@@ -1,0 +1,47 @@
+#!/usr/bin/env python2.6
+
+import sys
+
+from c2 import config
+from c2 import core
+from c2 import mongodb
+from bc.private import deck
+from bc.queue   import BC_QUEUES
+
+AGGR_ITER = 10
+
+config.init("aggregate-billing")
+LOG = core.mini_log("gs-aggregate-billing")
+
+queue = None
+try:
+	for q_id in BC_QUEUES.iterkeys():
+		queue = deck.deck_name(BC_QUEUES[q_id]['name'])
+
+		if not BC_QUEUES[q_id]['aggregate']:
+			continue
+
+		N = AGGR_ITER
+		n_tasks = 0
+
+		while N > 0:
+			res = mongodb.billing_collection(queue).find(
+				{ deck.STATE: deck.STATE_DONE },
+				fields = { deck.UID: True, '_id': False },
+				limit = 1000,
+			)
+
+			for t in res:
+				task = mongodb.billing_collection(queue).find_and_modify(
+					{ deck.UID: t[deck.UID] },
+					remove = True)
+
+				if not task:
+					continue
+
+				BC_QUEUES[q_id]['aggregate'](task)
+				n_tasks += 1
+			N -= 1
+		LOG.info("Aggregated %s tasks in queue '%s'", str(n_tasks), queue)
+except Exception, e:
+	LOG.exception("Unable to aggregate tasks in queue '%s': %s", queue, e)

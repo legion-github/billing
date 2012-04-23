@@ -1,0 +1,217 @@
+#!/bin/sh -efu
+
+PROG="${0##*/}"
+main_tree_id=HEAD
+
+show_usage() {
+	local rc=$1
+	cat <<-EOF
+	Usage: $PROG [options]
+
+	Options:
+	   -c, --commmit   make temporary commit prior to extract;
+	   -v, --verbose   print a message for each action;
+	   -h, --help      show this text and exit.
+
+	EOF
+	exit $rc
+}
+
+tmpdir=
+exit_handler() {
+	local rc=$?
+	trap - EXIT
+	rm -rf -- "$tmpdir"
+	exit $rc
+}
+
+message() {
+	printf '%s\n' "$PROG: $*"
+}
+
+do_verbose=
+verbose() {
+	[ -z "$do_verbose" ] ||
+		message "$*"
+}
+
+fatal() {
+	printf '%s\n' "$PROG: $*" >&2
+	exit 1
+}
+
+is_hex_sha1() {
+	[ "${#1}" -eq 40 ] || return 1
+        [ -n "${1##*[!0123456789abcdefABCDEF]*}" ] || return 1
+        return 0
+}
+
+get_version() {
+	git cat-file -p "${main_commit_sha1:-HEAD}:ChangeLog" 2>/dev/null |
+		sed -ne 's/^Version:[[:space:]]\+\([^[:space:]]\+\)[[:space:]]*$/\1/p;q'
+}
+
+get_object_sha1() {
+	local name="$1" && shift
+
+        local sha1
+        sha1="$(git rev-parse --verify "$name")" || return 1
+        is_hex_sha1 "$sha1" || return 1
+        printf %s "$sha1"
+}
+
+get_commit_sha1() {
+	local name="$1" && shift
+
+        local sha1
+        sha1="$(get_object_sha1 "$name")" || return 1
+        git rev-parse --verify "$sha1^0" || return 1
+}
+
+create_temporary_git_object_directory() {
+	local orig_object_dir
+	orig_object_dir="${GIT_OBJECT_DIRECTORY-"$git_dir/objects"}"
+	mkdir -p "$tmpdir/objects/info"
+	printf %s\\n "$orig_object_dir" >"$tmpdir/objects/info/alternates"
+	GIT_OBJECT_DIRECTORY="$tmpdir/objects"
+	export GIT_OBJECT_DIRECTORY
+}
+
+source_dir=
+prepare_package() {
+	local compress spec_file spec_name source0
+	spec_file="$1"
+
+	spec_name="$(sed '/^name:[[:space:]]*/I!d;s///;q' "$spec_file" |sed 's/[[:space:]]\+$//')"
+	source0="$(sed -n 's/[[:space:]]*Source0:[[:space:]]*\([^[:space:]]\+\)[[:space:]]*$/\1/ip' "$spec_file")"
+
+	verbose "RPM name:     $spec_name"
+	verbose "RPM source0:  $source0"
+
+	compress=
+	case "$source0" in
+		*.tar)        compress='cat'      ;;
+		*.tgz|*.gz)   compress='gzip -9'  ;;
+		*.tbz2|*.bz2) compress='bzip2 -9' ;;
+	esac
+	verbose "RPM compress: $compress"
+
+	git archive --format=tar --prefix="$spec_name-$version/" $main_commit_sha1 |
+		$compress > "$source_dir/$source0"
+
+	sed -i -r -e "s/^([[:space:]]*Version:[[:space:]]*)[^[:space:]]+\$/\\1$version/i" "$spec_file"
+
+	add_changelog "$spec_file"
+}
+
+add_changelog() {
+	local spec_file="$1"
+	local stamp="$(LC_TIME=C date '+%a %b %d %Y')"
+
+	local name email
+	name="$(git config user.name ||:)"
+	email="$(git config user.email ||:)"
+
+	printf '%s\n' "* $stamp ${name:-User} <${email:-User@Email}> ${version:-VERSION}-croc1" >> "$spec_file"
+
+	found=
+	git cat-file -p "$main_commit_sha1:ChangeLog" 2>/dev/null |
+	while read l; do
+		if [ -z "$found" ]; then
+			[ -n "${l##Version: $version*}" ] ||
+				found=1
+			continue
+		else
+			[ -n "${l##Version: *}" ] ||
+				{ printf '\n'; break; }
+		fi
+		printf '%s\n' "$l"
+	done >> "$spec_file"
+}
+
+TEMP=`getopt -n $PROG -o "c,v,h" -l "commit,verbose,help" -- "$@"` ||
+	show_usage 1
+eval set -- "$TEMP"
+
+do_commit=
+while :; do
+	case "$1" in 
+		-c|--commit) do_commit=1
+			;;
+		-v|--verbose) do_verbose=-v
+			;;
+		-h|--help)
+			show_usage 0
+			;;
+		--) shift; break
+			;;
+	esac
+	shift
+done
+
+topdir="$(git rev-parse --show-cdup)"
+[ -z "$topdir" ] ||
+	cd "$topdir"
+topdir="$(readlink -ev -- .)"
+
+git_dir="$(git rev-parse --git-dir)"
+git_dir="$(readlink -ev -- "$git_dir")"
+
+tmpdir="$(mktemp -dt "$PROG.XXXXXXXXXX")" || exit 1
+trap exit_handler HUP PIPE INT QUIT TERM EXIT
+
+main_commit_id="${main_tree_id%%:*}"
+main_commit_sha1="$(get_commit_sha1 "$main_commit_id")" ||
+	fatal "Invalid commit \"$main_commit_id\""
+
+if [ -n "$do_commit" ]; then
+	verbose "Makeing temporary commit ..."
+
+	create_temporary_git_object_directory
+
+	cp "${GIT_INDEX_FILE-"$git_dir/index"}" "$tmpdir/GIT_INDEX_FILE"
+	export GIT_INDEX_FILE="$tmpdir/GIT_INDEX_FILE"
+
+	git diff-files --name-only -z |
+		git update-index --remove -z --stdin
+	git update-index -q --refresh
+
+	tmp_tree="$(git write-tree)"
+	if [ "$tmp_tree" = "$(git rev-parse "$main_commit_sha1^{tree}" 2>/dev/null)" ]; then
+		message 'Nothing to commit'
+	else
+		tmp_parents="-p $main_commit_sha1"
+		if [ -f "$git_dir/MERGE_HEAD" ]; then
+			tmp_parents="$tmp_parents $(sed 's/^/-p /' "$git_dir/MERGE_HEAD")"
+		fi
+		main_commit_id="$(echo "Temporary commit by $PROG." |
+			git commit-tree "$tmp_tree" $tmp_parents)"
+		main_tree_id=$main_commit_id
+		main_commit_sha1=$main_commit_id
+	fi
+fi
+
+rpmbuild_args=
+case "${0##*/}" in
+	*-rpms*)  rpmbuild_args='-bb'          ;;
+	*-srpms*) rpmbuild_args='-bs --nodeps' ;;
+	*)        rpmbuild_args='-ba'          ;;
+esac
+
+version="$(get_version)"
+[ -n "$version" ] || version='1.6.2'
+echo "Version: $version"
+
+source_dir="$(rpm --eval %_sourcedir)"
+spec_dir="$(rpm --eval %_specdir)"
+spec="c2-billing.spec"
+
+git cat-file -p "$main_commit_sha1:$spec" 2>/dev/null > "$tmpdir/$spec"
+
+if [ ! -s "$tmpdir/$spec" ]; then
+	message "$spec: not found"
+	exit 1
+fi
+
+prepare_package "$tmpdir/$spec"
+rpmbuild $rpmbuild_args "$tmpdir/$spec"

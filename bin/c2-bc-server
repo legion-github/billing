@@ -1,0 +1,250 @@
+#!/usr/bin/env python2.6
+
+import os
+import sys
+import signal
+import random
+import time
+import logging
+import pymongo
+import Queue
+
+from pymongo.errors import AutoReconnect
+
+from c2 import config
+from c2 import core
+from c2 import daemon
+from c2 import mongodb
+
+from bc         import bc_config
+from bc         import sockets
+from bc.private import deck
+from bc.queue   import BC_QUEUES
+
+from billing    import constants as b_constants
+
+BC_DB_PERIOD     = 30
+BC_SCHD_DB_SYNC  = 15
+BC_SCHD_SLOWDOWN = 30
+BC_TASKLIST_LEN  = 300
+
+clients = dict()
+
+def client_add(addr, conn):
+	key = str(addr[0]) + ":" + str(addr[1])
+
+	logging.info("Add client: " + key)
+	clients[key] = {
+		'status': 'new',
+		'socket': conn,
+	}
+
+
+def client_remove(addr, conn):
+	key = str(addr[0]) + ":" + str(addr[1])
+	logging.info("Remove client: " + key)
+	del clients[key]
+
+
+def client_message(addr, conn, msg):
+	key = str(addr[0]) + ":" + str(addr[1])
+	try:
+		if msg['type'] == 'status':
+			clients[key]['status'] = msg['value']
+			#logging.info("client: " + key + " status: " + msg['value'])
+
+			if msg['value'] == 'ready':
+				q_id, tasklist  = queue.get(block=True)
+				procss_client(key, q_id, tasklist)
+			return
+
+		if msg['type'] == 'stat':
+			ans = []
+			uids = clients.keys()
+			uids.sort()
+
+			for uid in uids:
+				ans.append({
+					'client': uid,
+					'status': clients[uid]['status'],
+				})
+
+			for col in b_constants.BC_QUEUES:
+				len = mongodb.billing_collection('queue-'+col).find(
+						{"state":"processing"}).count()
+				for i in mongodb.billing_collection('queue-'+col).find(
+						{"state":"processing"},
+						["time-check"],
+						limit=1).sort("time-check"):
+
+					ans.append({'queue name':col,
+						'len': len,
+						'queue-size': queue.qsize(),
+						'lastes-check':time.time()-i['time-check']})
+
+			conn.send(ans)
+			return
+
+	except KeyError:
+		pass
+
+
+def procss_client(key, q_id, tasks):
+	clients[key]['status'] = 'busy'
+	clients[key]['socket'].send(
+		{
+			'type': 'task',
+			'queue': q_id,
+			'task': tasks
+		}
+	)
+
+
+def process_task(q_id, task):
+	# We should wait until clients get the status of "ready" or task's lock
+	# time almost expired.
+	while True:
+		try:
+			for uid in clients.keys():
+				if clients[uid]['status'] == 'ready':
+					procss_client(uid, q_id, task)
+					#logging.info("send: {0} {1}".format(len(task), uid))
+					break
+			else:
+				time.sleep(0.01)
+				continue
+			break
+
+		except KeyError:
+			# client goes into offline.
+			pass
+
+		except Exception, e:
+			logging.exception(repr(task))
+	return True
+
+
+def recheck(n):
+	now = int(time.time())
+	BC_QUEUES[n]['lastcheck'] = now
+
+	mongo_name = 'queue-' + BC_QUEUES[n]['name']
+
+	o = mongodb.billing_collection(mongo_name).find_one(
+			{
+				deck.TIME_CHECK: {
+					'$gte': 0,
+					'$lt':  now,
+				},
+				deck.STATE: deck.STATE_PROCESSING
+			},
+			fields = [ deck.TIME_CHECK ],
+			sort   = [ (deck.TIME_CHECK, pymongo.ASCENDING) ])
+	if o:
+		BC_QUEUES[n]['lastcheck'] = o[deck.TIME_CHECK]
+
+
+### main
+bc_config.init("bc")
+
+# Acquire pid and daemonize
+pid_fd = daemon.acquire_pid(bc_config.PID_DIR + "/bc.pid")
+
+daemon.daemonize()
+daemon.write_pid(pid_fd)
+
+# Open log
+core.mini_log("c2-bc",
+	level = bc_config.BILLING_LOG_LEVEL,
+	log_namespace = "")
+
+# Set signal handlers
+signal.siginterrupt(signal.SIGINT,  False)
+signal.siginterrupt(signal.SIGQUIT, False)
+signal.siginterrupt(signal.SIGTERM, False)
+
+signal.signal(signal.SIGCHLD, signal.SIG_IGN)
+
+# Run childrens
+for n in xrange(bc_config.BILLING_PROCESS):
+	os.system(os.path.dirname(sys.argv[0]) + "/c2-bc-client " + str(n))
+
+queue = Queue.Queue(10000)
+
+# Start server in background
+srv = sockets.Server()
+srv.set_handlers({
+	'on_connect':    client_add,
+	'on_disconnect': client_remove,
+	'on_recv':       client_message
+})
+srv.start(timeout=1)
+
+# Scheduler loop
+queue_order = BC_QUEUES.keys()
+queue_recheck = 0
+
+while True:
+	now = int(time.time())
+
+	try:
+		# Recheck queues state
+		if (now - queue_recheck) >= BC_SCHD_DB_SYNC:
+			for q_id in BC_QUEUES.iterkeys():
+				recheck(q_id)
+			queue_recheck = now
+
+		sched_lastcheck = now
+
+		for q_id in BC_QUEUES.iterkeys():
+			if sched_lastcheck > BC_QUEUES[q_id]['lastcheck']:
+				sched_lastcheck = BC_QUEUES[q_id]['lastcheck']
+
+		# Slowdown scheduler if we near by current time
+		if (now - sched_lastcheck) <= BC_SCHD_SLOWDOWN:
+			time.sleep(1)
+
+		# Order by last-check-time
+		queue_order.sort(
+			cmp = lambda a,b: cmp(BC_QUEUES[a]['lastcheck'], BC_QUEUES[b]['lastcheck']))
+		q_id = queue_order[0]
+
+		# We get some UUIDs for time period
+		cur = deck.find_tasks(
+			BC_QUEUES[q_id]['name'],
+			from_time = BC_QUEUES[q_id]['lastcheck'],
+			to_time   = BC_QUEUES[q_id]['lastcheck'] + BC_DB_PERIOD,
+			fields    = [ deck.TIME_CHECK, deck.UID ],
+			limit     = 5000)
+
+		period = list(cur)
+		logging.info("{0}: period: {1} {2}".format(BC_QUEUES[q_id]['name'], len(period), queue.qsize()))
+
+		i = 0
+		while i < len(period):
+			tasklist = map(lambda x: x[deck.UID], period[i : i + BC_TASKLIST_LEN])
+			queue.put((q_id, tasklist), block=True, timeout = 5)
+			i += BC_TASKLIST_LEN
+
+		#BC_QUEUES[q_id]['lastcheck'] += BC_DB_PERIOD
+
+		if period:
+			BC_QUEUES[q_id]['lastcheck'] = period[-1][deck.TIME_CHECK]
+		else:
+			BC_QUEUES[q_id]['lastcheck'] += BC_DB_PERIOD
+
+		# Enforce database sync
+		if BC_QUEUES[q_id]['lastcheck'] >= now:
+			queue_recheck = 0
+
+		time.sleep(0.5)
+		#logging.info("")
+
+	except AutoReconnect, e:
+		logging.exception("Mongo connection failure (sleeping for 60 seconds): %s", e)
+		time.sleep(60)
+		continue
+
+	except Exception, e:
+		logging.exception(e)
+		break

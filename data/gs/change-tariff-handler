@@ -1,0 +1,33 @@
+#!/usr/bin/python2.6
+
+import sys
+import time
+
+from c2 import config
+from c2 import core
+from bc.private import deck
+from bc.billing import customers
+
+process_num = str(sys.argv[1])
+customer_id = str(sys.argv[2])
+tariff_id_new = str(sys.argv[3])
+tariff_id_old = str(sys.argv[4])
+
+config.init('change-tariff')
+LOG = core.mini_log("gs-change-handler-" + process_num)
+
+try:
+	deck.customer_change_tariff(customer_id, tariff_id_old, tariff_id_new)
+
+	query = {
+		deck.CUSTOMER: customer_id,
+		deck.TARIFF: tariff_id_old,
+		deck.TIME_DESTROY: 0
+	}
+
+	if deck.count_all(query) == 0:
+		customers.set_tariff_applied(customer_id)
+		LOG.info("{0} tariff applied".format(customer_id))
+
+except Exception, e:
+	LOG.exception("Unable to re-create customer's tasks: %s", e)

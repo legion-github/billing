@@ -1,0 +1,28 @@
+#!/usr/bin/python2.6
+
+import sys
+import time
+
+from c2 import config
+from c2 import core
+from c2 import mongodb
+
+from bc.billing import customers
+
+config.init('change-tariff')
+LOG = core.mini_log("gs-change-tariff")
+
+try:
+	cur = mongodb.billing_collection('customers').find(
+		{
+			'tariff_status': customers.TARIFF_STATE_UPDATING
+		},
+		fields = [ '_id', 'tariff', 'tariff_prev' ]
+	)
+
+	for c in cur:
+		print c['_id'], c['tariff'], c['tariff_prev']
+
+except Exception, e:
+	LOG.error("Unable to get customer list: %s", e)
+
