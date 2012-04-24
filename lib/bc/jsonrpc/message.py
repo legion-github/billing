@@ -47,6 +47,9 @@ error_codes = {
 def jsonrpc_is_response(data):
 	""" Checks data is valid JSON-RPC 2.0 response """
 
+	if not isinstance(data, dict):
+		return False
+
 	for n in ['jsonrpc', 'id']:
 		if n not in data:
 			return False
