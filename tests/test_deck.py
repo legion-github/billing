@@ -11,7 +11,7 @@ from bc.private     import deck
 deckname = 'test-deck'
 bad_deckname = 'unknown-test-deck'
 
-class DeckTest(testcase.UserTestCase):
+class Test(testcase.UserTestCase):
 	def setUp(self):
 		testcase.UserTestCase.setUp(self)
 		self.billing_database()['queue-' + deckname].ensure_index([(deck.UID, pymongo.ASCENDING)], unique = True)
@@ -243,6 +243,3 @@ class DeckTest(testcase.UserTestCase):
 		else:
 			return False
 
-
-if __name__ == '__main__':
-	utils.run_tests(DeckTest)

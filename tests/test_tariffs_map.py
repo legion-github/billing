@@ -2,10 +2,10 @@ import unittest
 
 from billing import tariffs_map
 
-from c2.tests2 import testcase, utils
+from c2.tests2 import testcase
 
 
-class TariffsMapTest(testcase.MongoDBTestCase):
+class Test(testcase.MongoDBTestCase):
 
 	def test_add(self):
 		"""Check the addition to map"""

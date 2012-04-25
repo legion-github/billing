@@ -5,10 +5,10 @@ from billing import constants
 from billing import tariffs
 from billing import exceptions
 
-from c2.tests2 import testcase, utils
+from c2.tests2 import testcase
 
 
-class TariffsTest(testcase.MongoDBTestCase):
+class Test(testcase.MongoDBTestCase):
 
 	def test_rename_tariff(self):
 		"""Check the renaming of the tariff"""
@@ -40,7 +40,3 @@ class TariffsTest(testcase.MongoDBTestCase):
 
 		self.assertRaises(Exception,
 			lambda: tariffs.rename_tariff("unknown-id", "", ""))
-
-
-if __name__ == '__main__':
-	utils.run_tests(TariffsTest)

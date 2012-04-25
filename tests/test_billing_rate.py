@@ -1,9 +1,7 @@
 import unittest
-
 from bc.private.rate import Rate
-from c2.tests2       import utils
 
-class RateTest(unittest.TestCase):
+class Test(unittest.TestCase):
 	def test_init_from_string(self):
 		"""Check init from string"""
 		self.assertEquals(1, Rate('1'))
@@ -54,6 +52,3 @@ class RateTest(unittest.TestCase):
 
 		good = {0:100000000000900L, 6:800700L, 12:600500L, 18:400300L, 24:200100L}
 		self.assertEquals(good, r.export(units = 5, inc = 6))
-
-if __name__ == '__main__':
-	utils.run_tests(RateTest)

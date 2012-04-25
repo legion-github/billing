@@ -1,10 +1,7 @@
 import unittest
-
 from bc.jsonrpc import message
-from c2.tests2 import utils
 
-
-class JsonRpcTest(unittest.TestCase):
+class Test(unittest.TestCase):
 
 	def test_is_response(self):
 		"""Check response validation"""
@@ -34,6 +31,3 @@ class JsonRpcTest(unittest.TestCase):
 		self.assertFalse(message.jsonrpc_is_response([]))
 		self.assertFalse(message.jsonrpc_is_response(""))
 
-
-if __name__ == '__main__':
-	utils.run_tests(JsonRpcTest)

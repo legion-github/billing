@@ -1,13 +1,8 @@
-#!/usr/bin/python
-
 import unittest
-
 from bc.validator import ValidError
 from bc.validator import Validate as V
 
-from c2.tests2 import utils
-
-class ValidatorTest(unittest.TestCase):
+class Test(unittest.TestCase):
 	def test_basic(self):
 		"""Check basic types"""
 
@@ -129,7 +124,3 @@ class ValidatorTest(unittest.TestCase):
 		self.assertEqual({'a':'x'}, tmpl.check({'a':'x'}))
 		self.assertEqual({'a':1},   tmpl.check({'a':1}))
 		self.assertRaises(ValidError, lambda: tmpl.check({'a':[1]}))
-
-
-if __name__ == '__main__':
-	utils.run_tests(ValidatorTest)

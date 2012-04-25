@@ -1,21 +1,13 @@
 import uuid
-import pymongo
 
-from c2     import constants
 from c2.aws import exceptions
 
 from bc.private.rate import Rate
 from billing      import customers
 
-from c2.tests2 import testcase, utils
+from c2.tests2 import testcase
 
-wrong_ammounts = [
-	None,
-	-1,
-	"10"
-]
-
-class WalletsTest(testcase.TariffTestCase):
+class Test(testcase.TariffTestCase):
 	"""c2.wallets library test"""
 
 	def test_create(self):
@@ -32,7 +24,7 @@ class WalletsTest(testcase.TariffTestCase):
 
 		q = customers.add({"name": str(uuid.uuid4()), "tariff": self.tariff_id})
 
-		for ammount in wrong_ammounts:
+		for ammount in [None, -1, "10"]:
 			self.assertRaises(exceptions.InvalidParameterValue, lambda: customers.deposit(q["_id"], ammount))
 
 		ammount = 100
@@ -66,6 +58,3 @@ class WalletsTest(testcase.TariffTestCase):
 
 		customers.withdraw(q["_id"], Rate(value * 10 ** 33))
 		self.assertEquals(0, customers.get(q["_id"])["wallet"])
-
-if __name__ == '__main__':
-	utils.run_tests(WalletsTest)

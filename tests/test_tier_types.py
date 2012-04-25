@@ -4,10 +4,10 @@ import uuid
 from billing import tier_types
 from billing import exceptions
 
-from c2.tests2 import testcase, utils
+from c2.tests2 import testcase
 
 
-class TierTypesTest(testcase.MongoDBTestCase):
+class Test(testcase.MongoDBTestCase):
 
 	def test_add_one(self):
 		"""Check the addition new tier type"""
@@ -77,6 +77,3 @@ class TierTypesTest(testcase.MongoDBTestCase):
 		self.assertEquals(tt.get("_id"), None)
 		self.assertNotEquals(tt.get("tier_id"), None)
 
-
-if __name__ == '__main__':
-	utils.run_tests(TierTypesTest)
