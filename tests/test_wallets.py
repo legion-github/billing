@@ -19,7 +19,7 @@ class WalletsTest(testcase.TariffTestCase):
 	"""c2.wallets library test"""
 
 	def test_create(self):
-		"""create()"""
+		"""Check the wallet creation"""
 
 		q = customers.add({"name": str(uuid.uuid4()), "tariff": self.tariff_id})
 		c = self.billing_database()["customers"].find_one({"_id": q["_id"]})
@@ -28,7 +28,7 @@ class WalletsTest(testcase.TariffTestCase):
 		self.assertEquals(0, c["wallet"])
 
 	def test_deposit_1(self):
-		"""deposit(), simple operations"""
+		"""Check the deposit to wallet (simple operations)"""
 
 		q = customers.add({"name": str(uuid.uuid4()), "tariff": self.tariff_id})
 
@@ -43,7 +43,7 @@ class WalletsTest(testcase.TariffTestCase):
 		self.assertEquals(ammount * 2, customers.get(q["_id"])["wallet"])
 
 	def test_deposit_2(self):
-		"""deposit(), overflow"""
+		"""Check the deposit to wallet (overflow)"""
 
 		ammount = ((1L << 32) - 1)
 		num = 3
@@ -56,7 +56,7 @@ class WalletsTest(testcase.TariffTestCase):
 		self.assertEquals(ammount * num, customers.get(q["_id"])["wallet"])
 
 	def test_withdraw(self):
-		"""withdraw()"""
+		"""Check the withdraw"""
 
 		q = customers.add({"name": str(uuid.uuid4()), "tariff": self.tariff_id})
 

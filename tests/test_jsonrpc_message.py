@@ -7,7 +7,7 @@ from c2.tests2 import utils
 class JsonRpcTest(unittest.TestCase):
 
 	def test_is_response(self):
-		"""jsonrpc_is_response(message)"""
+		"""Check response validation"""
 
 		r = {"jsonrpc": "2.0", "result": 19, "id": 3}
 		self.assertTrue(message.jsonrpc_is_response(r))
@@ -29,7 +29,7 @@ class JsonRpcTest(unittest.TestCase):
 
 
 	def test_is_response1(self):
-		"""jsonrpc_is_response(trash)"""
+		"""Check jsonrpc_is_response incoming argumeng"""
 		self.assertFalse(message.jsonrpc_is_response(1))
 		self.assertFalse(message.jsonrpc_is_response([]))
 		self.assertFalse(message.jsonrpc_is_response(""))

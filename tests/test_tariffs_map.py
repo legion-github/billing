@@ -8,7 +8,7 @@ from c2.tests2 import testcase, utils
 class TariffsMapTest(testcase.MongoDBTestCase):
 
 	def test_add(self):
-		""" tm_add() """
+		"""Check the addition to map"""
 
 		tariff_id, customer_id, user_id = 't1', 'c1', 'u1'
 
@@ -24,7 +24,7 @@ class TariffsMapTest(testcase.MongoDBTestCase):
 
 
 	def test_remove(self):
-		""" tm_remove() """
+		"""Check the removal from the map"""
 
 		rec_id = tariffs_map.tm_add('t0', 'c0', 'u0')
 		rec_id = tariffs_map.tm_add('t2', 'c2', 'u2')
@@ -43,7 +43,7 @@ class TariffsMapTest(testcase.MongoDBTestCase):
 
 
 	def test_change_tariff(self):
-		""" tm_change_tariff() """
+		"""Check the changing record in the map"""
 
 		tariffs_map.tm_add('t0', 'c0', 'u0')
 		tariffs_map.tm_add('t0', 'c0', 'u1')
@@ -63,7 +63,7 @@ class TariffsMapTest(testcase.MongoDBTestCase):
 
 
 	def test_find(self):
-		""" tm_find() """
+		"""Check the finding in the map"""
 
 		r1 = tariffs_map.tm_add('t0', 'c0', 'u1')
 		r2 = tariffs_map.tm_add('t0', 'c0', 'u2')
@@ -82,7 +82,7 @@ class TariffsMapTest(testcase.MongoDBTestCase):
 
 
 	def test_find_one(self):
-		""" tm_find_one() """
+		"""Check the finding single record in the map"""
 
 		r1 = tariffs_map.tm_add('t0', 'c0', 'u1')
 		r2 = tariffs_map.tm_add('t0', 'c0', 'u2')

@@ -5,21 +5,21 @@ from c2.tests2       import utils
 
 class RateTest(unittest.TestCase):
 	def test_init_from_string(self):
-		"""tests init from string"""
+		"""Check init from string"""
 		self.assertEquals(1, Rate('1'))
 		self.assertEquals(1, Rate('0000001'))
 		self.assertEquals(100000000000900800700600500400300200100, Rate('100000000000900800700600500400300200100'))
 		self.assertRaises(ValueError, lambda: Rate('1.0'))
 
 	def test_init_from_num(self):
-		"""tests init from number"""
+		"""Check init from number"""
 		self.assertEquals(1, Rate(1))
 		self.assertEquals(1000, Rate(1000))
 		self.assertEquals(1000, Rate(1000L))
 		self.assertRaises(TypeError, lambda: Rate(1.0))
 
 	def test_arithmetic(self):
-		"""tests arithmetic operations"""
+		"""Check arithmetic operations"""
 		r = Rate(2)
 		self.assertEquals(4, r + r)
 		self.assertEquals(3, r + 1)
@@ -35,7 +35,7 @@ class RateTest(unittest.TestCase):
 		self.assertEquals(4, r)
 
 	def test_unsupported_arithmetic(self):
-		"""tests unsupported operations"""
+		"""Check unsupported operations"""
 		r = Rate(4)
 		self.assertRaises(TypeError, lambda: r / 2)
 		self.assertRaises(TypeError, lambda: r - 2)
@@ -43,7 +43,7 @@ class RateTest(unittest.TestCase):
 		self.assertRaises(TypeError, lambda: 8 - r)
 
 	def test_export(self):
-		"""tests export to dict()"""
+		"""Check export to dict()"""
 		r = Rate(100000000000900800700600500400300200100)
 
 		good = {0:100000L, 3:0L, 6:0L, 9:900L, 12:800L, 15:700L, 18:600L, 21:500L, 24:400L, 27:300L, 30:200L, 33:100L}

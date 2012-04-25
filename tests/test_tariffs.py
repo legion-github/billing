@@ -11,7 +11,7 @@ from c2.tests2 import testcase, utils
 class TariffsTest(testcase.MongoDBTestCase):
 
 	def test_rename_tariff(self):
-		"""rename_tariff()"""
+		"""Check the renaming of the tariff"""
 
 		tariff_name1 = str(uuid.uuid4())
 		tariff_name2 = str(uuid.uuid4())

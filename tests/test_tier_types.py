@@ -10,7 +10,7 @@ from c2.tests2 import testcase, utils
 class TierTypesTest(testcase.MongoDBTestCase):
 
 	def test_add_one(self):
-		"""add_one()"""
+		"""Check the addition new tier type"""
 
 		tier_id = 1
 		tier_name = "i"
@@ -33,7 +33,7 @@ class TierTypesTest(testcase.MongoDBTestCase):
 
 
 	def test_rename_one(self):
-		"""rename_one()"""
+		"""Check the removal tier type"""
 
 		tier_id = 1
 		tier_name = "i"
@@ -57,7 +57,7 @@ class TierTypesTest(testcase.MongoDBTestCase):
 
 
 	def test_find(self):
-		"""find()"""
+		"""Check the finding tier type"""
 
 		tier_num = 3
 		tier_list = [
