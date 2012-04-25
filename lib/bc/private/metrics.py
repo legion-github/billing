@@ -30,7 +30,6 @@ class Metric(object):
 		if not o:
 			raise ValueError('Unknown metric')
 		self.set(o)
-		return self
 
 
 	def set(self, o):
