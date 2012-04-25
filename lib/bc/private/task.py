@@ -59,14 +59,13 @@ class Task(object):
 		}
 
 		if not uid or not mtype:
-			return self
+			return
 
 		# TODO: Нужно будет найти сервер на котором находится mtype по uid
 		o = mongodb.billing_collection(mtype).find_one({'uuid':uid})
 		if not o:
 			raise ValueError('Unknown task')
 		self.set(o)
-		return self
 
 
 	def set(self, o):
