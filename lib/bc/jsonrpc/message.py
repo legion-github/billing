@@ -5,7 +5,10 @@
 
 __version__ = '1.0'
 
-__all__ = [ 'jsonrpc_request', 'jsonrpc_notify', 'jsonrpc_response', 'jsonrpc_response_error', 'jsonrpc_is_response' ]
+__all__ = [
+	'jsonrpc_request', 'jsonrpc_notify', 'jsonrpc_response', 'jsonrpc_response_error',
+	'jsonrpc_is_response', 'jsonrpc_is_request', 'jsonrpc_is_notification'
+]
 
 import uuid, logging
 
@@ -74,6 +77,44 @@ def jsonrpc_is_response(data):
 		if 'error' in data:
 			return False
 	else:
+		return False
+
+	return True
+
+
+def jsonrpc_is_request(data):
+	""" Checks data is valid JSON-RPC 2.0 request """
+
+	if not isinstance(data, dict):
+		return False
+
+	for n in ['jsonrpc', 'method', 'id']:
+		if n not in data:
+			return False
+
+	if data['jsonrpc'] != jsonrpc_version:
+		return False
+
+	if not isinstance(data['id'], (int,long,basestring)):
+		return False
+
+	return True
+
+
+def jsonrpc_is_notification(data):
+	""" Checks data is valid JSON-RPC 2.0 notification """
+
+	if not isinstance(data, dict):
+		return False
+
+	for n in ['jsonrpc', 'method']:
+		if n not in data:
+			return False
+
+	if data['jsonrpc'] != jsonrpc_version:
+		return False
+
+	if 'id' in data:
 		return False
 
 	return True
