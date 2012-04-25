@@ -1,11 +1,16 @@
 #!/usr/bin/python
 
 import unittest
-from validator import ValidError
-from validator import Validate as V
 
-class TestValidator(unittest.TestCase):
+from bc.validator import ValidError
+from bc.validator import Validate as V
+
+from c2.tests2 import utils
+
+class ValidatorTest(unittest.TestCase):
 	def test_basic(self):
+		"""Check basic types"""
+
 		tmpl = V({
 			'a': V(int),
 			'b': V(basestring),
@@ -31,6 +36,8 @@ class TestValidator(unittest.TestCase):
 
 
 	def test_basic_list(self):
+		"""Check list validation"""
+
 		tmpl = V([ V(int) ])
 		data = [ 1, 2, 3, 4, 5 ]
 		res = tmpl.check(data)
@@ -43,6 +50,8 @@ class TestValidator(unittest.TestCase):
 
 
 	def test_default(self):
+		"""Check default= option"""
+
 		data = {'a':1}
 
 		tmpl = V({ 'a': V(int), 'b': V(int, default = 10) })
@@ -62,6 +71,8 @@ class TestValidator(unittest.TestCase):
 
 
 	def test_required_false(self):
+		"""Check required=False option"""
+
 		tmpl = V({'a':V(int),'b':V(int, required=False)})
 
 		data = {'a':1}
@@ -82,12 +93,15 @@ class TestValidator(unittest.TestCase):
 
 
 	def test_required_true(self):
+		"""Check required=True option"""
 		tmpl = V({'a':V(int),'b':V(int, required=True)})
 		data = {'a':1}
 		self.assertRaises(ValidError, lambda: tmpl.check(data))
 
 
 	def test_maxmin(self):
+		"""Check min= max= options"""
+
 		tmpl = V(int, max=10)
 		self.assertEqual(5, tmpl.check(5))
 
@@ -102,6 +116,8 @@ class TestValidator(unittest.TestCase):
 
 
 	def test_variant(self):
+		"""Check variants"""
+
 		tmpl = V( ( V(int), V(basestring) ) )
 		self.assertEqual('x', tmpl.check('x'))
 		self.assertEqual(1,   tmpl.check(1))
@@ -116,4 +132,4 @@ class TestValidator(unittest.TestCase):
 
 
 if __name__ == '__main__':
-	unittest.main()
+	utils.run_tests(ValidatorTest)
