@@ -157,7 +157,7 @@ def request(**kwargs):
 		'method': kwargs.get('method'),
 	}
 	for n in ['id', 'params']:
-		if n in kwargs:
+		if n in kwargs and kwargs.get(n) != None:
 			r[n] = kwargs.get(n)
 	return r
 
