@@ -7,22 +7,15 @@ from c2 import mongodb
 
 
 class Metric(object):
-	mtype           = ''
-	count_dimention = {}
-	time_dimention  = {}
-	time_type       = 0
-	aggrigate       = 0
-	values          = property(lambda self:
-		{
-			'mtype':           self.mtype,
-			'count_dimention': self.count_dimention,
-			'time_dimention':  self.time_dimention,
-			'aggrigate':       self.aggrigate
-		}
-	)
-
-
 	def __init__(self, mtype = None):
+		self.__dict__['values'] = {
+			'mtype':           '',
+			'count_dimention': {},
+			'time_dimention':  {},
+			'time_type':       0,
+			'aggrigate':       0,
+		}
+
 		if not mtype:
 			return
 
@@ -30,14 +23,6 @@ class Metric(object):
 		if not o:
 			raise ValueError('Unknown metric')
 		self.set(o)
-
-
-	def set(self, o):
-		for n in self.values.keys():
-			if n not in o:
-				continue
-			self.__dict__[n] = o[n]
-		return self
 
 
 	def validate(self):
@@ -57,6 +42,37 @@ class Metric(object):
 			raise ValueError('Invalid metric')
 
 		mongodb.billing_collection('metrics').insert(self.values, safe = True)
+
+
+	def set(self, o):
+		for n in self.__dict__['values'].keys():
+			if n in o:
+				self.__dict__['values'][n] = o[n]
+		return self
+
+
+	def __getattr__(self, name):
+		o = self.__dict__['values']
+		if name not in o:
+			raise KeyError
+		return o[name]
+
+
+	def __setattr__(self, name, value):
+		o = self.__dict__['values']
+		if name not in o:
+			raise KeyError
+
+		t = type(o.get(name))
+
+		if not isinstance(value, t):
+			raise TypeError
+
+		o[name] = value
+
+
+	def __delattr__(self, name):
+		raise ValueError('Operation not allowed')
 
 
 	def __str__(self):
