@@ -137,7 +137,10 @@ def response(request, **kwargs):
 def jsonrpc_response_error(request, errcode, data = None):
 	""" Generates error response """
 
-	e = dict(error_codes.get(errcode, 'InternalError'))
+	if not errcode or errcode not in error_codes:
+		errcode = 'InternalError'
+
+	e = dict(error_codes.get(errcode))
 	if data:
 		e['data'] = data
 	return response(request, error = e)
