@@ -49,5 +49,13 @@ class Test(unittest.TestCase):
 		self.assertRaises(ValueError, setx)
 
 		def setx():
+			t.values = {}
+		self.assertRaises(KeyError, setx)
+
+		def setx():
 			t.uuid = '123'
+		self.assertTrue(setx)
+
+		def setx():
+			t.values['uuid'] = '123'
 		self.assertTrue(setx)
