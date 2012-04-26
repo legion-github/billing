@@ -9,7 +9,7 @@ from c2 import mongodb
 
 
 class Metric(bobject.BaseObject):
-	def __init__(self, mtype = None):
+	def __init__(self, data = None):
 		self.__dict__['values'] = {
 			'mtype':           '',
 			'count_dimention': {},
@@ -18,13 +18,8 @@ class Metric(bobject.BaseObject):
 			'aggrigate':       0,
 		}
 
-		if not mtype:
-			return
-
-		o = mongodb.billing_collection('metrics').find_one({'mtype': mtype})
-		if not o:
-			raise ValueError('Unknown metric')
-		self.set(o)
+		if data:
+			self.set(data)
 
 
 	def validate(self):
