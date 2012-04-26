@@ -25,5 +25,10 @@ class Test(unittest.TestCase):
 
 		def setx():
 			c = TestConstants()
+			c.baz = [4,5,6]
+		self.assertRaises(AttributeError, setx)
+
+		def setx():
+			c = TestConstants()
 			c.baz.append(4)
 		self.assertTrue(setx)
