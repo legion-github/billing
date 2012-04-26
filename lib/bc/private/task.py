@@ -20,7 +20,7 @@ class TaskConstants(object):
 constants = TaskConstants()
 
 class Task(bobject.BaseObject):
-	def __init__(self, uid = None, mtype = None):
+	def __init__(self, data = None):
 
 		c = TaskConstants()
 		now = int(time.time())
@@ -59,11 +59,5 @@ class Task(bobject.BaseObject):
 			'target_descr':   '',
 		}
 
-		if not uid or not mtype:
-			return
-
-		# TODO: Нужно будет найти сервер на котором находится mtype по uid
-		o = mongodb.billing_collection(mtype).find_one({'uuid':uid})
-		if not o:
-			raise ValueError('Unknown task')
-		self.set(o)
+		if data:
+			self.set(data)
