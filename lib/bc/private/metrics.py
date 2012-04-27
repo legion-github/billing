@@ -10,7 +10,7 @@ from c2 import mongodb
 
 class Metric(bobject.BaseObject):
 	def __init__(self, data = None):
-		self.__dict__['values'] = {
+		self.__values__ = {
 			'mtype':           '',
 			'count_dimention': {},
 			'time_dimention':  {},

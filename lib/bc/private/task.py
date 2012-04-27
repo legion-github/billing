@@ -25,7 +25,7 @@ class Task(bobject.BaseObject):
 		c = TaskConstants()
 		now = int(time.time())
 
-		self.__dict__['values'] = {
+		self.__values__ = {
 			# Уникальный идентификатор задания
 			'uuid':           str(uuid.uuid4()),
 

@@ -6,6 +6,8 @@ import uuid
 import readonly
 import bobject
 
+from rate import Rate
+
 from c2 import mongodb
 
 class TariffRateConstants(object):
@@ -27,14 +29,16 @@ class TariffRate(bobject.BaseObject):
 
 		c = TariffRateConstants()
 
-		self.__dict__['values'] = {
+		self.__getter__ = { 'rate': self.__get_rate }
+		self.__setter__ = { 'rate': self.__set_rate }
+		self.__values__ = {
 			'rid':          str(uuid.uuid4()),
 			'description':  '',
 			'mtype':        '',
 			'tid':          '',
 			'rate':         {
-				'',
-				c.CURRENCY_RUB
+				'value':    '',
+				'currency': c.CURRENCY_RUB,
 			},
 			'state':        c.STATE_ACTIVE,
 			'time_create':  int(time.time()),
@@ -46,9 +50,31 @@ class TariffRate(bobject.BaseObject):
 			self.set(data)
 
 
+	def __get_rate(self, name):
+		return {
+			'value':    Rate(self.__values__['rate']['value']),
+			'currency': self.__values__['rate']['currency'],
+		}
+
+
+	def __set_rate(self, name, value):
+		if not isinstance(value, dict) or not isinstance(value['value'], Rate):
+			raise TypeError('Invalid value type')
+
+		c = TariffRateConstants()
+
+		if value.get('currency', '') not in [ c.CURRENCY_RUB, c.CURRENCY_USD, c.CURRENCY_EUR ]:
+			raise TypeError('Invalid currency')
+
+		self.__values__['rate'] = {
+			'value':    str(value['value']),
+			'currency': value['currency']
+		}
+
+
 	def validate(self):
 		for n in ['rid', 'mtype', 'tid', 'description']:
-			if n not in self.__dict__['values']:
+			if n not in self.__values__:
 				return False
 		return True
 

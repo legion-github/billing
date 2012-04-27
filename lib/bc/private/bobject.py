@@ -3,36 +3,61 @@
 __version__ = '1.0'
 
 class BaseObject(object):
+	__values__ = {}
+	__getter__ = {}
+	__setter__ = {}
 
 	def set(self, o):
-		for n in self.__dict__['values'].keys():
+		h = self.__setter__
+
+		for n in self.__values__.keys():
 			if n not in o:
 				continue
 
-			typ = type(self.__dict__['values'][n])
+			if h and name in h:
+				h[n](n, o[n])
+				continue
+
+			typ = type(self.__values__[n])
 
 			if not isinstance(o[n], typ):
 				raise TypeError
 
-			self.__dict__['values'][n] = o[n]
+			self.__values__[n] = o[n]
 
 		return self
 
 
 	def __getattr__(self, name):
-		o = self.__dict__['values']
+		if name == 'values':
+			return self.__values__
+
+		o = self.__values__
+		h = self.__getter__
 
 		if name not in o:
 			raise KeyError
+
+		if h and name in h:
+			return h[name](name)
 
 		return o[name]
 
 
 	def __setattr__(self, name, value):
-		o = self.__dict__['values']
+		if name in ['__values__', '__getter__', '__setter__']:
+			self.__dict__[name] = value
+			return
+
+		o = self.__values__
+		h = self.__setter__
 
 		if name not in o:
 			raise KeyError
+
+		if h and name in h:
+			h[name](name, value)
+			return
 
 		typ = type(o.get(name))
 
