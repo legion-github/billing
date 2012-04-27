@@ -26,9 +26,7 @@ class HashRing(object):
 		this long value represents a place on the hash ring.
 		"""
 
-		m = hashlib.sha1()
-		m.update(key)
-		return long(m.hexdigest(), 16)
+		return long(hashlib.sha1(key).hexdigest(), 16)
 
 
 	def add_node(self, node, replicas=3):
