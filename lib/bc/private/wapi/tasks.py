@@ -6,7 +6,7 @@ import uuid, logging
 
 from billing import customers
 
-from bc.private   import deck
+from bc.private   import queue
 from bc.private   import task
 from bc.validator import Validate as V
 from bc           import jsonrpc
@@ -23,7 +23,7 @@ LOG = logging.getLogger("c2.abc")
 			'user':		V(basestring, min=1,  max=64),
 			'value':	V(int),
 			'descr':	V(basestring),
-			'pain':		V(basestring),
+			'arg':		V(basestring),
 			'time-create':	V(int),
 			'time-destroy':	V(int, default=0),
 	}),
@@ -45,13 +45,13 @@ def taskOpen(environ, request):
 	now = int(time.time())
 
 	t = task.Task()
+	rid, rate  = queue.resolve(request.get('type'), customer['tariff'], request.get('arg'))
+
+	if not rid:
+		return jsonrpc.methods.jsonrpc_result({'status':'fail'})
 
 	t.uuid         = request.get('uuid')
 	t.customer     = customer['_id']
-
-	# request.get('type'), request.get('pain'), customer['tariff'] -> (rid, rate)
-	# t.rid          = ???
-	# t.rate         = ???
 
 	t.time_create  = request.get('time-create', now)
 	t.time_check   = request.get('time-create', now)
