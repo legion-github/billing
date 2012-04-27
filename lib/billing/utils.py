@@ -11,10 +11,8 @@ GB_MONTH_COEFFICIENT = c2_constants.GIGABYTE * billing_constants.MONTH_SECONDS
 
 
 def sha1(*args):
-	data = ""
-	for a in args:
-		data += str(a) + "-"
-	return hashlib.sha1(data).hexdigest()
+	data = map(lambda x: str(x), args)
+	return hashlib.sha1(string.join(data, '-') + '-').hexdigest()
 
 
 def dict_merge(*args):
