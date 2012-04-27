@@ -31,35 +31,46 @@ LOG = logging.getLogger("c2.abc")
 def taskOpen(environ, request):
 	""" Open new billing task """
 
+	if 'time-create' not in request:
+		request['time-create'] = int(time.time())
+
 	# Temp hack for now
-	customer = request.get('customer')
-	if not customer:
-		user_id = request.get('user')
-		res = mongodb.billing_collection('log_accounts').find_one({'user': user_id})
+	if not request['customer']:
+		res = mongodb.billing_collection('log_accounts').find_one(
+			{ 'user': request['user'] }
+		)
 		if not res:
-			logging.getLogger("c2.billing").error("Unable to find customer by user: %s", str(user_id))
+			LOG.error("Unable to find customer by user: %s", request['user'])
 			return jsonrpc.methods.jsonrpc_result({'status':'fail'})
+
 		request['customer'] = res['customer']
 
-	customer = customers.get(request.get('customer'), ignore_wallets = True)
-	now = int(time.time())
-
-	t = task.Task()
-	rid, rate  = queue.resolve(request.get('type'), customer['tariff'], request.get('arg'))
+	customer = customers.get(request['customer'], ignore_wallets = True)
+	rid, rate  = queue.resolve(request['type'], customer['tariff'], request['arg'])
 
 	if not rid:
 		return jsonrpc.methods.jsonrpc_result({'status':'fail'})
 
-	t.uuid         = request.get('uuid')
-	t.customer     = customer['_id']
+	try:
+		t = task.Task()
+		t.set({
+			'uuid':         request['uuid'],
+			'customer':     customer['_id'],
 
-	t.time_create  = request.get('time-create', now)
-	t.time_check   = request.get('time-create', now)
-	t.time_destroy = request.get('time-destroy', 0)
+			'time_create':  request['time-create'],
+			'time_check':   request['time-create'],
+			'time_destroy': request['time-destroy'],
 
-	t.target_user  = request.get('user')
-	t.target_uuid  = request.get('uuid')
-	t.target_descr = request.get('descr')
+			'target_user':  request['user'],
+			'target_uuid':  request['uuid'],
+			'target_descr': request['descr'],
+		})
+
+		queue.task_add(request['type'], t)
+
+	except Exception, e:
+		LOG.exception("Unable to add new task: %s", e)
+		return jsonrpc.methods.jsonrpc_result({'status':'fail'})
 
 	return jsonrpc.methods.jsonrpc_result({'status':'ok'})
 
