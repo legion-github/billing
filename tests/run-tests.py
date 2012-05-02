@@ -4,7 +4,7 @@ import os
 import sys
 import glob
 import imp
-import unittest
+import unittest2 as unittest
 
 sys.path.insert(0, '../lib')
 suite = unittest.TestSuite()

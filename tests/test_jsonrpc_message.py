@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 from bc.jsonrpc import message
 
 class Test(unittest.TestCase):

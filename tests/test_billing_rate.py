@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 from bc.private.rate import Rate
 
 class Test(unittest.TestCase):

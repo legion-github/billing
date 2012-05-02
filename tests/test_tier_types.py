@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 import uuid
 
 from billing import tier_types

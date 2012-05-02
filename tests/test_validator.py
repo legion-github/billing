@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 from bc.validator import ValidError
 from bc.validator import Validate as V
 

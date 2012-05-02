@@ -1,10 +1,11 @@
-import unittest
+import unittest2 as unittest
+import unithelper
 
 from bc import config
 from bc import mongodb
 
 
-class Test(unittest.TestCase):
+class Test(unithelper.TestCase):
 	def test_inline_config(self):
 		"""Check reading configuration from string"""
 
@@ -19,7 +20,7 @@ class Test(unittest.TestCase):
 		"""
 
 		def setx():
-			conf = config.read(inline = confstr)
+			conf = config.read(inline = confstr, force=True)
 		self.assertTrue(setx)
 
 
@@ -35,7 +36,7 @@ class Test(unittest.TestCase):
 		"""
 
 		def setx():
-			conf = config.read(inline = confstr)
+			conf = config.read(inline = confstr, force=True)
 		self.assertRaises(ValueError,setx)
 
 
@@ -43,7 +44,7 @@ class Test(unittest.TestCase):
 		"""Check reading config file"""
 
 		def setx():
-			conf = config.read('./test_config1.conf')
+			conf = config.read('./test_config1.conf', force=True)
 		self.assertTrue(setx)
 
 
@@ -51,5 +52,5 @@ class Test(unittest.TestCase):
 		"""Check reading config file with wrong syntax"""
 
 		def setx():
-			conf = config.read('./test_config2.conf')
+			conf = config.read('./test_config2.conf', force=True)
 		self.assertRaises(ValueError,setx)

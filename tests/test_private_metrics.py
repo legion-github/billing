@@ -1,5 +1,5 @@
 import copy
-import unittest
+import unittest2 as unittest
 from bc.private import metrics
 
 class Test(unittest.TestCase):

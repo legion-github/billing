@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 from bc.private import readonly
 
 class TestConstants(object):
