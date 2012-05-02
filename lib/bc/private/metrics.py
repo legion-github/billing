@@ -5,7 +5,7 @@ import uuid
 
 import bobject
 
-from c2 import mongodb
+from bc import mongodb
 
 
 class Metric(bobject.BaseObject):
@@ -39,6 +39,6 @@ class Metric(bobject.BaseObject):
 		if not self.validate():
 			raise ValueError('Invalid metric')
 
-		mongodb.billing_collection('metrics').insert(self.values, safe = True)
+		mongodb.collection('metrics').insert(self.values, safe = True)
 
 

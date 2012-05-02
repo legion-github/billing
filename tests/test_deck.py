@@ -3,7 +3,7 @@ import uuid
 import pymongo
 
 from pymongo.errors import DuplicateKeyError
-from c2             import mongodb
+from bc             import mongodb
 from c2.tests2      import testcase, utils
 
 from bc.private     import deck
@@ -36,8 +36,8 @@ class Test(testcase.UserTestCase):
 		deck.recreate_forever(deckname, "ID", {'data':5})
 		deck.recreate_forever(deckname, "ID", {'data':5})
 
-		alive = mongodb.billing_collection('queue-'+deckname).find({'time-destroy': 0}).count()
-		dead = mongodb.billing_collection('queue-'+deckname).find({'time-destroy': {'$ne':0}}).count()
+		alive = mongodb.collection('queue-'+deckname).find({'time-destroy': 0}).count()
+		dead = mongodb.collection('queue-'+deckname).find({'time-destroy': {'$ne':0}}).count()
 		self.assertEquals(1, alive)
 		self.assertEquals(2, dead)
 
@@ -112,9 +112,9 @@ class Test(testcase.UserTestCase):
 
 		t = deck.get(deckname, to_time = int(time.time()))
 		deck.delete(deckname, t["uuid"], remove = False)
-		self.assertNotEquals(mongodb.billing_collection('queue-'+deckname).find()[0]['time-destroy'], 0)
+		self.assertNotEquals(mongodb.collection('queue-'+deckname).find()[0]['time-destroy'], 0)
 		deck.delete(deckname, t["uuid"], remove = True)
-		self.assertEquals(list(mongodb.billing_collection('queue-'+deckname).find()), [])
+		self.assertEquals(list(mongodb.collection('queue-'+deckname).find()), [])
 
 
 	def test_race1(self):
@@ -122,9 +122,9 @@ class Test(testcase.UserTestCase):
 
 		deck.create(deckname, "ID", self.user["uuid"], {'data': 4})
 		self.__recreate(deckname, "ID", {'data':5},race=deck.recreate, args={'name':deckname, 'uid':"ID", 'udata':{'data':6}})
-		alive = mongodb.billing_collection('queue-'+deckname).find({'time-destroy': 0}).count()
-		dead = mongodb.billing_collection('queue-'+deckname).find({'time-destroy': {'$ne':0}}).count()
-		all = mongodb.billing_collection('queue-'+deckname).find().count()
+		alive = mongodb.collection('queue-'+deckname).find({'time-destroy': 0}).count()
+		dead = mongodb.collection('queue-'+deckname).find({'time-destroy': {'$ne':0}}).count()
+		all = mongodb.collection('queue-'+deckname).find().count()
 
 		self.assertEquals(1, alive)
 		self.assertEquals(1, dead)
@@ -138,10 +138,10 @@ class Test(testcase.UserTestCase):
 		new_tariff=uuid.uuid4()
 
 		self.__recreate(deckname, "ID", {'data':5},race=deck.recreate, args={'name':deckname, 'uid':"ID", 'udata':{'data':4}, 'values':{'tariff':new_tariff}})
-		alive = mongodb.billing_collection('queue-'+deckname).find({'time-destroy': 0, 'info.data':5}).count()
-		dead = mongodb.billing_collection('queue-'+deckname).find({'time-destroy': {'$ne':0}, 'info.data':4}).count()
-		new = mongodb.billing_collection('queue-'+deckname).find({'tariff': new_tariff}).count()
-		all = mongodb.billing_collection('queue-'+deckname).find().count()
+		alive = mongodb.collection('queue-'+deckname).find({'time-destroy': 0, 'info.data':5}).count()
+		dead = mongodb.collection('queue-'+deckname).find({'time-destroy': {'$ne':0}, 'info.data':4}).count()
+		new = mongodb.collection('queue-'+deckname).find({'tariff': new_tariff}).count()
+		all = mongodb.collection('queue-'+deckname).find().count()
 
 		self.assertEquals(1, alive)	# alive resized, but with old tariff (job for gc)
 		self.assertEquals(0, new)	# tariff change fail
@@ -156,9 +156,9 @@ class Test(testcase.UserTestCase):
 
 		self.__recreate(deckname, "ID", {'data':5},race=deck.delete, args={'name':deckname, 'uid':"ID", 'remove': False})
 
-		alive = mongodb.billing_collection('queue-'+deckname).find({'time-destroy': 0, 'info.data':5}).count()
-		dead = mongodb.billing_collection('queue-'+deckname).find({'time-destroy': {'$ne':0}, 'info.data':4}).count()
-		all = mongodb.billing_collection('queue-'+deckname).find().count()
+		alive = mongodb.collection('queue-'+deckname).find({'time-destroy': 0, 'info.data':5}).count()
+		dead = mongodb.collection('queue-'+deckname).find({'time-destroy': {'$ne':0}, 'info.data':4}).count()
+		all = mongodb.collection('queue-'+deckname).find().count()
 
 		self.assertEquals(0, alive)	# alive resized and deleted
 		self.assertEquals(1, dead)	# dead have old size
@@ -172,9 +172,9 @@ class Test(testcase.UserTestCase):
 		deck.delete(deckname, "ID")
 		deck.recreate(deckname, "ID", {'data':5})
 
-		alive = mongodb.billing_collection('queue-'+deckname).find({'time-destroy': 0, 'info.data':5}).count()
-		dead = mongodb.billing_collection('queue-'+deckname).find({'time-destroy': {'$ne':0}, 'info.data':4}).count()
-		all = mongodb.billing_collection('queue-'+deckname).find().count()
+		alive = mongodb.collection('queue-'+deckname).find({'time-destroy': 0, 'info.data':5}).count()
+		dead = mongodb.collection('queue-'+deckname).find({'time-destroy': {'$ne':0}, 'info.data':4}).count()
+		all = mongodb.collection('queue-'+deckname).find().count()
 
 		self.assertEquals(0, alive)	# alive resized and deleted
 		self.assertEquals(1, dead)	# dead have old size
@@ -197,7 +197,7 @@ class Test(testcase.UserTestCase):
 		TIME_DESTROY = 'time-destroy'
 		DATA         = 'info'
 		now = int(time.time())
-		old = mongodb.billing_collection('queue-' + name).find_and_modify(
+		old = mongodb.collection('queue-' + name).find_and_modify(
 			{
 				UID: uid,
 				TIME_DESTROY: 0
@@ -215,7 +215,7 @@ class Test(testcase.UserTestCase):
 				old.update(values)
 
 			try:
-				mongodb.billing_collection('queue-' + name).update(
+				mongodb.collection('queue-' + name).update(
 					{
 						UID: uid,
 						TIME_DESTROY: 0
@@ -236,9 +236,9 @@ class Test(testcase.UserTestCase):
 					safe = True
 				)
 			except DuplicateKeyError:
-				o = mongodb.billing_collection('queue-' + name).find_one({UID: uid})
+				o = mongodb.collection('queue-' + name).find_one({UID: uid})
 				if set(['_id', UID, TIME_DESTROY]) == set(o.keys()):
-					mongodb.billing_collection('queue-' + name).remove(o)
+					mongodb.collection('queue-' + name).remove(o)
 			return True
 		else:
 			return False

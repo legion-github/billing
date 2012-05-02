@@ -11,7 +11,7 @@ from bc.private   import task
 from bc.validator import Validate as V
 from bc           import jsonrpc
 
-from c2 import mongodb
+from bc import mongodb
 
 LOG = logging.getLogger("c2.abc")
 
@@ -36,7 +36,7 @@ def taskOpen(environ, request):
 
 	# Temp hack for now
 	if not request['customer']:
-		res = mongodb.billing_collection('log_accounts').find_one(
+		res = mongodb.collection('log_accounts').find_one(
 			{ 'user': request['user'] }
 		)
 		if not res:

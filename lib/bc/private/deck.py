@@ -7,7 +7,7 @@ import logging
 import pymongo
 
 from pymongo.errors import DuplicateKeyError
-from c2 import mongodb
+from bc import mongodb
 
 from c2.core import Error
 
@@ -59,7 +59,7 @@ def is_valid(task):
 def create(name, uid, user_id, udata, ignore_error = False, destroy = False):
 	"""Create an new object in the queue"""
 
-	res = mongodb.billing_collection('log_accounts').find_one({ 'user': user_id })
+	res = mongodb.collection('log_accounts').find_one({ 'user': user_id })
 	if not res:
 		logging.getLogger("c2.billing").error("Unable to find customer by user: %s", str(user_id))
 		return
@@ -74,7 +74,7 @@ def create(name, uid, user_id, udata, ignore_error = False, destroy = False):
 
 	rec_id = uid or str(uuid.uuid4())
 
-	mongodb.billing_collection('queue-' + name).insert(
+	mongodb.collection('queue-' + name).insert(
 		{
 			'_id':        rec_id,
 			UID:          rec_id,
@@ -94,7 +94,7 @@ def create(name, uid, user_id, udata, ignore_error = False, destroy = False):
 
 def recreate(name, uid, udata, values = None):
 	now = int(time.time())
-	old = mongodb.billing_collection('queue-' + name).find_and_modify(
+	old = mongodb.collection('queue-' + name).find_and_modify(
 		{
 			UID: uid,
 			TIME_DESTROY: 0
@@ -111,7 +111,7 @@ def recreate(name, uid, udata, values = None):
 			old.update(values)
 
 		try:
-			mongodb.billing_collection('queue-' + name).update(
+			mongodb.collection('queue-' + name).update(
 				{
 					UID: uid,
 					TIME_DESTROY: 0
@@ -132,9 +132,9 @@ def recreate(name, uid, udata, values = None):
 				safe = True
 			)
 		except DuplicateKeyError:
-			o = mongodb.billing_collection('queue-' + name).find_one({UID: uid})
+			o = mongodb.collection('queue-' + name).find_one({UID: uid})
 			if set(['_id', UID, TIME_DESTROY]) == set(o.keys()):
-				mongodb.billing_collection('queue-' + name).remove(o)
+				mongodb.collection('queue-' + name).remove(o)
 		return True
 	else:
 		return False
@@ -170,14 +170,14 @@ def aggregate_daily(task, id_data = [], more = {}, remove = False):
 	}
 	utils.dict_merge(data, more)
 
-	mongodb.billing_collection('queue-' + task[NAME]).update(
+	mongodb.collection('queue-' + task[NAME]).update(
 		{ UID: aggr_id }, data,
 		upsert = True,
 		safe = True,
 	)
 
 	if remove:
-		mongodb.billing_collection('queue-' + task[NAME]).remove(
+		mongodb.collection('queue-' + task[NAME]).remove(
 			{ UID: task[UID] },
 			safe = True,
 		)
@@ -194,7 +194,7 @@ def customer_change_tariff(customer_id, tariff_id_old, tariff_id_new):
 	fields = [ UID, USER, DATA ]
 
 	for name in b_constants.BC_QUEUES:
-		for o in mongodb.billing_collection('queue-' + name).find(query, fields):
+		for o in mongodb.collection('queue-' + name).find(query, fields):
 			recreate(name, o[UID], o[DATA],
 				{
 					TARIFF: tariff_id_new
@@ -205,13 +205,13 @@ def customer_change_tariff(customer_id, tariff_id_old, tariff_id_new):
 def count_all(query):
 	num = 0
 	for name in b_constants.BC_QUEUES:
-		num += mongodb.billing_collection('queue-' + name).find(query).count()
+		num += mongodb.collection('queue-' + name).find(query).count()
 	return num
 
 
 def save(task):
 	"""Method save the object in the queue."""
-	mongodb.billing_collection('queue-' + task[NAME]).save(task, safe = True)
+	mongodb.collection('queue-' + task[NAME]).save(task, safe = True)
 
 
 def find_tasks(name, from_time = 0, to_time = None, fields = None, limit = None):
@@ -219,7 +219,7 @@ def find_tasks(name, from_time = 0, to_time = None, fields = None, limit = None)
 		to_time = int(time.time()) - LOCK_TIME
 	now = int(time.time())
 
-	return mongodb.billing_collection('queue-' + name).find(
+	return mongodb.collection('queue-' + name).find(
 		{
 			STATE:      STATE_PROCESSING,
 			TIME_CHECK: {
@@ -249,7 +249,7 @@ def get_task(name, uid, remove = False):
 		action['$set'][STATE] = STATE_DONE
 		action['$set'][TIME_DESTROY] = now
 
-	task = mongodb.billing_collection('queue-' + name).find_and_modify(query, action, new = False)
+	task = mongodb.collection('queue-' + name).find_and_modify(query, action, new = False)
 	if task:
 		task[TIME_NOW] = now
 
@@ -275,7 +275,7 @@ def get(name, from_time = 0, to_time = None, remove = False):
 		action['$set'][STATE] = STATE_DONE
 		action['$set'][TIME_DESTROY] = now
 
-	return mongodb.billing_collection('queue-' + name).find_and_modify(
+	return mongodb.collection('queue-' + name).find_and_modify(
 		{
 			TIME_CHECK: {
 				'$gte': from_time,
@@ -301,14 +301,14 @@ def delete(name, uid, remove = False):
 	"""Removes task from the queue or mark task as deleted"""
 
 	if remove:
-		mongodb.billing_collection('queue-' + name).remove(
+		mongodb.collection('queue-' + name).remove(
 			{
 				UID: uid,
 			},
 			safe = True)
 		return
 
-	mongodb.billing_collection('queue-' + name).update(
+	mongodb.collection('queue-' + name).update(
 		{
 			UID: uid,
 			TIME_DESTROY: 0,
@@ -322,16 +322,16 @@ def delete(name, uid, remove = False):
 
 
 def size(name):
-	return mongodb.billing_collection('queue-' + name).find().count()
+	return mongodb.collection('queue-' + name).find().count()
 
 
 def cleanup(uid, field = CUSTOMER):
 	for name in b_constants.BC_QUEUES:
-		mongodb.billing_collection('queue-' + name).remove({ field: uid }, safe = True)
+		mongodb.collection('queue-' + name).remove({ field: uid }, safe = True)
 
 
 def state_done(task):
-	mongodb.billing_collection('queue-' + task[NAME]).update(
+	mongodb.collection('queue-' + task[NAME]).update(
 		{ UID: task[UID] },
 		{ '$set': { STATE: STATE_DONE } }
 	)

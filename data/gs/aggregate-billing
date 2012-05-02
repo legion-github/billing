@@ -4,7 +4,8 @@ import sys
 
 from c2 import config
 from c2 import core
-from c2 import mongodb
+
+from bc         import mongodb
 from bc.private import deck
 from bc.queue   import BC_QUEUES
 

@@ -5,8 +5,8 @@ import time
 
 from c2 import config
 from c2 import core
-from c2 import mongodb
 
+from bc         import mongodb
 from bc.billing import customers
 
 config.init('change-tariff')

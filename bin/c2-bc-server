@@ -14,8 +14,8 @@ from pymongo.errors import AutoReconnect
 from c2 import config
 from c2 import core
 from c2 import daemon
-from c2 import mongodb
 
+from bc         import mongodb
 from bc         import bc_config
 from bc         import sockets
 from bc.private import deck

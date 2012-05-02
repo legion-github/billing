@@ -8,7 +8,7 @@ import bobject
 
 from rate import Rate
 
-from c2 import mongodb
+from bc import mongodb
 
 class TariffRateConstants(object):
 	__metaclass__ = readonly.metaClass
@@ -84,25 +84,25 @@ class TariffRate(bobject.BaseObject):
 		if not self.validate():
 			raise ValueError('Invalid rate')
 
-		mongodb.billing_collection('rates').insert(self.values, safe = True)
+		mongodb.collection('rates').insert(self.values, safe = True)
 
 
 def get_by_tariff(tid):
 	ret = []
-	for o in mongodb.billing_collection('rates').find({ 'tid': tid }):
+	for o in mongodb.collection('rates').find({ 'tid': tid }):
 		ret.append(TariffRate(o))
 	return ret
 
 
 def get_by_id(rid):
-	o = mongodb.billing_collection('rates').find_one({ 'rid': rid })
+	o = mongodb.collection('rates').find_one({ 'rid': rid })
 	if o:
 		return TariffRate(o)
 	return None
 
 
 def get_by_metric(tid, mtype):
-	o = mongodb.billing_collection('rates').find_one(
+	o = mongodb.collection('rates').find_one(
 		{
 			'tid':   tid,
 			'mtype': mtype

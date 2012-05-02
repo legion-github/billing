@@ -5,7 +5,7 @@ import readonly
 import bobject
 import tariff_rate
 
-from c2 import mongodb
+from bc import mongodb
 
 class TariffConstants(object):
 	__metaclass__ = readonly.metaClass
@@ -58,7 +58,7 @@ class Tariff(bobject.BaseObject):
 		if state not in [ c.STATE_ENABLE, c.STATE_DISABLE ]:
 			raise ValueError("Unknown state")
 
-		mongodb.billing_collection('tariffs').update(
+		mongodb.collection('tariffs').update(
 			{
 				'_id':   tariff_id,
 				'state': state,
@@ -70,7 +70,7 @@ class Tariff(bobject.BaseObject):
 	def create(self, rate_list = None):
 		""" Create new tariff """
 
-		mongodb.billing_collection('tariffs').insert(self.values, safe=True)
+		mongodb.collection('tariffs').insert(self.values, safe=True)
 
 		if not rate_list:
 			return

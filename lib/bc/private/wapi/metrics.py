@@ -8,7 +8,7 @@ from bc.private   import metrics
 from bc.validator import Validate as V
 from bc           import jsonrpc
 
-from c2 import mongodb
+from bc import mongodb
 
 LOG = logging.getLogger("c2.abc")
 
@@ -16,7 +16,7 @@ LOG = logging.getLogger("c2.abc")
 def metricList(environ, request):
 	""" Returns a list of all registered metrics """
 
-	ret = list(mongodb.billing_collection('metrics').find({}, {'_id':False}))
+	ret = list(mongodb.collection('metrics').find({}, {'_id':False}))
 	return jsonrpc.methods.jsonrpc_result(
 		{
 			'metrics': ret,

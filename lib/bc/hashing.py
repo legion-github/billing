@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import hashlib
 
 class HashRing(object):
@@ -104,15 +102,3 @@ class HashRing(object):
 				yield self.ring[key]
 
 
-##########################################################################
-
-o = HashRing([
-	"server1",
-	"server2",
-	"server3",
-	"server4",
-	"server5",
-])
-
-for i in xrange(1, 10):
-	print "Key:", "ZZZ" + str(i), "server:", o.get_node("ZZZ" + str(i))
