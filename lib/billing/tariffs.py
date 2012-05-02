@@ -10,7 +10,7 @@ import uuid
 import hashlib
 
 from c2 import misc
-from c2 import mongodb
+from bc import mongodb
 from c2 import instances
 from c2 import constants as c_constants
 
@@ -133,7 +133,7 @@ def get(uuid):
 	if uuid is None:
 		raise b_exceptions.TariffNotFoundError()
 
-	tariff = mongodb.billing_collection("tariffs").find_one({'_id': uuid})
+	tariff = mongodb.collection("tariffs").find_one({'_id': uuid})
 	if not tariff:
 		raise b_exceptions.TariffNotFoundError()
 	return tariff
@@ -142,7 +142,7 @@ def get_all():
 	"""Returns all available tariffs"""
 
 	res = []
-	for t in mongodb.billing_collection("tariffs").find():
+	for t in mongodb.collection("tariffs").find():
 		if t['_id'] != c_constants.ADMIN_TARIFF_ID:
 			res.append(t)
 	return res
@@ -150,7 +150,7 @@ def get_all():
 def get_subtree_iter(tariff_id):
 	"""Returns iterator to traverse tariff's subtree"""
 
-	for child in mongodb.billing_collection("tariffs").find({"parent": tariff_id}):
+	for child in mongodb.collection("tariffs").find({"parent": tariff_id}):
 		yield child
 		for subchild in get_subtree_iter(child["_id"]):
 			yield subchild
@@ -194,14 +194,14 @@ def create(values, uid=None, strict_check=True):
 
 	_verify(tariff, strict_check)
 
-	coll = mongodb.billing_collection("tariffs")
+	coll = mongodb.collection("tariffs")
 	coll.insert(tariff)
 
 	return tariff['_id']
 
 
 def remove(uuid, real=None):
-	coll = mongodb.billing_collection("tariffs")
+	coll = mongodb.collection("tariffs")
 
 	tariff = coll.find_one({'_id': uuid})
 	if not tariff:
@@ -375,7 +375,7 @@ def describe_ostypes(tariff_id, os_type):
 def rename_tariff(tariff_id, name, description):
 	"""Change tariff's name and description"""
 
-	rc = mongodb.billing_collection("tariffs").update(
+	rc = mongodb.collection("tariffs").update(
 		{ "_id": tariff_id },
 		{ "$set": { "name": name, "description": description }},
 		safe=True

@@ -1,14 +1,13 @@
-import unittest2 as unittest
+import unithelper
 import uuid
+
+from bc import mongodb
 
 from billing import constants
 from billing import tariffs
 from billing import exceptions
 
-from c2.tests2 import testcase
-
-
-class Test(testcase.MongoDBTestCase):
+class Test(unithelper.DBTestCase):
 
 	def test_rename_tariff(self):
 		"""Check the renaming of the tariff"""
@@ -28,13 +27,13 @@ class Test(testcase.MongoDBTestCase):
 			strict_check=False
 		)
 
-		t1 = self.billing_database()["tariffs"].find_one({"_id": tariff_id})
+		t1 = mongodb.collection("tariffs").find_one({"_id": tariff_id})
 		self.assertEquals(t1["name"], tariff_name1)
 		self.assertEquals(t1["description"], tariff_description1)
 
 		tariffs.rename_tariff(tariff_id, tariff_name2, tariff_description2)
 
-		t2 = self.billing_database()["tariffs"].find_one({ "_id": tariff_id })
+		t2 =  mongodb.collection("tariffs").find_one({ "_id": tariff_id })
 		self.assertEquals(t2["name"], tariff_name2)
 		self.assertEquals(t2["description"], tariff_description2)
 
