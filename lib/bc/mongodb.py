@@ -49,13 +49,13 @@ class collection(object):
 		database = conf['database']['name']
 		host = get_host(primarykey)
 
+		if not host:
+			raise DBError("Database host name is not specified")
+
 		self.reconnect  = reconnect
 		self.timeout    = timeout
 		self.connection = connection(host)
 		self.collection = self.connection[database][name]
-
-		if not host:
-			raise DBError("Database host name is not specified")
 
 
 	def __getattr__(self, name):
