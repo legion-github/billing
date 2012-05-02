@@ -1,10 +1,10 @@
 import copy
-import unittest2 as unittest
+import unithelper
 
 from bc.private.rate import Rate
 from bc.private import tariff_rate
 
-class Test(unittest.TestCase):
+class Test(unithelper.TestCase):
 	def test_new_metric(self):
 		"""Check tariff's rate object"""
 
@@ -40,30 +40,24 @@ class Test(unittest.TestCase):
 		self.assertEqual(str(t.rate['currency']), str(c))
 
 
-		def setx():
+		with self.assertNotRaises(TypeError):
 			t.set({
 				'rate': {
 					'value':    r,
 					'currency': c,
 				}
 			})
-		self.assertTrue(setx)
 
-		def setx():
+		with self.assertRaises(TypeError):
 			t.rate = {
 				'value':    r,
 			}
-		self.assertRaises(TypeError, setx)
 
-
-		def setx():
+		with self.assertRaises(TypeError):
 			t.rate = {
 				'value':    '123',
 				'currency': c,
 			}
-		self.assertRaises(TypeError, setx)
 
-
-		def setx():
+		with self.assertRaises(TypeError):
 			t.rate = 7
-		self.assertRaises(TypeError, setx)

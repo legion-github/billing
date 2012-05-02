@@ -1,8 +1,8 @@
 import time
-import unittest2 as unittest
+import unithelper
 from bc.private import task
 
-class Test(unittest.TestCase):
+class Test(unithelper.TestCase):
 	def test_new_task(self):
 		"""Check task creation"""
 
@@ -36,26 +36,20 @@ class Test(unittest.TestCase):
 
 		t = task.Task()
 
-		def setx():
+		with self.assertRaises(TypeError):
 			t.uuid = 123
-		self.assertRaises(TypeError, setx)
 
-		def setx():
+		with self.assertRaises(KeyError):
 			t.zzz = 1
-		self.assertRaises(KeyError, setx)
 
-		def setx():
+		with self.assertRaises(ValueError):
 			del t.zzz
-		self.assertRaises(ValueError, setx)
 
-		def setx():
+		with self.assertRaises(KeyError):
 			t.values = {}
-		self.assertRaises(KeyError, setx)
 
-		def setx():
+		with self.assertNotRaises(TypeError):
 			t.uuid = '123'
-		self.assertTrue(setx)
 
-		def setx():
+		with self.assertNotRaises(TypeError):
 			t.values['uuid'] = '123'
-		self.assertTrue(setx)

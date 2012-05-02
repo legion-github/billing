@@ -14,7 +14,7 @@ class BaseObject(object):
 			if n not in o:
 				continue
 
-			if h and name in h:
+			if h and n in h:
 				h[n](n, o[n])
 				continue
 

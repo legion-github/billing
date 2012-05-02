@@ -1,4 +1,4 @@
-import unittest2 as unittest
+import unithelper
 from bc.private import readonly
 
 class TestConstants(object):
@@ -9,26 +9,22 @@ class TestConstants(object):
 		'baz': [1,2,3]
 	}
 
-class Test(unittest.TestCase):
+class Test(unithelper.TestCase):
 	def test_readonly(self):
 		"""Check readonly class"""
 
-		def setx():
+		with self.assertRaises(AttributeError):
 			c = TestConstants()
 			c.foo = 222
-		self.assertRaises(AttributeError, setx)
 
-		def setx():
+		with self.assertRaises(AttributeError):
 			c = TestConstants()
 			c.bar = 'ZZZ'
-		self.assertRaises(AttributeError, setx)
 
-		def setx():
+		with self.assertRaises(AttributeError):
 			c = TestConstants()
 			c.baz = [4,5,6]
-		self.assertRaises(AttributeError, setx)
 
-		def setx():
+		with self.assertNotRaises(AttributeError):
 			c = TestConstants()
 			c.baz.append(4)
-		self.assertTrue(setx)

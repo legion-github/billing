@@ -1,7 +1,7 @@
-import unittest2 as unittest
+import unithelper
 from bc.private.rate import Rate
 
-class Test(unittest.TestCase):
+class Test(unithelper.TestCase):
 	def test_init_from_string(self):
 		"""Check init from string"""
 		self.assertEquals(1, Rate('1'))

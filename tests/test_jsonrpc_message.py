@@ -1,7 +1,7 @@
-import unittest2 as unittest
+import unithelper
 from bc.jsonrpc import message
 
-class Test(unittest.TestCase):
+class Test(unithelper.TestCase):
 
 	def test_is_response(self):
 		"""Check response validation"""

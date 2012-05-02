@@ -1,4 +1,3 @@
-import unittest2 as unittest
 import unithelper
 
 from bc import config
@@ -19,9 +18,8 @@ class Test(unithelper.TestCase):
 		}
 		"""
 
-		def setx():
+		with self.assertNotRaises(ValueError):
 			conf = config.read(inline = confstr, force=True)
-		self.assertTrue(setx)
 
 
 	def test_inline_wrong(self):
@@ -35,22 +33,19 @@ class Test(unithelper.TestCase):
 		}
 		"""
 
-		def setx():
+		with self.assertRaises(ValueError):
 			conf = config.read(inline = confstr, force=True)
-		self.assertRaises(ValueError,setx)
 
 
 	def test_file_config(self):
 		"""Check reading config file"""
 
-		def setx():
+		with self.assertNotRaises(ValueError):
 			conf = config.read('./test_config1.conf', force=True)
-		self.assertTrue(setx)
 
 
 	def test_file_wrong(self):
 		"""Check reading config file with wrong syntax"""
 
-		def setx():
+		with self.assertRaises(ValueError):
 			conf = config.read('./test_config2.conf', force=True)
-		self.assertRaises(ValueError,setx)

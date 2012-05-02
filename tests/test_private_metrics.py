@@ -1,8 +1,8 @@
 import copy
-import unittest2 as unittest
+import unithelper
 from bc.private import metrics
 
-class Test(unittest.TestCase):
+class Test(unithelper.TestCase):
 	def test_new_metric(self):
 		"""Check metric creation"""
 
@@ -23,21 +23,17 @@ class Test(unittest.TestCase):
 
 		t = metrics.Metric()
 
-		def setx():
+		with self.assertRaises(TypeError):
 			t.mtype = 123
-		self.assertRaises(TypeError, setx)
 
-		def setx():
+		with self.assertRaises(KeyError):
 			t.zzz = 1
-		self.assertRaises(KeyError, setx)
 
-		def setx():
+		with self.assertRaises(ValueError):
 			del t.zzz
-		self.assertRaises(ValueError, setx)
 
-		def setx():
+		with self.assertNotRaises(TypeError):
 			t.mtype = '123'
-		self.assertTrue(setx)
 
 
 	def test_export_metric(self):
