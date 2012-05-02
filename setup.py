@@ -41,6 +41,7 @@ setup(
 	],
 	data_files  = [
 		('libexec/billing',     ['bin/httpd-abc']),
+		('/etc',                ['data/billing.conf']),
 		('/etc/httpd/conf.d',   ['data/httpd-abc.conf']),
 		('/etc/rc.d/init.d',    ['data/init.d/c2-bc']),
 		('/etc/cron.d',         dir_expand('data/cron.d')),

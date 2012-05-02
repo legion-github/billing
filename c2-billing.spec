@@ -105,6 +105,7 @@ service crond reload
 %python_sitearch/bc
 
 %files common-cloud
+%_sysconfdir/billing.conf
 %python_sitearch/billing
 
 %files -n c2-abc
