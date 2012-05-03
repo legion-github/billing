@@ -22,6 +22,22 @@ class Test(unithelper.TestCase):
 			conf = config.read(inline = confstr, force=True)
 
 
+	def test_incomplete_config(self):
+		"""Check reading incomplete configuration"""
+
+		confstr = """
+		{
+			"database": {
+				"name": "testing",
+				"server": "127.0.0.1"
+			}
+		}
+		"""
+		with self.assertNotRaises(ValueError):
+			conf = config.read(inline = confstr, force=True)
+		self.assertEqual(conf['logging']['level'], 'error')
+
+
 	def test_inline_wrong(self):
 		"""Check wrong syntax in inline configuration"""
 
