@@ -9,6 +9,8 @@ import time
 import readonly
 import bobject
 
+from bc import mongodb
+
 class TaskConstants(object):
 	__metaclass__ = readonly.metaClass
 	__readonly__  = {
@@ -25,6 +27,7 @@ class Task(bobject.BaseObject):
 		c = TaskConstants()
 		now = int(time.time())
 
+		self.__getter__ = { 'rate': lambda x:int(self.__values__['rate'])}
 		self.__values__ = {
 			# Уникальный идентификатор задания
 			'uuid':           str(uuid.uuid4()),
@@ -61,3 +64,10 @@ class Task(bobject.BaseObject):
 
 		if data:
 			self.set(data)
+
+
+def task_done(task, metric):
+	mongodb.collection(metric.mtype).update(
+		{ 'uuid': task.uuid },
+		{ '$set': { 'state': task.c.STATE_DONE } }
+	)

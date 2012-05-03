@@ -1,4 +1,4 @@
-from private import deck
+from private.task import task_done
 from private.rate import Rate
 
 def calculate(task, metric, nostate=False):
@@ -9,7 +9,7 @@ def calculate(task, metric, nostate=False):
 	if int(task.time_destroy) > 0:
 		delta_ts = int(task.time_destroy) - int(task.time_check)
 		if not nostate:
-			deck.state_done(task)
+			task_done(task, metric)
 	else:
 		delta_ts = int(task.time_now) - int(task.time_check)
 
