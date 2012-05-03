@@ -3,13 +3,13 @@ Mapping: tariff <--> customer <--> user
 """
 
 import uuid, pymongo
-from c2 import mongodb
+from bc import mongodb
 
 def tm_add(tariff_id, customer_id, user_id):
 	""" Adds new mapping record. """
 
 	try:
-		res = mongodb.billing_collection('tariffs_map').find_one(
+		res = mongodb.collection('tariffs_map').find_one(
 			{
 				'customer_id': customer_id,
 				'user_id': user_id,
@@ -20,7 +20,7 @@ def tm_add(tariff_id, customer_id, user_id):
 			return None
 
 		rid = str(uuid.uuid4())
-		mongodb.billing_collection('tariffs_map').insert(
+		mongodb.collection('tariffs_map').insert(
 			{
 				'_id':         rid,
 				'customer_id': customer_id,
@@ -44,7 +44,7 @@ def tm_remove(typ, uid):
 		if typ == 'record':
 			typ = ''
 
-		mongodb.billing_collection('tariffs_map').remove(
+		mongodb.collection('tariffs_map').remove(
 			{ typ + '_id': uid },
 			safe = True
 		)
@@ -57,7 +57,7 @@ def tm_change_tariff(customer_id, tariff_id):
 	""" Changes tariff for customer. """
 
 	try:
-		mongodb.billing_collection('tariffs_map').update(
+		mongodb.collection('tariffs_map').update(
 			{ 'customer_id': customer_id },
 			{ '$set': { 'tariff_id': tariff_id } },
 			safe = True,
@@ -79,7 +79,7 @@ def tm_find(typ, uid, fields = None):
 			typ = ''
 
 		return list(
-			mongodb.billing_collection('tariffs_map').find(
+			mongodb.collection('tariffs_map').find(
 				{ typ + '_id': uid },
 				fields = fields
 			)

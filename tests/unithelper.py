@@ -1,4 +1,7 @@
+import uuid
 import unittest2 as unittest
+from bc import config
+from bc import mongodb
 
 class _AssertNotRaisesContext(object):
 	"""A context manager used to implement TestCase.assertNotRaises method."""
@@ -45,3 +48,20 @@ class TestCase(unittest.TestCase):
 			else:
 				excName = str(excClass)
 			raise self.failureException, "%s raised" % excName
+
+
+class DBTestCase(TestCase):
+	def setUp(self):
+		self.dbname = 'billing-' + str(uuid.uuid4())
+
+		self.conf = config.read()
+		self.conf['database']['name'] = self.dbname
+
+
+	def tearDown(self):
+		c = mongodb.connection(self.conf['database']['server'])
+		c.drop_database(self.dbname)
+
+		for n in self.conf['database']['shards']:
+			c = mongodb.connection(n)
+			c.drop_database(self.dbname)

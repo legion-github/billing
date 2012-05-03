@@ -1,13 +1,25 @@
-import unittest2 as unittest
+import unithelper
 import uuid
+
+from bc import config
+from bc import mongodb
 
 from billing import tier_types
 from billing import exceptions
 
-from c2.tests2 import testcase
+confstr = """
+{
+	"database": {
+		"name":"testing",
+		"server":"127.0.0.1",
+		"shards":["127.0.0.10","127.0.0.11","127.0.0.12","127.0.0.13","127.0.0.14"]
+	}
+}
+"""
+conf = config.read(inline = confstr, force=True)
 
 
-class Test(testcase.MongoDBTestCase):
+class Test(unithelper.DBTestCase):
 
 	def test_add_one(self):
 		"""Check the addition new tier type"""
@@ -18,9 +30,9 @@ class Test(testcase.MongoDBTestCase):
 		tier_description = "Tier"
 
 		t = tier_types.add_one(tier_id, tier_name, tier_replication, tier_description)
-		tt = self.billing_database()["tier_types"].find_one({"_id": t["_id"]})
-		self.assertNotEquals(tt["tier_id"], None)
+		tt = mongodb.collection("tier_types").find_one({"_id": t["_id"]})
 
+		self.assertNotEquals(tt["tier_id"], None)
 		self.assertNotEquals(tt["_id"], "")
 
 		self.assertEquals(tt["tier_id"], tier_id)
@@ -44,12 +56,12 @@ class Test(testcase.MongoDBTestCase):
 		self.assertNotEquals(tier_description1, tier_description2)
 
 		t = tier_types.add_one(tier_id, tier_name, tier_replication, tier_description1)
-		tt1 = self.billing_database()["tier_types"].find_one({"_id": t["_id"]})
+		tt1 = mongodb.collection("tier_types").find_one({"_id": t["_id"]})
 		self.assertEquals(tt1["description"], tier_description1)
 
 		tier_types.rename_one(t["_id"], tier_description2)
 
-		tt2 = self.billing_database()["tier_types"].find_one({"_id": t["_id"]})
+		tt2 = mongodb.collection("tier_types").find_one({"_id": t["_id"]})
 		self.assertEquals(tt2["description"], tier_description2)
 
 		self.assertRaises(exceptions.TierTypeError,

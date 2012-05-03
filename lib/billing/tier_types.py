@@ -5,7 +5,7 @@ import pymongo.errors
 
 from c2 import config
 from c2 import misc
-from c2 import mongodb
+from bc import mongodb
 
 from billing import constants
 from billing import exceptions
@@ -18,7 +18,7 @@ def find(tier_type_ids=None, fields=None):
 	if tier_type_ids is not None:
 		query["_id"] = { "$in": tier_type_ids }
 
-	return mongodb.billing_collection("tier_types").find(query, fields)
+	return mongodb.collection("tier_types").find(query, fields)
 
 
 def add_one(tier_id, tier_name, replication, description=""):
@@ -29,7 +29,7 @@ def add_one(tier_id, tier_name, replication, description=""):
 		"replication": replication,
 	}
 
-	if mongodb.billing_collection("tier_types").find_one(tier_type, fields = { '_id': True }):
+	if mongodb.collection("tier_types").find_one(tier_type, fields = { '_id': True }):
 		raise exceptions.TierTypeExistsError()
 
 	tier_type = {
@@ -42,7 +42,7 @@ def add_one(tier_id, tier_name, replication, description=""):
 	while True:
 		tier_type["_id"] = misc.generate_id(constants.TIER_TYPE_PREFIX)
 		try:
-			mongodb.billing_collection("tier_types").insert(tier_type, safe=True)
+			mongodb.collection("tier_types").insert(tier_type, safe=True)
 		except pymongo.errors.DuplicateKeyError:
 			collisions += 1
 			if collisions >= config.MAX_ID_GENERATION_COLLISIONS:
@@ -56,7 +56,7 @@ def add_one(tier_id, tier_name, replication, description=""):
 def rename_one(tier_id, description):
 	"""Change description of the existing tier type"""
 
-	rc = mongodb.billing_collection("tier_types").update(
+	rc = mongodb.collection("tier_types").update(
 		{ "_id": tier_id },
 		{ "$set": { "description": description }},
 		safe=True
@@ -69,7 +69,7 @@ def rename_one(tier_id, description):
 def get(user_id, tier_type_id, embedded = False):
 	"""Returns the specified tier type."""
 
-	tier_type = mongodb.billing_collection("tier_types").find_one({
+	tier_type = mongodb.collection("tier_types").find_one({
 		"_id": tier_type_id })
 	
 	if tier_type is None or tier_type["_id"] not in _get_user_tier_type_ids(user_id):
@@ -84,7 +84,7 @@ def get(user_id, tier_type_id, embedded = False):
 def get_all(user_id, mark_default = False, sort = None):
 	"""Returns all tier types for the specified user."""
 
-	tier_types = list(mongodb.billing_collection("tier_types").find({
+	tier_types = list(mongodb.collection("tier_types").find({
 		"_id": { "$in": _get_user_tier_type_ids(user_id) } }, sort = sort))
 
 	if mark_default:
@@ -100,7 +100,7 @@ def get_all(user_id, mark_default = False, sort = None):
 def get_default(user_id, embedded = False):
 	"""Returns default tier type for the specified user."""
 
-	tier_types = list(mongodb.billing_collection("tier_types").find({
+	tier_types = list(mongodb.collection("tier_types").find({
 		"_id": { "$in": _get_user_tier_type_ids(user_id) } }))
 
 	tier_type = _get_default_tier_type(tier_types)

@@ -20,20 +20,21 @@ confstr = """
 	"database": {
 		"name":"testing",
 		"server":"127.0.0.1",
-		"shards":["127.0.0.10","127.0.0.11","27.0.0.12","127.0.0.13","127.0.0.14"]
+		"shards":["127.0.0.10","127.0.0.11","127.0.0.12","127.0.0.13","127.0.0.14"]
 	}
 }
 """
 
 conf = config.read(inline = confstr, force=True)
 
-class Test(unithelper.TestCase):
+class Test(unithelper.DBTestCase):
 	@unittest.skipUnless(haveDatabase(), True)
 	def test_connect_mongo1(self):
 		"""Check mongo connecting to global server"""
 
 		c = mongodb.collection("testing")
 		self.assertEqual(c.connection.host, "127.0.0.1")
+		#c.insert({'foo':1})
 
 
 	@unittest.skipUnless(haveDatabase(), True)

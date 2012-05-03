@@ -18,4 +18,4 @@ def resolve(mtype, tid, arg):
 
 
 def task_add(mtype, otask):
-	mongodb.collection(mtype).insert(otask.values, safe=True)
+	mongodb.collection(mtype, otask.uuid).insert(otask.values, safe=True)

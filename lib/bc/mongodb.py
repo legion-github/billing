@@ -19,13 +19,6 @@ class DBError(Exception):
 		Exception.__init__(self, unicode(error).format(*args) if len(args) else unicode(str(error)))
 
 
-class DBConnectionFailureError(DBError):
-	"""The connnection failure exception"""
-
-	def __init__(self, error, *args):
-		Exception.__init__(self, unicode(error).format(*args) if len(args) else unicode(str(error)))
-
-
 class CallProxy(object):
 	def __init__(self, func, reconnect = 0, timeout = 1):
 		self.__reconnect = reconnect
@@ -56,13 +49,13 @@ class collection(object):
 		database = conf['database']['name']
 		host = get_host(primarykey)
 
+		if not host:
+			raise DBError("Database host name is not specified")
+
 		self.reconnect  = reconnect
 		self.timeout    = timeout
 		self.connection = connection(host)
 		self.collection = self.connection[database][name]
-
-		if not host:
-			raise DBError("Database host name is not specified")
 
 
 	def __getattr__(self, name):
@@ -114,9 +107,6 @@ def connection(host):
 		try:
 			connection = pymongo.Connection(host, network_timeout = 30)
 			_CONNECTIONS[host] = connection
-
-		except pymongo.errors.ConnectionFailure, e:
-			raise DBConnectionFailureError("Unable to connect to MongoDB: {0}", e)
 
 		except Exception, e:
 			raise DBError("Unable to connect to MongoDB: {0}", e)

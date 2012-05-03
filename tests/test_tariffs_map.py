@@ -1,11 +1,9 @@
-import unittest2 as unittest
+import unithelper
 
+from bc import mongodb
 from billing import tariffs_map
 
-from c2.tests2 import testcase
-
-
-class Test(testcase.MongoDBTestCase):
+class Test(unithelper.DBTestCase):
 
 	def test_add(self):
 		"""Check the addition to map"""
@@ -13,7 +11,7 @@ class Test(testcase.MongoDBTestCase):
 		tariff_id, customer_id, user_id = 't1', 'c1', 'u1'
 
 		rec_id = tariffs_map.tm_add(tariff_id, customer_id, user_id)
-		rec = self.billing_database()['tariffmap'].find_one({'_id': rec_id})
+		rec = mongodb.collection('tariffs_map').find_one({'_id': rec_id})
 
 		self.assertNotEquals(rec['_id'], None)
 		self.assertNotEquals(rec["_id"], "")
@@ -38,7 +36,7 @@ class Test(testcase.MongoDBTestCase):
 			tariffs_map.tm_add(tariff_id, customer_id, user_id)
 			self.assertTrue(tariffs_map.tm_remove(n, i))
 
-		n = self.billing_database()['tariffmap'].find().count()
+		n = mongodb.collection('tariffs_map').find().count()
 		self.assertEquals(n, 1)
 
 
@@ -52,13 +50,13 @@ class Test(testcase.MongoDBTestCase):
 		tariffs_map.tm_change_tariff('c0', 't2')
 
 		t = []
-		for n in self.billing_database()['tariffmap'].find({'customer_id': 'c0'}, fields={'tariff_id':True}):
+		for n in mongodb.collection('tariffs_map').find({'customer_id': 'c0'}, fields={'tariff_id':True}):
 			if n['tariff_id'] not in t:
 				t.append(n['tariff_id'])
 		self.assertEquals(1, len(t))
 		self.assertEquals('t2', t[0])
 
-		n = self.billing_database()['tariffmap'].find_one({'customer_id': 'c1'}, fields={'tariff_id':True})
+		n = mongodb.collection('tariffs_map').find_one({'customer_id': 'c1'}, fields={'tariff_id':True})
 		self.assertEquals('t1', n['tariff_id'])
 
 
@@ -91,6 +89,3 @@ class Test(testcase.MongoDBTestCase):
 		r = tariffs_map.tm_find_one('user', 'u2', fields = {'_id':True})
 		self.assertEquals(r2, r['_id'])
 
-
-if __name__ == '__main__':
-	utils.run_tests(TariffsMapTest)

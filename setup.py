@@ -21,6 +21,7 @@ setup(
 	requires    = [
 		'msgpack',
 		'pymongo',
+		'unittest2',
 	],
 	scripts     = [
 		'bin/c2-bc-client',
