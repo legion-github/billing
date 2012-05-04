@@ -13,8 +13,13 @@ CONFIG_FILE = '/etc/billing.conf'
 _TEMPLATE_CONFIG = {
 	# Logger configuration
 	'logging': {
-		'level':  'error',
+		'type': 'syslog',
+		'level': 'error',
 		'logdir': '/var/log',
+		'logsize': '30Mb',
+		'backcount': 3,
+		'address': '/dev/log',
+		'facility': 'daemon'
 	},
 
 	# Database section
