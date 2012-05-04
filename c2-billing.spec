@@ -10,8 +10,8 @@ Group:    Applications/System
 
 BuildRequires:  python, python-setuptools
 
-Requires:       python, python-mongo, %name-common
-Requires(pre):  c2-common = %version-%release
+Requires:       python
+Requires:       c2-bc-common-cloud
 
 Vendor:     CROC
 URL:        http://cloud.croc.ru
@@ -28,6 +28,8 @@ CROC Cloud Platform billing controller
 Summary:  CROC Cloud billing commons (billing side)
 Group:    Applications/System
 
+Requires: c2-common
+
 %description common-billing
 CROC Cloud billing common files, directories and libraries.
 Billing private library.
@@ -36,6 +38,9 @@ Billing private library.
 %package common-cloud
 Summary:  CROC Cloud billing commons (cloud side)
 Group:    Applications/System
+
+Requires: python-mongo
+Requires: python-msgpack
 
 %description common-cloud
 CROC Cloud billing common files, directories and libraries.
@@ -47,7 +52,7 @@ Summary:  CROC Cloud Platform - API Controller
 Group:    Applications/System
 
 Requires:       python, httpd, mod_wsgi
-Requires(pre):  c2-common
+Requires(pre):  c2-bc-common-cloud
 
 %description -n c2-abc
 CROC Cloud Platform API Controller
@@ -56,7 +61,9 @@ CROC Cloud Platform API Controller
 %package -n c2-gs-bc
 Summary:  CROC Cloud Platform Garbage collection service (BC)
 Group:    Applications/System
-Requires: c2-gs, c2-bc-common
+
+Requires: c2-gs
+Requires: c2-bc-common-cloud
 
 %description -n c2-gs-bc
 Garbage collection service (BC)
@@ -102,10 +109,10 @@ service crond reload
 %_sysconfdir/rc.d/init.d/*
 
 %files common-billing
+%_sysconfdir/billing.conf
 %python_sitearch/bc
 
 %files common-cloud
-%_sysconfdir/billing.conf
 %python_sitearch/billing
 
 %files -n c2-abc
