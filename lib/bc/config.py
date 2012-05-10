@@ -5,8 +5,35 @@ import json
 import string
 import cStringIO
 
+from bc import utils
+
 CONFIG = None
-CONFIG_FILE = '/tmp/billing.conf'
+CONFIG_FILE = '/etc/billing.conf'
+
+_TEMPLATE_CONFIG = {
+	# Logger configuration
+	'logging': {
+		'type': 'syslog',
+		'level': 'error',
+		'logdir': '/var/log',
+		'logsize': '30Mb',
+		'backcount': 3,
+		'address': '/dev/log',
+		'facility': 'daemon'
+	},
+
+	# Database section
+	"database": {
+		# Database name
+		"name": "billing",
+
+		# Database searver for global collections
+		"server": "127.0.0.1",
+
+		# Database servers for sharding
+		"shards": []
+	}
+}
 
 def read(filename = CONFIG_FILE, inline = None, force = False):
 	"""Read system config file"""
@@ -41,5 +68,5 @@ def read(filename = CONFIG_FILE, inline = None, force = False):
 
 		arrconf.append(line)
 
-	CONFIG = json.loads(string.join(arrconf, ' '))
+	CONFIG = utils.dict_merge(_TEMPLATE_CONFIG, json.loads(string.join(arrconf, ' ')))
 	return CONFIG
