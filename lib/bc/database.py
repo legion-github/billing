@@ -136,11 +136,11 @@ class DB:
 
 
 	def insertdict(self, table, dictionary):
-		join = lambda x :"`, `".join(map(self.escape, x)).join(['`','`'])
-		queue = "INSERT INTO {0} ({1}) VALUES ({2})".format(table,
-				join(dictionary.keys()),
-				join(dictionary.values()))
-
+		join = lambda x, y: "{0}, {0}".format(y).join(map(self.escape, x)).join([y,y])
+		queue = "INSERT INTO {0} ({1}) VALUES ({2});".format(table,
+				join(dictionary.keys(),'`'),
+				join(dictionary.values(),"'"))
+		print queue
 		self.cursor().execute(queue)
 
 
