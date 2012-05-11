@@ -75,6 +75,8 @@ class DB:
 		conf = config.read()
 
 		self.name = conf['database']['name']
+		self.user = conf['database']['user']
+		self.passwd = conf['database']['pass']
 		self.host = get_host(primarykey)
 
 		if not self.host:
@@ -92,6 +94,8 @@ class DB:
 			_CONNECTIONS[key] = MySQLdb.connect(
 				host        = self.host,
 				db          = self.name,
+				user        = self.user,
+				passwd      = self.passwd,
 				cursorclass = DBDictCursor
 			)
 
@@ -127,16 +131,17 @@ class DB:
 		raise DBError("Unable to connect to database: {0}", err)
 
 
-	def __getattr__(self, name):
-		value = getattr(self.collection, name)
-		if callable(value):
-			return CallProxy(value, self.reconnect, self.timeout)
-		else:
-			return value
+	def escape(self, string):
+		return self.conn.escape_string(str(string))
 
 
-	def __getitem__(self, name):
-		return self.collection[name]
+	def insertdict(self, table, dictionary):
+		join = lambda x :"`, `".join(map(self.escape, x)).join(['`','`'])
+		queue = "INSERT INTO {0} ({1}) VALUES ({2})".format(table,
+				join(dictionary.keys()),
+				join(dictionary.values()))
+
+		self.cursor().execute(queue)
 
 
 #cur = DB().cursor()
