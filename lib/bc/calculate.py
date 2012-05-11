@@ -1,4 +1,4 @@
-from private.task import task_done
+from private.tasks import task_done
 from private.rate import Rate
 
 def calculate(task, metric, nostate=False):

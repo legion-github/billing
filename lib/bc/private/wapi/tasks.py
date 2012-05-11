@@ -7,7 +7,7 @@ import uuid, logging
 from billing import customers
 
 from bc.private   import queue
-from bc.private   import task
+from bc.private   import tasks
 from bc.validator import Validate as V
 from bc           import jsonrpc
 

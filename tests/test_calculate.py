@@ -1,6 +1,6 @@
 import time
 import unithelper
-from bc.private import task
+from bc.private import tasks
 from bc.calculate import calculate
 from bc.private import metrics
 
@@ -16,7 +16,7 @@ class Test(unithelper.TestCase):
 			'rid':            '',
 			'rate':           '931322574615478515625000',
 			'description':    '',
-			'state':          task.constants.STATE_PROCESSING,
+			'state':          tasks.constants.STATE_PROCESSING,
 			'value':          1024,
 			'time_now':       now-delay,
 			'time_check':     now-delay,
@@ -27,7 +27,7 @@ class Test(unithelper.TestCase):
 			'target_descr':   '',
 		}
 
-		t = task.Task()
+		t = tasks.Task()
 		t.set(values)
 
 

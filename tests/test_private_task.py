@@ -1,6 +1,6 @@
 import time
 import unithelper
-from bc.private import task
+from bc.private import tasks
 
 class Test(unithelper.TestCase):
 	def test_new_task(self):
@@ -13,7 +13,7 @@ class Test(unithelper.TestCase):
 			'rid':            '',
 			'rate':           '',
 			'description':    '',
-			'state':          task.constants.STATE_PROCESSING,
+			'state':          tasks.constants.STATE_PROCESSING,
 			'value':          0,
 			'time_now':       now,
 			'time_check':     now,
@@ -24,7 +24,7 @@ class Test(unithelper.TestCase):
 			'target_descr':   '',
 		}
 
-		t = task.Task()
+		t = tasks.Task()
 		t.set({'uuid':'123'})
 
 		self.assertEqual(set(t.values.keys()), set(values.keys()))
@@ -34,7 +34,7 @@ class Test(unithelper.TestCase):
 	def test_change_task(self):
 		"""Check task modification"""
 
-		t = task.Task()
+		t = tasks.Task()
 
 		with self.assertRaises(TypeError):
 			t.uuid = 123
