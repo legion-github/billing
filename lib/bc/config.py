@@ -27,6 +27,9 @@ _TEMPLATE_CONFIG = {
 		# Database name
 		"name": "billing",
 
+		"user": "root",
+		"pass": "",
+
 		# Database searver for global collections
 		"server": "127.0.0.1",
 
