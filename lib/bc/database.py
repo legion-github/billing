@@ -3,6 +3,7 @@ import MySQLdb
 from MySQLdb import cursors
 
 import config
+import hashing
 
 
 _CONNECTIONS = {}
@@ -108,13 +109,23 @@ class DB:
 		return self
 
 
-	def cursor(self):
+	def ping(self):
+		self.conn.ping()
+		return self
+
+
+	def autocommit(self, mode):
+		self.conn.autocommit(bool(mode))
+		return self
+
+
+	def cursor(self, cls=None):
 		err = None
 		i = self.reconnect
 
 		while True:
 			try:
-				return self.conn.cursor()
+				return self.conn.cursor(cls)
 
 			except (AttributeError, MySQLdb.OperationalError), e:
 				err = e
@@ -145,9 +156,10 @@ class DB:
 			self.conn.commit()
 
 
-#cur = DB().cursor()
-#res = cur.execute("show variables")
-#for o in cur.fetchall():
-#	print o
-#cur = DB().cursor()
-#res = cur.execute("show variables")
+	def query(self, fmt, *args):
+		cur = self.cursor()
+		res = cur.execute(fmt, *args)
+		if res == 0:
+			raise StopIteration
+		for o in cur:
+			yield o
