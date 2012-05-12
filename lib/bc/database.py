@@ -171,7 +171,7 @@ class DB(object):
 
 
 	def create_schema(self):
-		for name, query in SCHEMA:
+		for name, query in SCHEMA.iteritems():
 			if name in DYNAMIC_TABLES:
 				continue
 			self.cursor().execute(query.format(name))
@@ -184,7 +184,7 @@ SCHEMA = {
 			CREATE TABLE `{0}` (
 			  `mtype` varchar(36) NOT NULL,
 			  `time_type` int(11) NOT NULL,
-			  `aggregate` bit(1) NOT NULL,
+			  `aggregate` tinyint(1) NOT NULL,
 			  `time_dimention_koef` int(11) NOT NULL,
 			  `count_dimention_koef` int(11) NOT NULL,
 			  `count_dimention_type` varchar(45) NOT NULL,
