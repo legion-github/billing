@@ -67,7 +67,7 @@ class DBDictCursor(cursors.DictCursor):
 		raise err
 
 
-class DB:
+class DB(object):
 	conn = None
 	name = None
 	host = None
@@ -164,3 +164,79 @@ class DB:
 			raise StopIteration
 		for o in cur:
 			yield o
+
+
+	def create_queue(self, name):
+		self.cursor().execute(SCHEMA['queue_skeleton'].format(name))
+
+
+	def create_schema(self):
+		for name, query in SCHEMA:
+			if name in DYNAMIC_TABLES:
+				continue
+			self.cursor().execute(query.format(name))
+
+
+
+DYNAMIC_TABLES = ['queue_skeleton']
+SCHEMA = {
+	'metrics': """
+			CREATE TABLE `{0}` (
+			  `mtype` varchar(36) NOT NULL,
+			  `time_type` int(11) NOT NULL,
+			  `aggregate` bit(1) NOT NULL,
+			  `time_dimention_koef` int(11) NOT NULL,
+			  `count_dimention_koef` int(11) NOT NULL,
+			  `count_dimention_type` varchar(45) NOT NULL,
+			  PRIMARY KEY (`mtype`)
+			) DEFAULT CHARSET=utf8;
+		""",
+
+	'queue_skeleton': """
+			CREATE TABLE `{0}` (
+			  `uuid` varchar(36) NOT NULL,
+			  `customer` varchar(36) NOT NULL,
+			  `rid` varchar(36) NOT NULL,
+			  `rate` bigint(20) NOT NULL,
+			  `description` varchar(1024) NOT NULL,
+			  `state` enum('DONE','PROCESSING','AGGREGATE') NOT NULL,
+			  `value` bigint(20) NOT NULL DEFAULT '1',
+			  `time_now` int(11) NOT NULL,
+			  `time_check` int(11) NOT NULL,
+			  `time_create` int(11) NOT NULL,
+			  `time_destroy` int(11) NOT NULL,
+			  `target_user` varchar(36) DEFAULT NULL,
+			  `target_uuid` varchar(36) DEFAULT NULL,
+			  `target_description` varchar(36) DEFAULT NULL,
+			  PRIMARY KEY (`uuid`),
+			  UNIQUE KEY `uuid_UNIQUE` (`uuid`)
+			) DEFAULT CHARSET=utf8;
+		""",
+	'rates': """
+			CREATE TABLE `{0}` (
+			  `rid` varchar(36) NOT NULL,
+			  `description` varchar(1024) NOT NULL,
+			  `mtype` varchar(36) NOT NULL,
+			  `tariff_id` varchar(36) NOT NULL,
+			  `rate_value` bigint(20) NOT NULL,
+			  `rate_currency` enum('RUR','USD','EUR') NOT NULL,
+			  `state` enum('ACTIVE','ARCHIVE','UPDATING') NOT NULL,
+			  `time_create` int(11) NOT NULL,
+			  `time_destroy` int(11) NOT NULL,
+			  `arg` varchar(36) DEFAULT NULL,
+			  PRIMARY KEY (`rid`),
+			  UNIQUE KEY `rid_UNIQUE` (`rid`)
+			) DEFAULT CHARSET=utf8;
+		""",
+	'tariffs': """
+			CREATE TABLE `{0}` (
+			  `tariff_id` varchar(36) NOT NULL,
+			  `name` varchar(45) NOT NULL,
+			  `description` varchar(1024) NOT NULL,
+			  `currency` enum('RUR','USD','EUR') NOT NULL,
+			  `create_time` int(11) NOT NULL,
+			  `state` enum('ARCHIVE','ACTIVE') NOT NULL,
+			  PRIMARY KEY (`tariff_id`)
+			) DEFAULT CHARSET=utf8;
+		""",
+}
