@@ -71,9 +71,9 @@ class DB:
 	name = None
 	host = None
 
-	def __init__(self, primarykey = None, reconnect = 0, timeout = 1):
+	def __init__(self, primarykey = None, reconnect = 0, timeout = 1, commit = True):
 		conf = config.read()
-
+		self.commit = commit
 		self.name = conf['database']['name']
 		self.user = conf['database']['user']
 		self.passwd = conf['database']['pass']
@@ -140,8 +140,9 @@ class DB:
 		queue = "INSERT INTO {0} ({1}) VALUES ({2});".format(table,
 				join(dictionary.keys(),'`'),
 				join(dictionary.values(),"'"))
-		print queue
 		self.cursor().execute(queue)
+		if self.commit:
+			self.conn.commit()
 
 
 #cur = DB().cursor()
