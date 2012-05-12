@@ -1,40 +1,26 @@
 #!/usr/bin/python2.6
 import bobject
 
-from database import DB
+from bc.database import DB
 
 
 class Metric(bobject.BaseObject):
 	def __init__(self, data = None):
 		self.__values__ = {
-			'mtype':           '',
-			'count_dimention': {},
-			'time_dimention':  {},
-			'time_type':       0,
-			'aggregate':       0,
+			'mtype':                '',
+			'count_dimention_koef': 0,
+			'count_dimention_type': '',
+			'time_dimention_koef':  0,
+			'time_type':            0,
+			'aggregate':            0,
 		}
 
 		if data:
 			self.set(data)
 
 
-	def validate(self):
-		if not self.mtype:
-			return False
+def add(metric):
 
-		for o in [self.time_dimension, self.count_dimension]:
-			if 'name'  not in o or not isinstance(o['name'], basestring):
-				return False
-			if 'value' not in o or not isinstance(o['value'], int, long):
-				return False
-		return True
-
-
-	def add(self):
-		# XXXlegion: Wrong place for database operations ?
-		if not self.validate():
-			raise ValueError('Invalid metric')
-
-		DB().insertdict('metrics', self.values)
+	DB().insertdict('metrics', metric.values)
 
 

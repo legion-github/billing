@@ -2,16 +2,17 @@ import copy
 import unithelper
 from bc.private import metrics
 
-class Test(unithelper.TestCase):
+class Test(unithelper.DBTestCase):
 	def test_new_metric(self):
 		"""Check metric creation"""
 
 		values = {
-			'mtype':           '',
-			'count_dimention': {},
-			'time_dimention':  {},
-			'time_type':       0,
-			'aggregate':       0,
+			'mtype':                '',
+			'count_dimention_koef': 0,
+			'count_dimention_type': '',
+			'time_dimention_koef':  0,
+			'time_type':            0,
+			'aggregate':            0,
 		}
 
 		t = metrics.Metric()
@@ -56,7 +57,18 @@ class Test(unithelper.TestCase):
 		self.assertEqual(r2['mtype'], '123')
 
 
-def test_add_metric(self):
-	"""Check metric add"""
+	def test_add_metric(self):
+		"""Check metric add"""
+
+		m = metrics.Metric()
+		m.set({
+			'mtype':                'test_name',
+			'count_dimention_koef': 1024,
+			'count_dimention_type': 'bytes',
+			'time_dimention_koef':  60,
+			'time_type':            1,
+			'aggregate':            0,
+		})
+		metrics.add(m)
 
 

@@ -1,7 +1,22 @@
 import uuid
 import unittest2 as unittest
 from bc import config
-from bc import mongodb
+from bc import database
+
+
+confstr = """
+{
+	"database": {
+		"name": "testing",
+		"server": "127.0.0.1",
+		"user": "root",
+		"pass": "qwerty"
+	}
+}
+"""
+
+conf = config.read(inline = confstr, force=True)
+
 
 class _AssertNotRaisesContext(object):
 	"""A context manager used to implement TestCase.assertNotRaises method."""
@@ -52,16 +67,9 @@ class TestCase(unittest.TestCase):
 
 class DBTestCase(TestCase):
 	def setUp(self):
-		self.dbname = 'billing-' + str(uuid.uuid4())
-
-		self.conf = config.read()
-		self.conf['database']['name'] = self.dbname
-
+		database.DB().create_schema()
 
 	def tearDown(self):
-		c = mongodb.connection(self.conf['database']['server'])
-		c.drop_database(self.dbname)
-
-		for n in self.conf['database']['shards']:
-			c = mongodb.connection(n)
-			c.drop_database(self.dbname)
+		for i in database.SCHEMA.keys():
+			if i not in database.DYNAMIC_TABLES:
+				database.DB().cursor().execute("DROP TABLE {0};".format(i))
