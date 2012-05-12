@@ -11,7 +11,7 @@ class Test(unithelper.TestCase):
 			'count_dimention': {},
 			'time_dimention':  {},
 			'time_type':       0,
-			'aggrigate':       0,
+			'aggregate':       0,
 		}
 
 		t = metrics.Metric()
@@ -54,4 +54,9 @@ class Test(unithelper.TestCase):
 
 		self.assertEqual(r1['mtype'], '')
 		self.assertEqual(r2['mtype'], '123')
+
+
+def test_add_metric(self):
+	"""Check metric add"""
+
 

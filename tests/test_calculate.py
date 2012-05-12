@@ -36,7 +36,7 @@ class Test(unithelper.TestCase):
 			'count_dimention': {},
 			'time_dimention':  {},
 			'time_type':       1,
-			'aggrigate':       0,
+			'aggregate':       0,
 		}
 
 		m = metrics.Metric(metric)

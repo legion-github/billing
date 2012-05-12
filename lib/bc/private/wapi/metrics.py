@@ -36,7 +36,7 @@ def metricList(environ, request):
 		'time_value':  V(int),
 		'time_type':   V(int),
 
-		'aggrigate':   V(int),
+		'aggregate':   V(int),
 	}),
 	auth = False)
 def metricAdd(environ, request):
@@ -54,7 +54,7 @@ def metricAdd(environ, request):
 				'value': request.get('time_value')
 			},
 			'time_type': request.get('time_type'),
-			'aggrigate': request.get('aggrigate')
+			'aggregate': request.get('aggregate')
 		}).add()
 	except:
 		return jsonrpc.methods.jsonrpc_result_error('InvalidRequest', { 'status': 'error' })

@@ -1,11 +1,7 @@
 #!/usr/bin/python2.6
-
-import time
-import uuid
-
 import bobject
 
-from bc import mongodb
+from database import DB
 
 
 class Metric(bobject.BaseObject):
@@ -15,7 +11,7 @@ class Metric(bobject.BaseObject):
 			'count_dimention': {},
 			'time_dimention':  {},
 			'time_type':       0,
-			'aggrigate':       0,
+			'aggregate':       0,
 		}
 
 		if data:
@@ -39,6 +35,6 @@ class Metric(bobject.BaseObject):
 		if not self.validate():
 			raise ValueError('Invalid metric')
 
-		mongodb.collection('metrics').insert(self.values, safe = True)
+		DB().insertdict('metrics', self.values)
 
 
