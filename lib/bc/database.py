@@ -72,19 +72,20 @@ class DB:
 	name = None
 	host = None
 
-	def __init__(self, primarykey = None, reconnect = 0, timeout = 1, commit = True):
+	def __init__(self, primarykey = None, dbname = None, reconnect = 0, timeout = 1, commit = True):
 		conf = config.read()
 		self.commit = commit
-		self.name = conf['database']['name']
-		self.user = conf['database']['user']
+		self.name   = dbname or conf['database']['name']
+		self.user   = conf['database']['user']
 		self.passwd = conf['database']['pass']
-		self.host = get_host(primarykey)
+		self.host   = get_host(primarykey)
 
 		if not self.host:
 			raise DBError("Database host name is not specified")
 
 		self.reconnect  = reconnect
 		self.timeout    = timeout
+
 		self.connect()
 
 
