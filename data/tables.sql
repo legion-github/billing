@@ -48,10 +48,10 @@ CREATE TABLE `queue_skeleton` (
   `description` varchar(1024) NOT NULL,
   `state` enum('DONE','PROCESSING','AGGREGATE') NOT NULL,
   `value` bigint(20) NOT NULL DEFAULT '1',
-  `time_now` timestamp NOT NULL,
-  `time_check` timestamp NOT NULL,
-  `time_create` timestamp NOT NULL,
-  `time_destroy` timestamp NOT NULL,
+  `time_now` int(11) NOT NULL,
+  `time_check` int(11) NOT NULL,
+  `time_create` int(11) NOT NULL,
+  `time_destroy` int(11) NOT NULL,
   `target_user` varchar(36) DEFAULT NULL,
   `target_uuid` varchar(36) DEFAULT NULL,
   `target_description` varchar(36) DEFAULT NULL,
@@ -75,8 +75,8 @@ CREATE TABLE `rates` (
   `rate_value` bigint(20) NOT NULL,
   `rate_currency` enum('RUR','USD','EUR') NOT NULL,
   `state` enum('ACTIVE','ARCHIVE','UPDATING') NOT NULL,
-  `time_create` timestamp NOT NULL,
-  `time_destroy` timestamp NOT NULL,
+  `time_create` int(11) NOT NULL,
+  `time_destroy` int(11) NOT NULL,
   `arg` varchar(36) DEFAULT NULL,
   PRIMARY KEY (`rid`),
   UNIQUE KEY `rid_UNIQUE` (`rid`)
@@ -95,7 +95,7 @@ CREATE TABLE `tariffs` (
   `name` varchar(45) NOT NULL,
   `description` varchar(1024) NOT NULL,
   `currency` enum('RUR','USD','EUR') NOT NULL,
-  `create_time` timestamp NOT NULL,
+  `create_time` int(11) NOT NULL,
   `state` enum('ARCHIVE','ACTIVE') NOT NULL,
   PRIMARY KEY (`tariff_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -110,4 +110,4 @@ CREATE TABLE `tariffs` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-05-10 18:41:26
+-- Dump completed on 2011-05-10 18:41:26
