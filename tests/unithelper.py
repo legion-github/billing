@@ -78,12 +78,11 @@ class DBTestCase(TestCase):
 	def setUp(self):
 		if not haveDatabase():
 			return
+		database.DB().destroy_schema()
 		database.DB().create_schema()
 
 
 	def tearDown(self):
 		if not haveDatabase():
 			return
-		for i in database.SCHEMA.keys():
-			if i not in database.DYNAMIC_TABLES:
-				database.DB().cursor().execute("DROP TABLE {0};".format(i))
+		database.DB().destroy_schema()

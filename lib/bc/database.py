@@ -177,6 +177,11 @@ class DB(object):
 			self.cursor().execute(query.format(name))
 
 
+	def destroy_schema(self):
+		for n in self.query('show tables'):
+			self.cursor().execute("DROP TABLE IF EXISTS {0}".format(n.values()[0]))
+
+
 
 DYNAMIC_TABLES = ['queue_skeleton']
 SCHEMA = {
@@ -209,7 +214,7 @@ SCHEMA = {
 			  `target_description` varchar(36) DEFAULT '',
 			  PRIMARY KEY (`uuid`),
 			  UNIQUE KEY `uuid_UNIQUE` (`uuid`),
-			  KEY `state_INDEX` USING BTREE (`state`),
+			  KEY `state_INDEX` USING BTREE (`state`)
 			) DEFAULT CHARSET=utf8;
 		""",
 	'rates': """
@@ -226,7 +231,7 @@ SCHEMA = {
 			  `arg` varchar(36) DEFAULT '',
 			  PRIMARY KEY (`rid`),
 			  UNIQUE KEY `rid_UNIQUE` (`rid`),
-			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`mtype`,`tariff_id`,`arg`),
+			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`mtype`,`tariff_id`,`arg`)
 			) DEFAULT CHARSET=utf8;
 		""",
 	'tariffs': """
@@ -238,8 +243,8 @@ SCHEMA = {
 			  `create_time` int(11) NOT NULL,
 			  `state` enum('ARCHIVE','ACTIVE') NOT NULL,
 			  PRIMARY KEY (`tariff_id`),
-			  UNIQUE KEY `tariff_id_UNIQUE` (`rid`),
-			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`tariff_id`),
+			  UNIQUE KEY `tariff_id_UNIQUE` (`tariff_id`),
+			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`tariff_id`)
 			) DEFAULT CHARSET=utf8;
 		""",
 }
