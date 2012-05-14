@@ -21,7 +21,7 @@ class BaseObject(object):
 			typ = type(self.__values__[n])
 
 			if not isinstance(o[n], typ):
-				raise TypeError
+				raise TypeError("Type of {0} is {1}, not {2}".format(o[n], type(o[n]),typ))
 
 			self.__values__[n] = o[n]
 
