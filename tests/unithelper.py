@@ -1,4 +1,5 @@
 import uuid
+import MySQLdb
 import unittest2 as unittest
 from bc import config
 from bc import database
@@ -65,11 +66,24 @@ class TestCase(unittest.TestCase):
 			raise self.failureException, "%s raised" % excName
 
 
+def haveDatabase():
+	try:
+		database.DB()
+	except MySQLdb.OperationalError:
+		return False
+	return True
+
+
 class DBTestCase(TestCase):
 	def setUp(self):
+		if not haveDatabase():
+			return
 		database.DB().create_schema()
 
+
 	def tearDown(self):
+		if not haveDatabase():
+			return
 		for i in database.SCHEMA.keys():
 			if i not in database.DYNAMIC_TABLES:
 				database.DB().cursor().execute("DROP TABLE {0};".format(i))

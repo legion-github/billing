@@ -1,6 +1,8 @@
 import copy
+import unittest2 as unittest
 import unithelper
 from bc.private import metrics
+
 
 class Test(unithelper.DBTestCase):
 	def test_new_metric(self):
@@ -57,6 +59,7 @@ class Test(unithelper.DBTestCase):
 		self.assertEqual(r2['mtype'], '123')
 
 
+	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_add_metric(self):
 		"""Check metric add"""
 
