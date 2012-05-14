@@ -201,15 +201,15 @@ SCHEMA = {
 			  `description` varchar(1024) NOT NULL,
 			  `state` enum('DONE','PROCESSING','AGGREGATE') NOT NULL,
 			  `value` bigint(20) NOT NULL DEFAULT '1',
-			  `time_now` int(11) NOT NULL,
 			  `time_check` int(11) NOT NULL,
 			  `time_create` int(11) NOT NULL,
 			  `time_destroy` int(11) NOT NULL,
-			  `target_user` varchar(36) DEFAULT NULL,
-			  `target_uuid` varchar(36) DEFAULT NULL,
-			  `target_description` varchar(36) DEFAULT NULL,
+			  `target_user` varchar(36) DEFAULT '',
+			  `target_uuid` varchar(36) DEFAULT '',
+			  `target_description` varchar(36) DEFAULT '',
 			  PRIMARY KEY (`uuid`),
-			  UNIQUE KEY `uuid_UNIQUE` (`uuid`)
+			  UNIQUE KEY `uuid_UNIQUE` (`uuid`),
+			  KEY `state_INDEX` USING BTREE (`state`),
 			) DEFAULT CHARSET=utf8;
 		""",
 	'rates': """
@@ -223,9 +223,10 @@ SCHEMA = {
 			  `state` enum('ACTIVE','ARCHIVE','UPDATING') NOT NULL,
 			  `time_create` int(11) NOT NULL,
 			  `time_destroy` int(11) NOT NULL,
-			  `arg` varchar(36) DEFAULT NULL,
+			  `arg` varchar(36) DEFAULT '',
 			  PRIMARY KEY (`rid`),
-			  UNIQUE KEY `rid_UNIQUE` (`rid`)
+			  UNIQUE KEY `rid_UNIQUE` (`rid`),
+			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`mtype`,`tariff_id`,`arg`),
 			) DEFAULT CHARSET=utf8;
 		""",
 	'tariffs': """
@@ -236,7 +237,9 @@ SCHEMA = {
 			  `currency` enum('RUR','USD','EUR') NOT NULL,
 			  `create_time` int(11) NOT NULL,
 			  `state` enum('ARCHIVE','ACTIVE') NOT NULL,
-			  PRIMARY KEY (`tariff_id`)
+			  PRIMARY KEY (`tariff_id`),
+			  UNIQUE KEY `tariff_id_UNIQUE` (`rid`),
+			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`tariff_id`),
 			) DEFAULT CHARSET=utf8;
 		""",
 }
