@@ -66,12 +66,14 @@ class Test(unithelper.DBTestCase):
 		m = metrics.Metric()
 		m.set({
 			'mtype':                'test_name',
-			'count_dimention_koef': 1024,
+			'count_dimention_koef': 1024L,
 			'count_dimention_type': 'bytes',
-			'time_dimention_koef':  60,
-			'time_type':            1,
+			'time_dimention_koef':  60L,
+			'time_type':            1L,
 			'aggregate':            0,
 		})
 		metrics.add(m)
+		self.assertEqual(m, metrics.get_all().next())
+
 
 

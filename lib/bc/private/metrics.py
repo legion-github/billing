@@ -8,10 +8,10 @@ class Metric(bobject.BaseObject):
 	def __init__(self, data = None):
 		self.__values__ = {
 			'mtype':                '',
-			'count_dimention_koef': 0,
+			'count_dimention_koef': 0L,
 			'count_dimention_type': '',
-			'time_dimention_koef':  0,
-			'time_type':            0,
+			'time_dimention_koef':  0L,
+			'time_type':            0L,
 			'aggregate':            0,
 		}
 
@@ -23,4 +23,10 @@ def add(metric):
 
 	DB().insertdict('metrics', metric.values)
 
+
+def get_all():
+
+
+	for i in DB().query("SELECT * FROM `metrics` m;"):
+		yield Metric(i)
 
