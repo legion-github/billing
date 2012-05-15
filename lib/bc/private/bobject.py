@@ -73,3 +73,11 @@ class BaseObject(object):
 
 	def __str__(self):
 		return str(self.values)
+
+
+	def __eq__(self, over):
+		return self.values == over.values
+
+
+	def __ne__(self, over):
+		return self.values != over.values
