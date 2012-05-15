@@ -1,7 +1,7 @@
 #!/usr/bin/python2.6
 import bobject
 
-from bc.database import DB
+from bc import database
 
 
 class Metric(bobject.BaseObject):
@@ -21,12 +21,13 @@ class Metric(bobject.BaseObject):
 
 def add(metric):
 
-	DB().insertdict('metrics', metric.values)
+	with database.DBConnect() as db:
+		db.insert('metrics', metric.values)
 
 
 def get_all():
 
-
-	for i in DB().query("SELECT * FROM `metrics` m;"):
-		yield Metric(i)
+	with database.DBConnect() as db:
+		for i in db.query("SELECT * FROM `metrics` m;"):
+			yield Metric(i)
 

@@ -1,13 +1,10 @@
 import time
+import uuid
 import MySQLdb
 from MySQLdb import cursors
 
 import config
 import hashing
-
-
-_CONNECTIONS = {}
-"""Database connections."""
 
 
 class DBError(Exception):
@@ -37,7 +34,7 @@ def _runtime_decorator(obj, n):
 	return x
 
 
-class DBDictCursor(cursors.DictCursor):
+class DBDictServCursor(cursors.SSDictCursor):
 	reconnect_timeout = 1
 	reconnect_count = 0
 
@@ -64,123 +61,166 @@ class DBDictCursor(cursors.DictCursor):
 
 			if self.reconnect_timeout > 0:
 				time.sleep(self.reconnect_timeout)
-		raise err
-
-
-class DB(object):
-	conn = None
-	name = None
-	host = None
-
-	def __init__(self, primarykey = None, dbname = None, reconnect = 0, timeout = 1, commit = True):
-		conf = config.read()
-		self.commit = commit
-		self.name   = dbname or conf['database']['name']
-		self.user   = conf['database']['user']
-		self.passwd = conf['database']['pass']
-		self.host   = get_host(primarykey)
-
-		if not self.host:
-			raise DBError("Database host name is not specified")
-
-		self.reconnect  = reconnect
-		self.timeout    = timeout
-
-		self.connect()
-
-
-	def connect(self):
-		key = self.host + "/" + self.name
-
-		if key not in _CONNECTIONS:
-			_CONNECTIONS[key] = MySQLdb.connect(
-				host        = self.host,
-				db          = self.name,
-				user        = self.user,
-				passwd      = self.passwd,
-				cursorclass = DBDictCursor
-			)
-
-		self.conn = _CONNECTIONS[key]
-		return self
-
-
-	def disconnect(self):
-		self.conn.close()
-		return self
-
-
-	def ping(self):
-		self.conn.ping()
-		return self
-
-
-	def autocommit(self, mode):
-		self.conn.autocommit(bool(mode))
-		return self
-
-
-	def cursor(self, cls=None):
-		err = None
-		i = self.reconnect
-
-		while True:
-			try:
-				return self.conn.cursor(cls)
-
-			except (AttributeError, MySQLdb.OperationalError), e:
-				err = e
-
-			if i == 0:
-				break
-			i -= 1
-
-			if self.timeout > 0:
-				time.sleep(self.timeout)
-
-			self.connect()
 
 		raise DBError("Unable to connect to database: {0}", err)
 
 
+class DBPool(object):
+
+	_CONNECTIONS = {}
+
+	def __init__(self, reconnect=0, timeout=1):
+		self.reconnect = reconnect
+		self.timeout   = timeout
+
+
+	def get_item(self, dbname=None, primarykey=None):
+		"""Returns free connection"""
+
+		conf = config.read()
+
+		dbuser = conf['database']['user']
+		dbpass = conf['database']['pass']
+		dbname = dbname or conf['database']['name']
+		dbhost = get_host(primarykey)
+
+		if not dbhost:
+			raise DBError("Database host name is not specified")
+
+		key = "{0}/{1}".format(dbhost, dbname)
+
+		if key not in self._CONNECTIONS:
+			self._CONNECTIONS[key] = {}
+
+		while True:
+			for ids,sock in self._CONNECTIONS[key].iteritems():
+				if sock['status'] == 'free':
+					sock['status'] = 'busy'
+					self.collect(key)
+					return self._CONNECTIONS[key][ids]
+
+			ids = str(uuid.uuid4())
+
+			self._CONNECTIONS[key][ids] = {
+				'key':    key,
+				'ids':    ids,
+				'status': 'free',
+				'socket': MySQLdb.connect(
+						cursorclass = DBDictServCursor,
+						host        = dbhost,
+						db          = dbname,
+						user        = dbuser,
+						passwd      = dbpass)
+			}
+
+
+	def collect(self, key=None):
+		keys = [ key ]
+		if not key:
+			keys = self._CONNECTIONS.keys()
+
+		for key in keys:
+			garbage = []
+
+			for ids,sock in self._CONNECTIONS[key].iteritems():
+				if sock['status'] == 'free':
+					garbage.append(sock)
+
+			if not garbage:
+				continue
+
+			garbage.pop()
+
+			for sock in garbage:
+				self.close_connection(sock)
+
+
+	def close_connection(self, conn):
+		if conn['status'] != 'free':
+			return
+		del self._CONNECTIONS[conn['key']][conn['ids']]
+
+
+	def free_connection(self, conn):
+		conn['status'] = 'free'
+		self.collect()
+
+	def get_connection(self, dbname=None, primarykey=None):
+		pitem = self.get_item(dbname, primarykey)
+		return pitem['socket']
+
+
+	def debug(self):
+		return self._CONNECTIONS
+
+
+DB = DBPool()
+
+class DBConnect(object):
+	def __init__(self, dbname=None, primarykey=None, commit=True):
+		self.conn = DB.get_item(dbname, primarykey)
+		self.commit = commit
+
+
+	def connect(self):
+		return self.conn['socket']
+
+
+	def __enter__(self):
+		return self
+
+
+	def __exit__(self, exc_type, exc_value, traceback):
+		DB.free_connection(self.conn)
+		return False
+
+
 	def escape(self, string):
-		return self.conn.escape_string(str(string))
+		return self.connect().escape_string(str(string))
 
 
-	def insertdict(self, table, dictionary):
+	def insert(self, table, dictionary):
 		join = lambda x, y: "{0}, {0}".format(y).join(map(self.escape, x)).join([y,y])
 		queue = "INSERT INTO {0} ({1}) VALUES ({2});".format(table,
 				join(dictionary.keys(),'`'),
 				join(dictionary.values(),"'"))
-		self.cursor().execute(queue)
+		self.connect().cursor().execute(queue)
 		if self.commit:
-			self.conn.commit()
+			self.connect().commit()
 
 
 	def query(self, fmt, *args):
-		cur = self.cursor()
+		cur = self.connect().cursor()
 		res = cur.execute(fmt, *args)
 		if res == 0:
 			raise StopIteration
 		for o in cur:
 			yield o
+		cur.close()
 
 
-	def create_queue(self, name):
-		self.cursor().execute(SCHEMA['queue_skeleton'].format(name))
+def create_queue(name):
+	with DBConnect() as db:
+		db.connect().cursor().execute(SCHEMA['queue_skeleton'].format(name))
 
 
-	def create_schema(self):
+def create_schema():
+	with DBConnect() as db:
 		for name, query in SCHEMA.iteritems():
 			if name in DYNAMIC_TABLES:
 				continue
-			self.cursor().execute(query.format(name))
+			db.connect().cursor().execute(query.format(name))
 
 
-	def destroy_schema(self):
-		for n in self.query('show tables'):
-			self.cursor().execute("DROP TABLE IF EXISTS {0}".format(n.values()[0]))
+def destroy_schema():
+	with DBConnect() as db0:
+		cur0 = db0.connect().cursor()
+		cur0.execute('show tables')
 
+		with DBConnect() as db1:
+			for n in cur0:
+				db1.connect().cursor().execute("DROP TABLE IF EXISTS {0}".format(n.values()[0]))
+		cur0.close()
 
 
 DYNAMIC_TABLES = ['queue_skeleton']
@@ -248,3 +288,4 @@ SCHEMA = {
 			) DEFAULT CHARSET=utf8;
 		""",
 }
+

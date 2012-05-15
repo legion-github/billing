@@ -16,7 +16,7 @@ confstr = """
 }
 """
 
-conf = config.read(inline = confstr, force=True)
+config.read(inline = confstr, force=True)
 
 
 class _AssertNotRaisesContext(object):
@@ -68,8 +68,8 @@ class TestCase(unittest.TestCase):
 
 def haveDatabase():
 	try:
-		database.DB()
-	except MySQLdb.OperationalError:
+		database.DB.get_connection()
+	except MySQLdb.OperationalError, e:
 		return False
 	return True
 
@@ -78,11 +78,11 @@ class DBTestCase(TestCase):
 	def setUp(self):
 		if not haveDatabase():
 			return
-		database.DB().destroy_schema()
-		database.DB().create_schema()
+		database.destroy_schema()
+		database.create_schema()
 
 
 	def tearDown(self):
 		if not haveDatabase():
 			return
-		database.DB().destroy_schema()
+		database.destroy_schema()
