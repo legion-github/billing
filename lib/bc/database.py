@@ -316,5 +316,13 @@ SCHEMA = {
 			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`tariff_id`)
 			) DEFAULT CHARSET=utf8;
 		""",
+	'auth_roles': """
+			CREATE TABLE `{0}` (
+			  `role` varchar(64) NOT NULL,
+			  `method` varchar(64) NOT NULL,
+			  `secret` varchar(1024) NOT NULL,
+			  UNIQUE KEY `main_UNIQUE` USING BTREE (`role`, `method`)
+			) DEFAULT CHARSET=utf8;
+	""",
 }
 
