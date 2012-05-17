@@ -11,8 +11,8 @@ from bc import database
 class TariffConstants(object):
 	__metaclass__ = readonly.metaClass
 	__readonly__  = {
-		'STATE_ENABLE':  'enable',
-		'STATE_DISABLE': 'disable'
+		'STATE_ENABLE':  'ENABLE',
+		'STATE_DISABLE': 'DISABLE'
 	}
 
 constants = TariffConstants()
@@ -22,9 +22,9 @@ class Tariff(bobject.BaseObject):
 
 		c = TariffConstants()
 
-		self.__dict__['values'] = {
+		self.__values__ = {
 			'create_time': int(time.time()),
-			'tariff_id':         str(uuid.uuid4()),
+			'tariff_id':   str(uuid.uuid4()),
 			'name':        '',
 			'description': '',
 			'currency':    tariff_rate.constants.CURRENCY_RUB,
@@ -59,7 +59,7 @@ class Tariff(bobject.BaseObject):
 		if state not in [ c.STATE_ENABLE, c.STATE_DISABLE ]:
 			raise ValueError("Unknown state")
 
-		with database.DBConnect as db:
+		with database.DBConnect() as db:
 			db.update('tariffs',
 				{'tariff_id': tariff_id},
 				{'state': state}

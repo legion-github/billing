@@ -3,40 +3,48 @@ import uuid
 
 from bc import database
 
-from billing import constants
-from billing import tariffs
+from bc.private import tariff
 
 class Test(unithelper.DBTestCase):
 
-	def test_rename_tariff(self):
-		"""Check the renaming of the tariff"""
+	def test_tariff_creation(self):
+		"""Check the creating of the tariff"""
 
 		tariff_name1 = str(uuid.uuid4())
-		tariff_name2 = str(uuid.uuid4())
 
 		tariff_description1 = str(uuid.uuid4())
-		tariff_description2 = str(uuid.uuid4())
 
-		tariff_id = tariffs.create(
-			{
+		tar = tariff.Tariff(
+			data={
 				"name": tariff_name1,
 				"description": tariff_description1,
-				"currency": constants.CURRENCY_LIST[0]
-			},
-			strict_check=False
+				"currency": 'USD'
+			}
 		)
-
+		tar.create()
 		with database.DBConnect() as db:
-			t1 = db.query("SELECT * FROM `tariffs` WHERE `tariff_id`='{0}'".format(tariff_id)).next()
+			t1 = db.query("SELECT * FROM `tariffs` WHERE `tariff_id`='{0}';".format(tar.values['tariff_id'])).next()
 		self.assertEquals(t1["name"], tariff_name1)
 		self.assertEquals(t1["description"], tariff_description1)
 
-		tariffs.rename_tariff(tariff_id, tariff_name2, tariff_description2)
+
+	def test_tariff_delete(self):
+		"""Check state changing"""
+
+		tariff_name1 = str(uuid.uuid4())
+
+		tariff_description1 = str(uuid.uuid4())
+
+		tar = tariff.Tariff(
+			data={
+				"name": tariff_name1,
+				"description": tariff_description1,
+				"currency": 'USD'
+			}
+		)
+		tar.create()
+		tar.set_state("DISABLE")
 
 		with database.DBConnect() as db:
-			t2 = db.query("SELECT * FROM `tariffs` WHERE `tariff_id`='{0}'".format(tariff_id)).next()
-		self.assertEquals(t2["name"], tariff_name2)
-		self.assertEquals(t2["description"], tariff_description2)
-
-		self.assertRaises(Exception,
-			lambda: tariffs.rename_tariff("unknown-id", "", ""))
+			t1 = db.query("SELECT * FROM `tariffs` WHERE `tariff_id`='{0}';".format(tar.values['tariff_id'])).next()
+		self.assertEquals(t1["state"], "DISABLE")

@@ -310,7 +310,7 @@ SCHEMA = {
 			  `description` varchar(1024) NOT NULL,
 			  `currency` enum('RUR','USD','EUR') NOT NULL,
 			  `create_time` int(11) NOT NULL,
-			  `state` enum('ARCHIVE','ACTIVE') NOT NULL,
+			  `state` enum('ENABLE','DISABLE') NOT NULL,
 			  PRIMARY KEY (`tariff_id`),
 			  UNIQUE KEY `tariff_id_UNIQUE` (`tariff_id`),
 			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`tariff_id`)
