@@ -181,13 +181,22 @@ class DBConnect(object):
 
 	def insert(self, table, dictionary):
 		join = lambda x, y: "{0}, {0}".format(y).join(map(self.escape, x)).join([y,y])
-		queue = "INSERT INTO {0} ({1}) VALUES ({2});".format(table,
+		query = "INSERT INTO {0} ({1}) VALUES ({2});".format(table,
 				join(dictionary.keys(),'`'),
 				join(dictionary.values(),"'"))
-		self.connect().cursor().execute(queue)
+		self.connect().cursor().execute(query)
 		if self.commit:
 			self.connect().commit()
 
+
+	def update(self, table, search_dict, set_dict):
+		query = "UPDATE {0} SET {1} WHERE {2};".format(table,
+				", ".join(map(lambda x: "{0}='{1}'".format(x[0], x[1]), set_dict.iteritems())),
+				", ".join(map(lambda x: "{0}='{1}'".format(x[0], x[1]), search_dict.iteritems())),
+				)
+		self.connect().cursor().execute(query)
+		if self.commit:
+			self.connect().commit()
 
 	def query(self, fmt, *args):
 		cur = self.connect().cursor()
