@@ -5,7 +5,7 @@ __version__ = '1.0'
 __all__ = [ 'jsonrpc_is_auth', 'jsonrpc_auth', 'jsonrpc_sign_request' ]
 
 import base64, hmac, hashlib, uuid, logging, string
-from bc import mongodb
+from bc import database
 
 LOG = logging.getLogger("jsonrpc.auth")
 
@@ -33,13 +33,15 @@ def serialize(data, prefix = 'params'):
 
 
 def get_secret(role, method):
-	o = mongodb.collection('auth_roles').find_one(
-		{ 'role': role, 'method': method },
-		fields = { 'secret': True }
-	)
-	if not o:
-		return None
-	return o['secret']
+	with database.DBConnect() as db:
+		o = db.query("SELECT secret"+
+		             "  FROM auth_roles"+
+		             " WHERE role=%s"+
+		             "   AND method=%s",
+		             (role, method))
+		if not o:
+			return None
+		return o['secret']
 
 
 def sign_string(secret, string):
