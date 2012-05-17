@@ -154,6 +154,31 @@ class DBPool(object):
 		return self._CONNECTIONS
 
 
+class DBQuery(object):
+	cursor = None
+
+	def __init__(self, cursor, fmt, *args):
+		self.cursor = cursor
+		cursor.execute(fmt, *args)
+
+	def __iter__(self):
+		for o in self.cursor:
+			yield o
+
+	def one(self):
+		if self.cursor:
+			return self.cursor.fetchone()
+		return None
+
+	def all(self):
+		if self.cursor:
+			return self.cursor.fetchall()
+		return None
+
+	def __del__(self):
+		self.cursor.close()
+
+
 DB = DBPool()
 
 class DBConnect(object):
@@ -198,14 +223,9 @@ class DBConnect(object):
 		if self.commit:
 			self.connect().commit()
 
+
 	def query(self, fmt, *args):
-		cur = self.connect().cursor()
-		res = cur.execute(fmt, *args)
-		if res == 0:
-			raise StopIteration
-		for o in cur:
-			yield o
-		cur.close()
+		return DBQuery(self.connect().cursor(), fmt, *args)
 
 
 def create_queue(name):
