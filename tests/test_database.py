@@ -35,7 +35,7 @@ class Test(unithelper.DBTestCase):
 					}
 			db.insert('new_table', dictionary)
 			c = db.query("SELECT * FROM `new_table` WHERE `uuid`='{0}';".format(dictionary['uuid']))
-			self.assertEqual(dictionary, c.next())
+			self.assertEqual(dictionary, c.one())
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -58,4 +58,4 @@ class Test(unithelper.DBTestCase):
 			db.update('new_table', dsearch, dset)
 
 			c = db.query("SELECT * FROM `new_table` WHERE `uuid`='{0}';".format(dictionary['uuid']))
-			self.assertEqual(dictionary, c.next())
+			self.assertEqual(dictionary, c.one())

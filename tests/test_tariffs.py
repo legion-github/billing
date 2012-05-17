@@ -23,7 +23,7 @@ class Test(unithelper.DBTestCase):
 		)
 		tar.create()
 		with database.DBConnect() as db:
-			t1 = db.query("SELECT * FROM `tariffs` WHERE `tariff_id`='{0}';".format(tar.values['tariff_id'])).next()
+			t1 = db.query("SELECT * FROM `tariffs` WHERE `tariff_id`='{0}';".format(tar.values['tariff_id'])).one()
 		self.assertEquals(t1["name"], tariff_name1)
 		self.assertEquals(t1["description"], tariff_description1)
 
@@ -46,5 +46,5 @@ class Test(unithelper.DBTestCase):
 		tar.set_state("DISABLE")
 
 		with database.DBConnect() as db:
-			t1 = db.query("SELECT * FROM `tariffs` WHERE `tariff_id`='{0}';".format(tar.values['tariff_id'])).next()
+			t1 = db.query("SELECT * FROM `tariffs` WHERE `tariff_id`='{0}';".format(tar.values['tariff_id'])).one()
 		self.assertEquals(t1["state"], "DISABLE")
