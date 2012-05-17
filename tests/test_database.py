@@ -6,7 +6,6 @@ import unittest2 as unittest
 from bc import database
 
 
-
 class Test(unithelper.DBTestCase):
 	def setUp(self):
 		with database.DBConnect() as db:
@@ -23,7 +22,6 @@ class Test(unithelper.DBTestCase):
 			"""
 			db.connect().cursor().execute(test_base_dropper)
 			db.connect().cursor().execute(test_base_creator)
-
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)

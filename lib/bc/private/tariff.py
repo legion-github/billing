@@ -1,11 +1,12 @@
 import time
 import uuid
+import copy
 
 import readonly
 import bobject
 import tariff_rate
 
-from bc import mongodb
+from bc import database
 
 class TariffConstants(object):
 	__metaclass__ = readonly.metaClass
@@ -23,7 +24,7 @@ class Tariff(bobject.BaseObject):
 
 		self.__dict__['values'] = {
 			'create_time': int(time.time()),
-			'_id':         str(uuid.uuid4()),
+			'tariff_id':         str(uuid.uuid4()),
 			'name':        '',
 			'description': '',
 			'currency':    tariff_rate.constants.CURRENCY_RUB,
@@ -37,7 +38,7 @@ class Tariff(bobject.BaseObject):
 	def get_rates(self):
 		""" Gets all tariff's metric rates """
 
-		return tariff_rate.get_by_tariff(self._id)
+		return tariff_rate.get_by_tariff(self.tariff_id)
 
 
 	def export(self):
@@ -51,26 +52,25 @@ class Tariff(bobject.BaseObject):
 	def set_state(self, state, tid = None):
 		""" Change tariffs state """
 
-		tariff_id = (tid or self._id)
+		tariff_id = (tid or self.tariff_id)
 
 		c = TariffConstants()
 
 		if state not in [ c.STATE_ENABLE, c.STATE_DISABLE ]:
 			raise ValueError("Unknown state")
 
-		mongodb.collection('tariffs').update(
-			{
-				'_id':   tariff_id,
-				'state': state,
-			}
-		)
+		with database.DBConnect as db:
+			db.update('tariffs',
+				{'tariff_id': tariff_id},
+				{'state': state}
+				)
 		return self
 
 
 	def create(self, rate_list = None):
 		""" Create new tariff """
-
-		mongodb.collection('tariffs').insert(self.values, safe=True)
+		with database.DBConnect() as db:
+			db.insert('tariffs', self.values)
 
 		if not rate_list:
 			return
@@ -78,7 +78,7 @@ class Tariff(bobject.BaseObject):
 		for r in rate_list:
 			if 'rid' in r:
 				del r['rid']
-			r['tid'] = self._id
+			r['tid'] = self.tariff_id
 
 			tr = tariff_rate.TariffRate(r)
 			tr.add()
