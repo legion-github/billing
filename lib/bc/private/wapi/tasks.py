@@ -11,8 +11,6 @@ from bc.private   import tasks
 from bc.validator import Validate as V
 from bc           import jsonrpc
 
-from bc import mongodb
-
 LOG = logging.getLogger("c2.abc")
 
 @jsonrpc.methods.jsonrpc_method(
@@ -35,15 +33,15 @@ def taskOpen(environ, request):
 		request['time-create'] = int(time.time())
 
 	# Temp hack for now
-	if not request['customer']:
-		res = mongodb.collection('log_accounts').find_one(
-			{ 'user': request['user'] }
-		)
-		if not res:
-			LOG.error("Unable to find customer by user: %s", request['user'])
-			return jsonrpc.methods.jsonrpc_result({'status':'fail'})
-
-		request['customer'] = res['customer']
+	#if not request['customer']:
+	#	res = mongodb.collection('log_accounts').find_one(
+	#		{ 'user': request['user'] }
+	#	)
+	#	if not res:
+	#		LOG.error("Unable to find customer by user: %s", request['user'])
+	#		return jsonrpc.methods.jsonrpc_result({'status':'fail'})
+	#
+	#	request['customer'] = res['customer']
 
 	customer = customers.get(request['customer'], ignore_wallets = True)
 	rid, rate  = queue.resolve(request['type'], customer['tariff'], request['arg'])
