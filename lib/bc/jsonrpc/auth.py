@@ -4,7 +4,7 @@ __version__ = '1.0'
 
 __all__ = [ 'jsonrpc_is_auth', 'jsonrpc_auth', 'jsonrpc_sign_request' ]
 
-import base64, hmac, hashlib, uuid, logging, string
+import base64, hmac, hashlib, uuid, logging, string, time
 from bc import database
 
 LOG = logging.getLogger("jsonrpc.auth")
@@ -63,13 +63,27 @@ def jsonrpc_auth(sign, request):
 	if not secret:
 		return False
 
-	return sign.get('sign') == sign_string(str(secret), str(serialize(request)))
+	data  = {
+			'auth': {
+				'role': role,
+				'time': int(time.time()) / 15 * 15
+			},
+			'data': request
+	}
+	return sign.get('sign') == sign_string(str(secret), serialize(data))
 
 
 def jsonrpc_sign(role, secret, request):
-	auth = {
+	data  = {
+			'auth': {
+				'role': role,
+				'time': int(time.time()) / 15 * 15
+			},
+			'data': request
+	}
+	auth  = {
 		'role': role,
-		'sign': sign_string(secret, serialize(request))
+		'sign': sign_string(secret, serialize(data))
 	}
 
 	if 'params' not in request:
