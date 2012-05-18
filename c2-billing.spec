@@ -41,6 +41,7 @@ Group:    Applications/System
 
 Requires: python-mongo
 Requires: python-msgpack
+Requires: MySQL-python
 
 %description common-cloud
 CROC Cloud billing common files, directories and libraries.
