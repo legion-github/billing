@@ -1,7 +1,6 @@
 import unithelper
 
 from bc import config
-from bc import mongodb
 
 
 class Test(unithelper.TestCase):
