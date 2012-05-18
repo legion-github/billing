@@ -22,7 +22,7 @@ def logger(name, **kwargs):
 	conf = config.read()
 
 	if kwargs.get('syslog', True) or conf['logging']['type'] == 'syslog':
-		return sys_log(kwargs)
+		return syslog(**kwargs)
 
 	name          = kwargs.get('name', 'billing')
 	log_level     = kwargs.get('level', conf['logging']['level'])
