@@ -206,7 +206,7 @@ class DBConnect(object):
 
 	def delete(self, table, dictionary):
 		query = "DELETE FROM {0} WHERE {1};".format(table,
-			" AND ".join(map(lambda x: "{0}='{1}'".format(x[0], self.escape(x[1])), dict.iteritems())))
+			" AND ".join(map(lambda x: "{0}='{1}'".format(x[0], self.escape(x[1])), dictionary.iteritems())))
 		self.connect().cursor().execute(query)
 		if self.commit:
 			self.connect().commit()
