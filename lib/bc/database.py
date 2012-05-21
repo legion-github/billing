@@ -204,6 +204,14 @@ class DBConnect(object):
 		return self.connect().escape_string(str(string))
 
 
+	def delete(self, table, dictionary):
+		query = "DELETE FROM {0} WHERE {1};".format(table,
+			" AND ".join(map(lambda x: "{0}='{1}'".format(x[0], self.escape(x[1])), dict.iteritems())))
+		self.connect().cursor().execute(query)
+		if self.commit:
+			self.connect().commit()
+
+
 	def insert(self, table, dictionary):
 		join = lambda x, y: "{0}, {0}".format(y).join(map(self.escape, x)).join([y,y])
 		query = "INSERT INTO {0} ({1}) VALUES ({2});".format(table,
