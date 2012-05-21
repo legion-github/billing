@@ -38,7 +38,7 @@ def get_secret(role, method):
 		             "  FROM auth_roles"+
 		             " WHERE role=%s"+
 		             "   AND method=%s",
-		             (role, method))
+		             (role, method)).one()
 		if not o:
 			return None
 		return o['secret']
