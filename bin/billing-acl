@@ -1,0 +1,198 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import re
+import getopt
+import getpass
+
+sys.path.insert(0, '../lib')
+
+from bc import log
+from bc import database
+
+LOG  = log.logger("wapi-acl", syslog=False)
+PROG = sys.argv[0].rsplit('/')[-1]
+
+mode   = 'insert'
+quiet  = False
+dbname = 'billing'
+dbuser = 'bc'
+dbpass = 'qwerty'
+
+def error(msg):
+	print "{0}: Error: {1}".format(PROG, msg)
+
+
+def fatal(msg):
+	error(msg)
+	sys.exit(1)
+
+
+def show_help(arg, errmsg=None):
+	if errmsg:
+		error(errmsg)
+	print """
+Usage: {0} [options] list
+   or: {0} [options] <insert,update,upsert,delete> [<mapfile>,...]
+
+Options:
+   -d, --database=<name>   specify database name;
+   -u, --user=<user>       specify database user;
+   -p, --password          read database password from stdin;
+   -q, --quiet             suppress all normal output;
+   -h, --help              show this message.
+""".format(PROG)
+	sys.exit(0)
+
+def set_quiet(arg):
+	global quiet
+	quiet = True
+
+def set_dbname(arg):
+	global dbname
+	dbname = arg
+
+def set_dbuser(arg):
+	global dbuser
+	dbuser = arg
+
+def set_dbpass(arg):
+	global dbpass
+	dbpass = getpass.getpass()
+
+
+def process_rule(method, role, secret):
+	with database.DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db:
+		res = db.query("SELECT role FROM auth_roles WHERE role=%s AND method=%s", (role, method)).one()
+
+		if not res:
+			if mode == 'insert' or mode == 'upsert':
+				db.insert('auth_roles',
+					{
+						'method': method,
+						'role':   role,
+						'secret': secret
+					}
+				)
+				return
+			fatal('role={0}, method={1} not found in database'.format(role, method))
+		else:
+			if mode == 'insert':
+				fatal('role={0}, method={1} already in database'.format(role, method))
+
+			if mode == 'delete':
+				db.delete('auth_roles',
+					{
+						'method': method,
+						'role':   role
+					}
+				)
+				return
+
+			# upsert or update
+			db.update('auth_roles',
+				{
+					'method': method,
+					'role':   role
+				},
+				{
+					'secret': secret
+				}
+			)
+
+
+def read_input(fd):
+	i = 1
+	while True:
+		s = fd.readline()
+		if not s:
+			break
+		s = s[:-1].lstrip()
+
+		if not s or s[0] == '#':
+			i += 1
+			continue
+
+		a = s.split('\t')
+
+		req = 3
+		if mode == 'delete':
+			req = 2
+
+		if len(a) < req:
+			print 'Warning: wrong file fomat in line {0}.'.format(i)
+			continue
+
+		if mode != 'delete':
+			role, method, secret = a[0:3]
+			process_rule(method, role, secret)
+		else:
+			role, method = a[0:2]
+			process_rule(method, role, None)
+		i += 1
+
+
+def process_file(fn):
+	if not os.access(fn, os.R_OK):
+		error('{0}: Not readable'.format(fn))
+		return
+	
+	if not os.path.isfile(fn):
+		error('{0}: Not regular file'.format(fn))
+		return
+
+	read_input(open(fn, 'r'))
+
+
+try:
+	opts, args = getopt.gnu_getopt(sys.argv[1:], 'd:u:ph',
+	                               [ 'database=', 'user=', 'password', 'help' ])
+except getopt.GetoptError, err:
+	fatal(str(err))
+
+opt_handlers = {
+	'h|help':	show_help,
+	'q|quiet':	set_quiet,
+	'd|database':	set_dbname,
+	'u|user':	set_dbuser,
+	'p|password':	set_dbpass,
+}
+
+for opt in opts:
+	key = opt[0].rsplit('-')[-1]
+	for option in opt_handlers.keys():
+		if re.match('(' + option + ')', key):
+			opt_handlers[option](opt[1])
+			break
+	pass
+
+if len(args) == 0:
+	show_help('', "More arguments required")
+
+mode = args.pop(0)
+if mode not in ['list','insert','update','upsert','delete']:
+	fatal('{0}: Argument must be insert, update, upsert'.format(mode))
+
+if mode == 'list':
+	with database.DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db:
+		if not quiet:
+			print "#<role>\t<method>\t<secret>"
+		c = db.query("SELECT method,role,secret FROM auth_roles ORDER BY role,method")
+		for rule in c:
+			print '{0}\t{1}\t{2}'.format(rule['role'],rule['method'],rule['secret'])
+	sys.exit(0)
+
+if len(args) == 0:
+	if not quiet:
+		print "# Format: <role>\\t<method>\\t<secret>"
+	read_input(sys.stdin)
+	sys.exit(0)
+
+for infile in args[1:]:
+	if infile == 'stdin':
+		if not quiet:
+			print "# Format: <role>\\t<method>\\t<secret>"
+		read_input(sys.stdin)
+		continue
+	process_file(infile)
