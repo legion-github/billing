@@ -1,7 +1,6 @@
 __version__ = '1.0'
 
-from bc.billing import utils
-from bc         import database
+from bc import database
 
 def resolve(mtype, tid, arg):
 	with database.DBCOnnect() as db:
