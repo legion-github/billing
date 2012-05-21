@@ -10,7 +10,7 @@ from bc           import log
 LOG = log.logger("wapi.metrics")
 
 @jsonrpc.methods.jsonrpc_method(validate = False, auth = True)
-def metricList(environ, request):
+def metricList(request):
 	""" Returns a list of all registered metrics """
 
 	ret = []
@@ -39,7 +39,7 @@ def metricList(environ, request):
 		'aggregate':   V(int),
 	}),
 	auth = True)
-def metricAdd(environ, request):
+def metricAdd(request):
 	""" Adds new billing metric """
 
 	try:
@@ -67,7 +67,7 @@ def metricAdd(environ, request):
 		'type': V(basestring, min=1, max=128)
 	}),
 	auth = True)
-def metricGet(environ, request):
+def metricGet(request):
 	""" Return metric object by name """
 
 	try:

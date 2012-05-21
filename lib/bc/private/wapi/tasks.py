@@ -25,7 +25,7 @@ LOG = log.logger("wapi.tasks")
 			'time-destroy':	V(int, default=0),
 	}),
 	auth = False)
-def taskOpen(environ, request):
+def taskOpen(request):
 	""" Open new billing task """
 
 	if 'time-create' not in request:
