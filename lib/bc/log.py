@@ -13,7 +13,7 @@ log_level_mapping = {
 
 default_log_format  = '%(asctime)s.%(msecs)03d: %(levelname)s: %(filename)s: %(lineno)d: %(message)s'
 default_date_format = '%Y.%m.%d %H:%M:%S'
-default_namespace   = 'billing'
+default_namespace   = ''
 
 
 def logger(name, **kwargs):
