@@ -21,7 +21,7 @@ def logger(name, **kwargs):
 
 	conf = config.read()
 
-	if kwargs.get('syslog', True) or conf['logging']['type'] == 'syslog':
+	if kwargs.get('syslog', True) and conf['logging']['type'] == 'syslog':
 		return syslog(**kwargs)
 
 	name          = kwargs.get('name', 'billing')
@@ -57,7 +57,7 @@ def syslog(**kwargs):
 
 	name          = kwargs.get('name', None)
 	log_level     = kwargs.get('level', conf['logging']['level'])
-	log_address   = kwargs.get('address', conf['logging']['address'])
+	log_address   = kwargs.get('address', str(conf['logging']['address']))
 	log_facility  = kwargs.get('facility', conf['logging']['facility'])
 	log_format    = kwargs.get('log_format',  default_log_format)
 	date_format   = kwargs.get('date_format', default_date_format)
