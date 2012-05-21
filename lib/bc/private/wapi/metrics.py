@@ -2,15 +2,14 @@
 
 __version__ = '1.0'
 
-import uuid, logging
-
 from bc.private   import metrics
 from bc.validator import Validate as V
 from bc           import jsonrpc
+from bc           import log
 
-LOG = logging.getLogger("c2.abc")
+LOG = log.logger("wapi.metrics")
 
-@jsonrpc.methods.jsonrpc_method(validate = False, auth = False)
+@jsonrpc.methods.jsonrpc_method(validate = False, auth = True)
 def metricList(environ, request):
 	""" Returns a list of all registered metrics """
 
@@ -39,7 +38,7 @@ def metricList(environ, request):
 
 		'aggregate':   V(int),
 	}),
-	auth = False)
+	auth = True)
 def metricAdd(environ, request):
 	""" Adds new billing metric """
 
@@ -67,7 +66,7 @@ def metricAdd(environ, request):
 	validate = V({
 		'type': V(basestring, min=1, max=128)
 	}),
-	auth = False)
+	auth = True)
 def metricGet(environ, request):
 	""" Return metric object by name """
 

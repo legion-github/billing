@@ -2,16 +2,15 @@
 
 __version__ = '1.0'
 
-import uuid, logging
-
 from billing import customers
 
 from bc.private   import queue
 from bc.private   import tasks
 from bc.validator import Validate as V
 from bc           import jsonrpc
+from bc           import log
 
-LOG = logging.getLogger("c2.abc")
+LOG = log.logger("wapi.tasks")
 
 @jsonrpc.methods.jsonrpc_method(
 	validate = V({
