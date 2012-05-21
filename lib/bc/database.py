@@ -74,20 +74,20 @@ class DBPool(object):
 		self.timeout   = timeout
 
 
-	def get_item(self, dbname=None, primarykey=None):
+	def get_item(self, dbname=None, dbuser=None, dbpass=None, primarykey=None):
 		"""Returns free connection"""
 
 		conf = config.read()
 
-		dbuser = conf['database']['user']
-		dbpass = conf['database']['pass']
+		dbuser = dbuser or conf['database']['user']
+		dbpass = dbpass or conf['database']['pass']
 		dbname = dbname or conf['database']['name']
 		dbhost = get_host(primarykey)
 
 		if not dbhost:
 			raise DBError("Database host name is not specified")
 
-		key = "{0}/{1}".format(dbhost, dbname)
+		key = "{0}@{1}/{2}".format(dbuser,dbhost, dbname)
 
 		if key not in self._CONNECTIONS:
 			self._CONNECTIONS[key] = {}
@@ -182,8 +182,8 @@ class DBQuery(object):
 DB = DBPool()
 
 class DBConnect(object):
-	def __init__(self, dbname=None, primarykey=None, commit=True):
-		self.conn = DB.get_item(dbname, primarykey)
+	def __init__(self, dbname=None, dbuser=None, dbpass=None, primarykey=None, commit=True):
+		self.conn = DB.get_item(dbname, dbuser, dbpass, primarykey)
 		self.commit = commit
 
 
@@ -241,20 +241,20 @@ def create_queue(name):
 		db.connect().cursor().execute(SCHEMA['queue_skeleton'].format(name))
 
 
-def create_schema():
-	with DBConnect() as db:
+def create_schema(dbname=None, dbuser=None, dbpass=None):
+	with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db:
 		for name, query in SCHEMA.iteritems():
 			if name in DYNAMIC_TABLES:
 				continue
 			db.connect().cursor().execute(query.format(name))
 
 
-def destroy_schema():
-	with DBConnect() as db0:
+def destroy_schema(dbname=None, dbuser=None, dbpass=None):
+	with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db0:
 		cur0 = db0.connect().cursor()
 		cur0.execute('show tables')
 
-		with DBConnect() as db1:
+		with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db1:
 			for n in cur0:
 				db1.connect().cursor().execute("DROP TABLE IF EXISTS {0}".format(n.values()[0]))
 		cur0.close()
