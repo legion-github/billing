@@ -13,7 +13,7 @@ class JsonRpcHttpError(Exception):
 		Exception.__init__(self, fmt.format(*args))
 
 
-def jsonrpc_http_request(conn, method, params, auth_data = None, req_limit = 256):
+def jsonrpc_http_request(conn, method, params=None, auth_data=None, req_limit=256):
 	req = message.jsonrpc_request(method, params)
 
 	if auth_data:
