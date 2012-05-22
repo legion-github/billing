@@ -265,12 +265,9 @@ SCHEMA = {
 	'metrics': """
 			CREATE TABLE `{0}` (
 			  `id` varchar(128) NOT NULL,
-			  `type` int(11) NOT NULL,
+			  `type` varchar(32) NOT NULL,
+			  `formula` varchar(32) NOT NULL,
 			  `aggregate` tinyint(1) NOT NULL,
-			  `time_desc` varchar(64) NOT NULL,
-			  `time_unit` int(11) NOT NULL,
-			  `count_desc` varchar(64) NOT NULL,
-			  `count_unit` int(11) NOT NULL,
 			  PRIMARY KEY (`id`)
 			) DEFAULT CHARSET=utf8;
 		""",

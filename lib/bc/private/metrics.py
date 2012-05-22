@@ -7,8 +7,9 @@ from bc import database
 class TariffRateConstants(object):
 	__metaclass__ = readonly.metaClass
 	__readonly__  = {
-		'TYPE_SPEED': 'speed',
-		'TYPE_COUNT': 'count',
+		'FORMULA_SPEED': 'speed',
+		'FORMULA_TIME':  'time',
+		'FORMULA_UNIT':  'unit',
 	}
 
 constants = TariffRateConstants()
@@ -17,14 +18,9 @@ class Metric(bobject.BaseObject):
 	def __init__(self, data = None):
 		self.__values__ = {
 			'id':         '',
-			'type':       0L,
+			'type':       '',
+			'formula':    '',
 			'aggregate':  0,
-
-			'count_desc': '',
-			'count_unit': 0L,
-
-			'time_desc':  '',
-			'time_unit':  0L,
 		}
 
 		if data:

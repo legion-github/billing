@@ -29,11 +29,8 @@ def metricList(request):
 	validate = V({
 		'id':         V(basestring, min=1, max=128),
 		'type':       V(basestring, min=1, max=32),
+		'formula':    V(basestring, min=1, max=32),
 		'aggregate':  V(int),
-		'count_desc': V(basestring, min=1, max=64),
-		'count_unit': V(int),
-		'time_desc':  V(basestring, min=1, max=64),
-		'time_unit':  V(int),
 	}),
 	auth = True)
 def metricAdd(request):
@@ -43,11 +40,8 @@ def metricAdd(request):
 		m = metrics.Metric({
 			'id':         request.get('id'),
 			'type':       request.get('type'),
+			'formula':    request.get('formula'),
 			'aggregate':  request.get('aggregate'),
-			'count_desc': request.get('count_desc'),
-			'count_unit': request.get('count_unit'),
-			'time_desc':  request.get('time_desc'),
-			'time_unit':  request.get('time_unit'),
 		})
 		metrics.add(m)
 	except:

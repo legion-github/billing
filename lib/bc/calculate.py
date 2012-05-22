@@ -16,15 +16,14 @@ def calculate(task, metric, nostate=False):
 	if delta_ts < 0:
 		delta_ts = 0
 
-	rate = task.rate
-
-	if rate == 0:
+	if task.rate == 0:
 		return (None, None)
 
 	switch = {
-		metrics.constants.TYPE_SPEED: lambda: rate * delta_ts * task.value,
-		metrics.constants.TYPE_COUNT: lambda: rate * task.value,
+		metrics.constants.FORMULA_SPEED: lambda: task.rate * delta_ts * task.value,
+		metrics.constants.FORMULA_TIME:  lambda: task.rate * delta_ts,
+		metrics.constants.FORMULA_UNIT:  lambda: task.rate * task.value,
 	}
 
-	return (task.customer, switch[metric.type]())
+	return (task.customer, switch[metric.formula]())
 
