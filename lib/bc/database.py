@@ -264,13 +264,14 @@ DYNAMIC_TABLES = ['queue_skeleton']
 SCHEMA = {
 	'metrics': """
 			CREATE TABLE `{0}` (
-			  `mtype` varchar(36) NOT NULL,
-			  `time_type` int(11) NOT NULL,
+			  `id` varchar(128) NOT NULL,
+			  `type` int(11) NOT NULL,
 			  `aggregate` tinyint(1) NOT NULL,
-			  `time_dimention_koef` int(11) NOT NULL,
-			  `count_dimention_koef` int(11) NOT NULL,
-			  `count_dimention_type` varchar(45) NOT NULL,
-			  PRIMARY KEY (`mtype`)
+			  `time_desc` varchar(64) NOT NULL,
+			  `time_unit` int(11) NOT NULL,
+			  `count_desc` varchar(64) NOT NULL,
+			  `count_unit` int(11) NOT NULL,
+			  PRIMARY KEY (`id`)
 			) DEFAULT CHARSET=utf8;
 		""",
 
