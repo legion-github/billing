@@ -225,7 +225,7 @@ class DBConnect(object):
 	def update(self, table, search_dict, set_dict):
 		query = "UPDATE {0} SET {1} WHERE {2};".format(table,
 				", ".join(map(lambda x: "{0}='{1}'".format(x[0], x[1]), set_dict.iteritems())),
-				" AND ".join(map(lambda x: "{0}='{1}'".format(x[0], x[1]), search_dict.iteritems())),
+				" AND ".join(map(lambda x: "{0}='{1}'".format(x[0], self.escape(x[1])), search_dict.iteritems())),
 				)
 		self.connect().cursor().execute(query)
 		if self.commit:
