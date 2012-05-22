@@ -1,18 +1,31 @@
 #!/usr/bin/python2.6
 import bobject
+import readonly
 
 from bc import database
 
+class TariffRateConstants(object):
+	__metaclass__ = readonly.metaClass
+	__readonly__  = {
+		'TYPE_SPEED': 'speed',
+		'TYPE_COUNT': 'count',
+	}
+
+constants = TariffRateConstants()
 
 class Metric(bobject.BaseObject):
 	def __init__(self, data = None):
 		self.__values__ = {
-			'mtype':                '',
-			'count_dimention_koef': 0L,
-			'count_dimention_type': '',
-			'time_dimention_koef':  0L,
-			'time_type':            0L,
-			'aggregate':            0,
+			'mtype':      '',
+
+			'count_desc': '',
+			'count_unit': 0L,
+
+			'time_desc':  '',
+			'time_unit':  0L,
+
+			'type':       0L,
+			'aggregate':  0,
 		}
 
 		if data:
