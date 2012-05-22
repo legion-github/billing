@@ -1,5 +1,5 @@
 from private.tasks import task_done
-from private.rate import Rate
+from private import metrics
 
 def calculate(task, metric, nostate=False):
 	"""
@@ -16,18 +16,15 @@ def calculate(task, metric, nostate=False):
 	if delta_ts < 0:
 		delta_ts = 0
 
-	cost = Rate(0)
-
 	rate = task.rate
 
 	if rate == 0:
 		return (None, None)
 
-	
-	if metric.time_type == 1:
-		cost += rate * delta_ts * task.value
-	elif metric.time_type == 0:
-		cost += rate * task.value
+	switch = {
+		metrics.constants.TYPE_SPEED: lambda: rate * delta_ts * task.value,
+		metrics.constants.TYPE_COUNT: lambda: rate * task.value,
+	}
 
-	return (task.customer, cost)
+	return (task.customer, switch[metric.type]())
 
