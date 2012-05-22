@@ -133,18 +133,6 @@ def read_input(fd):
 		i += 1
 
 
-def process_file(fn):
-	if not os.access(fn, os.R_OK):
-		error('{0}: Not readable'.format(fn))
-		return
-	
-	if not os.path.isfile(fn):
-		error('{0}: Not regular file'.format(fn))
-		return
-
-	read_input(open(fn, 'r'))
-
-
 try:
 	opts, args = getopt.gnu_getopt(sys.argv[1:], 'd:u:ph',
 	                               [ 'database=', 'user=', 'password', 'help' ])
@@ -189,10 +177,11 @@ if len(args) == 0:
 	read_input(sys.stdin)
 	sys.exit(0)
 
-for infile in args[1:]:
-	if infile == 'stdin':
-		if not quiet:
-			print "# Format: <role>\\t<method>\\t<secret>"
-		read_input(sys.stdin)
-		continue
-	process_file(infile)
+for fn in args:
+	if not os.access(fn, os.R_OK):
+		fatal('{0}: Not readable'.format(fn))
+
+	if not os.path.isfile(fn):
+		fatal('{0}: Not regular file'.format(fn))
+
+	read_input(open(fn, 'r'))
