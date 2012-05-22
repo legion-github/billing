@@ -97,7 +97,7 @@ def jsonrpc_process(request):
 			return message.jsonrpc_response(request, res[1])
 
 		if res[0] == JSONRPC_ERROR:
-			return message.jsonrpc_response_error(res[1], res[2])
+			return message.jsonrpc_response_error(request, res[1], res[2])
 
 		if res[0] == JSONRPC_HTTP:
 			return (res[1], res[2], res[3])
