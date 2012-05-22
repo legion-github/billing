@@ -38,7 +38,6 @@ setup(
 		'bc/jsonrpc',
 		'bc/private',
 		'bc/private/wapi',
-		'bc/withdraw',
 	],
 	data_files  = [
 		('libexec/billing',     ['bin/httpd-abc']),
