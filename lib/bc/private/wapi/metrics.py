@@ -27,35 +27,29 @@ def metricList(request):
 
 @jsonrpc.methods.jsonrpc_method(
 	validate = V({
-		'type':        V(basestring, min=1, max=128),
-
-		'count_name':  V(basestring, min=1, max=32),
-		'count_value': V(int),
-
-		'time_name':   V(basestring, min=1, max=32),
-		'time_value':  V(int),
-		'time_type':   V(int),
-
-		'aggregate':   V(int),
+		'id':         V(basestring, min=1, max=128),
+		'type':       V(basestring, min=1, max=32),
+		'aggregate':  V(int),
+		'count_desc': V(basestring, min=1, max=64),
+		'count_unit': V(int),
+		'time_desc':  V(basestring, min=1, max=64),
+		'time_unit':  V(int),
 	}),
 	auth = True)
 def metricAdd(request):
 	""" Adds new billing metric """
 
 	try:
-		m = metrics.Metric().set({
-			'mtype': request.get('type'),
-			'count_dimension': {
-				'name':  request.get('count_name'),
-				'value': request.get('count_value')
-			},
-			'time_dimension': {
-				'name':  request.get('time_name'),
-				'value': request.get('time_value')
-			},
-			'time_type': request.get('time_type'),
-			'aggregate': request.get('aggregate')
-		}).add()
+		m = metrics.Metric({
+			'id':         request.get('id'),
+			'type':       request.get('type'),
+			'aggregate':  request.get('aggregate'),
+			'count_desc': request.get('count_desc'),
+			'count_unit': request.get('count_unit'),
+			'time_desc':  request.get('time_desc'),
+			'time_unit':  request.get('time_unit'),
+		})
+		metrics.add(m)
 	except:
 		return jsonrpc.methods.jsonrpc_result_error('InvalidRequest', { 'status': 'error' })
 
@@ -64,7 +58,7 @@ def metricAdd(request):
 
 @jsonrpc.methods.jsonrpc_method(
 	validate = V({
-		'type': V(basestring, min=1, max=128)
+		'id': V(basestring, min=1, max=128)
 	}),
 	auth = True)
 def metricGet(request):

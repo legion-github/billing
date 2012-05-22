@@ -16,16 +16,15 @@ constants = TariffRateConstants()
 class Metric(bobject.BaseObject):
 	def __init__(self, data = None):
 		self.__values__ = {
-			'mtype':      '',
+			'id':         '',
+			'type':       0L,
+			'aggregate':  0,
 
 			'count_desc': '',
 			'count_unit': 0L,
 
 			'time_desc':  '',
 			'time_unit':  0L,
-
-			'type':       0L,
-			'aggregate':  0,
 		}
 
 		if data:
@@ -33,6 +32,7 @@ class Metric(bobject.BaseObject):
 
 
 def add(metric):
+	"""Creates new billing metric"""
 
 	with database.DBConnect() as db:
 		db.insert('metrics', metric.values)
