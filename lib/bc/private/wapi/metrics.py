@@ -60,9 +60,10 @@ def metricGet(request):
 	""" Return metric object by name """
 
 	try:
-		m = metrics.Metric(request.get('type'))
+		m = metrics.get(request.get('id'))
 
-	except ValueError:
+	except Exception, e:
+		LOG.error(e)
 		return jsonrpc.methods.jsonrpc_result_error('InvalidParams', { 'status': 'error' })
 
 	return jsonrpc.methods.jsonrpc_result({ 'metric': m.values, 'status':'ok' })
