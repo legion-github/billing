@@ -6,7 +6,6 @@ from MySQLdb import cursors
 import config
 import hashing
 
-
 class DBError(Exception):
 	"""The base class for database exceptions that our code throws"""
 
@@ -107,6 +106,7 @@ class DBPool(object):
 				'status': 'free',
 				'socket': MySQLdb.connect(
 						cursorclass = DBDictServCursor,
+						init_command= "SET autocommit=0",
 						host        = dbhost,
 						db          = dbname,
 						user        = dbuser,
@@ -184,7 +184,7 @@ DB = DBPool()
 class DBConnect(object):
 	def __init__(self, dbname=None, dbuser=None, dbpass=None, primarykey=None, commit=True):
 		self.conn = DB.get_item(dbname, dbuser, dbpass, primarykey)
-		self.commit = commit
+		self.autocommit = commit
 
 
 	def connect(self):
@@ -200,6 +200,14 @@ class DBConnect(object):
 		return False
 
 
+	def commit(self):
+		self.connect().commit()
+
+
+	def rollback(self):
+		self.connect().rollback()
+
+
 	def escape(self, string):
 		return self.connect().escape_string(str(string))
 
@@ -208,8 +216,8 @@ class DBConnect(object):
 		query = "DELETE FROM {0} WHERE {1};".format(table,
 			" AND ".join(map(lambda x: "{0}='{1}'".format(x[0], self.escape(x[1])), dictionary.iteritems())))
 		self.connect().cursor().execute(query)
-		if self.commit:
-			self.connect().commit()
+		if self.autocommit:
+			self.commit()
 
 
 	def insert(self, table, dictionary):
@@ -218,8 +226,8 @@ class DBConnect(object):
 				join(dictionary.keys(),'`'),
 				join(dictionary.values(),"'"))
 		self.connect().cursor().execute(query)
-		if self.commit:
-			self.connect().commit()
+		if self.autocommit:
+			self.commit()
 
 
 	def update(self, table, search_dict, set_dict):
@@ -228,8 +236,8 @@ class DBConnect(object):
 				" AND ".join(map(lambda x: "{0}='{1}'".format(x[0], self.escape(x[1])), search_dict.iteritems())),
 				)
 		self.connect().cursor().execute(query)
-		if self.commit:
-			self.connect().commit()
+		if self.autocommit:
+			self.commit()
 
 
 	def query(self, fmt, *args):
@@ -269,7 +277,7 @@ SCHEMA = {
 			  `formula` varchar(32) NOT NULL,
 			  `aggregate` tinyint(1) NOT NULL,
 			  PRIMARY KEY (`id`)
-			) DEFAULT CHARSET=utf8;
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",
 
 	'queue_skeleton': """
@@ -290,7 +298,7 @@ SCHEMA = {
 			  PRIMARY KEY (`uuid`),
 			  UNIQUE KEY `uuid_UNIQUE` (`uuid`),
 			  KEY `state_INDEX` USING BTREE (`state`)
-			) DEFAULT CHARSET=utf8;
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",
 	'rates': """
 			CREATE TABLE `{0}` (
@@ -307,7 +315,7 @@ SCHEMA = {
 			  PRIMARY KEY (`rid`),
 			  UNIQUE KEY `rid_UNIQUE` (`rid`),
 			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`mtype`,`tariff_id`,`arg`)
-			) DEFAULT CHARSET=utf8;
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",
 	'tariffs': """
 			CREATE TABLE `{0}` (
@@ -320,7 +328,7 @@ SCHEMA = {
 			  PRIMARY KEY (`tariff_id`),
 			  UNIQUE KEY `tariff_id_UNIQUE` (`tariff_id`),
 			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`tariff_id`)
-			) DEFAULT CHARSET=utf8;
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",
 	'auth_roles': """
 			CREATE TABLE `{0}` (
@@ -328,7 +336,7 @@ SCHEMA = {
 			  `method` varchar(64) NOT NULL,
 			  `secret` varchar(1024) NOT NULL,
 			  UNIQUE KEY `main_UNIQUE` USING BTREE (`role`, `method`)
-			) DEFAULT CHARSET=utf8;
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	""",
 }
 
