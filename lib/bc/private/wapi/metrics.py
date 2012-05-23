@@ -38,13 +38,14 @@ def metricAdd(request):
 
 	try:
 		m = metrics.Metric({
-			'id':         request.get('id'),
-			'type':       request.get('type'),
-			'formula':    request.get('formula'),
-			'aggregate':  request.get('aggregate'),
+			'id':         str(request.get('id')),
+			'type':       str(request.get('type')),
+			'formula':    str(request.get('formula')),
+			'aggregate':  int(request.get('aggregate')),
 		})
 		metrics.add(m)
-	except:
+	except Exception, e:
+		LOG.error(e)
 		return jsonrpc.methods.jsonrpc_result_error('InvalidRequest', { 'status': 'error' })
 
 	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
