@@ -31,7 +31,9 @@ def add(metric):
 	"""Creates new billing metric"""
 
 	with database.DBConnect() as db:
-		db.insert('metrics', metric.values)
+		r = db.query("SELECT id FROM metrics WHERE id=%s", (metric.id,)).one()
+		if not r:
+			db.insert('metrics', metric.values)
 
 
 def get_all():
