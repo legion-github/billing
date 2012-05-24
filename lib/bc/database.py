@@ -13,7 +13,7 @@ class DBError(Exception):
 		Exception.__init__(self, unicode(error).format(*args) if len(args) else unicode(str(error)))
 
 
-def get_host(key = None):
+def get_host(key=None):
 	"""Returns database server"""
 
 	conf = config.read()
@@ -73,7 +73,7 @@ class DBPool(object):
 		self.timeout   = timeout
 
 
-	def get_item(self, dbname=None, dbuser=None, dbpass=None, primarykey=None):
+	def get_item(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, primarykey=None):
 		"""Returns free connection"""
 
 		conf = config.read()
@@ -81,7 +81,7 @@ class DBPool(object):
 		dbuser = dbuser or conf['database']['user']
 		dbpass = dbpass or conf['database']['pass']
 		dbname = dbname or conf['database']['name']
-		dbhost = get_host(primarykey)
+		dbhost = dbhost or get_host(primarykey)
 
 		if not dbhost:
 			raise DBError("Database host name is not specified")
@@ -182,8 +182,8 @@ class DBQuery(object):
 DB = DBPool()
 
 class DBConnect(object):
-	def __init__(self, dbname=None, dbuser=None, dbpass=None, primarykey=None, commit=True):
-		self.conn = DB.get_item(dbname, dbuser, dbpass, primarykey)
+	def __init__(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, primarykey=None, commit=True):
+		self.conn = DB.get_item(dbhost, dbname, dbuser, dbpass, primarykey)
 		self.autocommit = commit
 
 
