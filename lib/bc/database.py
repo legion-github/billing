@@ -244,31 +244,18 @@ class DBConnect(object):
 		return DBQuery(self.connect().cursor(), fmt, *args)
 
 
-def create_queue(name):
-	with DBConnect() as db:
-		db.connect().cursor().execute(SCHEMA['queue_skeleton'].format(name))
-
-
 def create_schema(dbname=None, dbuser=None, dbpass=None):
 	with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db:
 		for name, query in SCHEMA.iteritems():
-			if name in DYNAMIC_TABLES:
-				continue
 			db.connect().cursor().execute(query.format(name))
 
 
 def destroy_schema(dbname=None, dbuser=None, dbpass=None):
-	with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db0:
-		cur0 = db0.connect().cursor()
-		cur0.execute('show tables')
-
-		with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db1:
-			for n in cur0:
-				db1.connect().cursor().execute("DROP TABLE IF EXISTS {0}".format(n.values()[0]))
-		cur0.close()
+	with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db:
+		for name in SCHEMA.keys():
+			db.connect().cursor().execute("DROP TABLE IF EXISTS {0}".format(name))
 
 
-DYNAMIC_TABLES = ['queue_skeleton']
 SCHEMA = {
 	'metrics': """
 			CREATE TABLE `{0}` (
@@ -280,7 +267,7 @@ SCHEMA = {
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",
 
-	'queue_skeleton': """
+	'queue': """
 			CREATE TABLE `{0}` (
 			  `uuid` varchar(36) NOT NULL,
 			  `customer` varchar(36) NOT NULL,
