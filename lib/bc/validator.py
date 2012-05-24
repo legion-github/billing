@@ -76,7 +76,7 @@ class Validate(object):
 
 
 	def _check_ignore(self):
-		if not self.value:
+		if self.value == None:
 			if self.required:
 				raise ValidError(self.curname, "Required but not defined")
 			return True
@@ -168,7 +168,9 @@ class Validate(object):
 		python> tmpl.check( {'a':1} )
 		python> tmpl.check( {'a':2,'b':3} )
 		"""
-		self.value = arg[0] or self.default
+		self.value = arg[0]
+		if self.value == None and self.default != None:
+			self.value = self.default
 		self.curname = ".".join(self.path)
 
 #		print "Check", self.curname, 'type:', self.vtype
