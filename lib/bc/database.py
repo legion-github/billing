@@ -289,18 +289,18 @@ SCHEMA = {
 		""",
 	'rates': """
 			CREATE TABLE `{0}` (
-			  `rid` varchar(36) NOT NULL,
+			  `id` varchar(36) NOT NULL,
 			  `description` varchar(1024) NOT NULL,
 			  `mtype` varchar(36) NOT NULL,
 			  `tariff_id` varchar(36) NOT NULL,
-			  `rate_value` bigint(20) NOT NULL,
-			  `rate_currency` enum('RUR','USD','EUR') NOT NULL,
+			  `rate` bigint(20) NOT NULL,
+			  `currency` enum('RUR','USD','EUR') NOT NULL,
 			  `state` enum('ACTIVE','ARCHIVE','UPDATING') NOT NULL,
 			  `time_create` int(11) NOT NULL,
 			  `time_destroy` int(11) NOT NULL,
 			  `arg` varchar(36) DEFAULT '',
-			  PRIMARY KEY (`rid`),
-			  UNIQUE KEY `rid_UNIQUE` (`rid`),
+			  PRIMARY KEY (`id`),
+			  UNIQUE KEY `id_UNIQUE` (`id`),
 			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`mtype`,`tariff_id`,`arg`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",

@@ -4,7 +4,7 @@ import copy
 
 import readonly
 import bobject
-import tariff_rate
+import rate
 
 from bc import database
 
@@ -27,7 +27,7 @@ class Tariff(bobject.BaseObject):
 			'tariff_id':   str(uuid.uuid4()),
 			'name':        '',
 			'description': '',
-			'currency':    tariff_rate.constants.CURRENCY_RUB,
+			'currency':    rate.constants.CURRENCY_RUB,
 			'state':       c.STATE_ENABLE,
 		}
 
@@ -38,7 +38,7 @@ class Tariff(bobject.BaseObject):
 	def get_rates(self):
 		""" Gets all tariff's metric rates """
 
-		return tariff_rate.get_by_tariff(self.tariff_id)
+		return rate.get_by_tariff(self.tariff_id)
 
 
 	def export(self):
@@ -80,7 +80,7 @@ class Tariff(bobject.BaseObject):
 				del r['rid']
 			r['tid'] = self.tariff_id
 
-			tr = tariff_rate.TariffRate(r)
+			tr = rate.Rate(r)
 			tr.add()
 
 		return self
