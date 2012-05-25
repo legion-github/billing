@@ -4,7 +4,7 @@ import readonly
 
 from bc import database
 
-class TariffRateConstants(object):
+class MetricConstants(object):
 	__metaclass__ = readonly.metaClass
 	__readonly__  = {
 		'FORMULA_SPEED': 'speed',
@@ -12,7 +12,7 @@ class TariffRateConstants(object):
 		'FORMULA_UNIT':  'unit',
 	}
 
-constants = TariffRateConstants()
+constants = MetricConstants()
 
 class Metric(bobject.BaseObject):
 	def __init__(self, data = None):
