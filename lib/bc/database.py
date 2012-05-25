@@ -269,11 +269,9 @@ SCHEMA = {
 
 	'queue': """
 			CREATE TABLE `{0}` (
-			  `uuid` varchar(36) NOT NULL,
+			  `id` varchar(36) NOT NULL,
 			  `customer` varchar(36) NOT NULL,
 			  `rid` varchar(36) NOT NULL,
-			  `rate` bigint(20) NOT NULL,
-			  `description` varchar(1024) NOT NULL,
 			  `state` enum('DONE','PROCESSING','AGGREGATE') NOT NULL,
 			  `value` bigint(20) NOT NULL DEFAULT '1',
 			  `time_check` int(11) NOT NULL,
@@ -282,9 +280,9 @@ SCHEMA = {
 			  `target_user` varchar(36) DEFAULT '',
 			  `target_uuid` varchar(36) DEFAULT '',
 			  `target_description` varchar(36) DEFAULT '',
-			  PRIMARY KEY (`uuid`),
-			  UNIQUE KEY `uuid_UNIQUE` (`uuid`),
-			  KEY `state_INDEX` USING BTREE (`state`)
+			  PRIMARY KEY (`id`),
+			  UNIQUE KEY `id_UNIQUE` (`id`),
+			  KEY `search_INDEX` USING BTREE (`state`,`time_check`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",
 	'rates': """

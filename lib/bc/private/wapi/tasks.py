@@ -31,17 +31,6 @@ def taskOpen(request):
 	if 'time-create' not in request:
 		request['time-create'] = int(time.time())
 
-	# Temp hack for now
-	#if not request['customer']:
-	#	res = mongodb.collection('log_accounts').find_one(
-	#		{ 'user': request['user'] }
-	#	)
-	#	if not res:
-	#		LOG.error("Unable to find customer by user: %s", request['user'])
-	#		return jsonrpc.methods.jsonrpc_result({'status':'fail'})
-	#
-	#	request['customer'] = res['customer']
-
 	customer = customers.get(request['customer'], ignore_wallets = True)
 	rid, rate  = queue.resolve(request['type'], customer['tariff'], request['arg'])
 
@@ -49,9 +38,9 @@ def taskOpen(request):
 		return jsonrpc.methods.jsonrpc_result({'status':'fail'})
 
 	try:
-		t = task.Task()
+		t = tasks.Task()
 		t.set({
-			'uuid':         request['uuid'],
+			'id':           request['uuid'],
 			'customer':     customer['_id'],
 
 			'time_create':  request['time-create'],
@@ -63,7 +52,7 @@ def taskOpen(request):
 			'target_descr': request['descr'],
 		})
 
-		queue.task_add(request['type'], t)
+		tasks.add(request['type'], t)
 
 	except Exception, e:
 		LOG.exception("Unable to add new task: %s", e)

@@ -6,10 +6,11 @@ __version__ = '1.0'
 import uuid
 import time
 
-import readonly
-import bobject
+from bc import database
 
-from bc import mongodb
+from bc.private import readonly
+from bc.private import bobject
+
 
 class TaskConstants(object):
 	__metaclass__ = readonly.metaClass
@@ -27,10 +28,9 @@ class Task(bobject.BaseObject):
 		c = TaskConstants()
 		now = int(time.time())
 
-		self.__getter__ = { 'rate': lambda x:int(self.__values__['rate'])}
 		self.__values__ = {
 			# Уникальный идентификатор задания
-			'uuid':           str(uuid.uuid4()),
+			'id':             str(uuid.uuid4()),
 
 			# Владелец задания, тот чей счёт используется
 			'customer':       '',
@@ -38,17 +38,11 @@ class Task(bobject.BaseObject):
 			# Уникальный идентификатор правила тарифа
 			'rid':            '',
 
-			# (Дупликация) стоймость метрики в тарифе
-			'rate':           '',
-
-			# (Дупликация) описание метрики в тарифе
-			'description':    '',
-
 			# Текущее состояние задания
 			'state':          c.STATE_PROCESSING,
 
 			# Значение ресурса задания. Это может быть время или штуки
-			'value':          0,
+			'value':          0L,
 
 			# Тайминги задания
 			'time_now':       now,
@@ -66,8 +60,20 @@ class Task(bobject.BaseObject):
 			self.set(data)
 
 
-def task_done(task, metric):
-	mongodb.collection(metric.mtype).update(
-		{ 'uuid': task.uuid },
-		{ '$set': { 'state': task.c.STATE_DONE } }
-	)
+def add(mtype, task):
+	with database.DBConnect(primarykey=task.id) as db:
+		db.insert('queue', task.values)
+
+
+def set_done(mtype, task):
+	with database.DBConnect(primarykey=task.id) as db:
+		c = TaskConstants()
+		db.update('queue',
+			{
+				'id':    task.id,
+				'state': c.STATE_PROCESSING
+			},
+			{
+				'state': c.STATE_DONE
+			}
+		)

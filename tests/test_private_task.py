@@ -8,13 +8,11 @@ class Test(unithelper.TestCase):
 
 		now = int(time.time())
 		values = {
-			'uuid':           '123',
+			'id':             '123',
 			'customer':       '',
 			'rid':            '',
-			'rate':           '',
-			'description':    '',
 			'state':          tasks.constants.STATE_PROCESSING,
-			'value':          0,
+			'value':          0L,
 			'time_now':       now,
 			'time_check':     now,
 			'time_create':    now,
@@ -25,7 +23,7 @@ class Test(unithelper.TestCase):
 		}
 
 		t = tasks.Task()
-		t.set({'uuid':'123'})
+		t.set({'id':'123'})
 
 		self.assertEqual(set(t.values.keys()), set(values.keys()))
 		self.assertEqual(set(t.values.values()), set(values.values()))
@@ -37,7 +35,7 @@ class Test(unithelper.TestCase):
 		t = tasks.Task()
 
 		with self.assertRaises(TypeError):
-			t.uuid = 123
+			t.id = 123
 
 		with self.assertRaises(KeyError):
 			t.zzz = 1
@@ -49,7 +47,7 @@ class Test(unithelper.TestCase):
 			t.values = {}
 
 		with self.assertNotRaises(TypeError):
-			t.uuid = '123'
+			t.id = '123'
 
 		with self.assertNotRaises(TypeError):
-			t.values['uuid'] = '123'
+			t.values['id'] = '123'
