@@ -13,8 +13,3 @@ def resolve(mtype, tid, arg):
 		if not r:
 			return (None, None)
 		return (r['rid'], r['rate'])
-
-
-def task_add(mtype, otask):
-	with database.DBConnect(primarykey = otask.uuid) as db:
-		db.insert(mtype, otask.values)

@@ -12,6 +12,7 @@ class Test(unithelper.TestCase):
 			'customer':       '',
 			'rid':            '',
 			'state':          tasks.constants.STATE_PROCESSING,
+			'rate':           0L,
 			'value':          0L,
 			'time_now':       now,
 			'time_check':     now,
