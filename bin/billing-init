@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+import httplib
+
+from bc import log
+from bc.jsonrpc import http
+from bc.jsonrpc import message
+
+LOG = log.logger("client", syslog=False)
+
+host = 'localhost:10004'
+
+try:
+	conn = httplib.HTTPConnection(host, timeout = 30)
+	conn.connect()
+	conn.timeout = 30
+	conn.sock.settimeout(conn.timeout)
+except Exception as e:
+	LOG.exception("Failed to connect to %s: %s.", host, e)
+	sys.exit(1)
+
+try:
+	auth    = {'role':'admin','secret':'qwerty'}
+	metrics = [
+		{ 'id': 'os_types',                  'formula': 'unit',  'type': 'time',        'aggregate': 1 },
+		{ 'id': 'service_monitoring',        'formula': 'unit',  'type': 'time',        'aggregate': 1 },
+		{ 'id': 'volume_bytes',              'formula': 'speed', 'type': 'bytes-usage', 'aggregate': 0 },
+		{ 'id': 'snapshot_bytes',            'formula': 'speed', 'type': 'bytes-usage', 'aggregate': 0 },
+		{ 'id': 'fs_bytes',                  'formula': 'speed', 'type': 'bytes-usage', 'aggregate': 0 },
+		{ 'id': 'fs_get',                    'formula': 'unit',  'type': 'count',       'aggregate': 1 },
+		{ 'id': 'fs_put',                    'formula': 'unit',  'type': 'count',       'aggregate': 1 },
+		{ 'id': 'ipaddr_reserve',            'formula': 'time',  'type': 'time-usage',  'aggregate': 0 },
+		{ 'id': 'ipaddr_use',                'formula': 'time',  'type': 'time-usage',  'aggregate': 0 },
+		{ 'id': 'traffic_region_incoming',   'formula': 'unit',  'type': 'bytes',       'aggregate': 1 },
+		{ 'id': 'traffic_region_outgoing',   'formula': 'unit',  'type': 'bytes',       'aggregate': 1 },
+		{ 'id': 'traffic_external_incoming', 'formula': 'unit',  'type': 'bytes',       'aggregate': 1 },
+		{ 'id': 'traffic_external_outgoing', 'formula': 'unit',  'type': 'bytes',       'aggregate': 1 },
+	]
+	for m in metrics:
+		print '->', m
+		r = http.jsonrpc_http_request(conn, "metricAdd", m, auth_data=auth)
+		print '<-', r
+
+except Exception, e:
+	print 'Error:', e
