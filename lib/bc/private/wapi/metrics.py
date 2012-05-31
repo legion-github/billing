@@ -44,12 +44,7 @@ def metricAdd(request):
 	""" Adds new billing metric """
 
 	try:
-		m = metrics.Metric({
-			'id':         str(request.get('id')),
-			'type':       str(request.get('type')),
-			'formula':    str(request.get('formula')),
-			'aggregate':  int(request.get('aggregate')),
-		})
+		m = metrics.Metric(request)
 		metrics.add(m)
 	except Exception, e:
 		LOG.error(e)

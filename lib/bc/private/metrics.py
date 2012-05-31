@@ -17,10 +17,10 @@ constants = MetricConstants()
 class Metric(bobject.BaseObject):
 	def __init__(self, data = None):
 		self.__values__ = {
-			'id':         '',
-			'type':       '',
-			'formula':    '',
-			'aggregate':  0,
+			'id':         u'',
+			'type':       u'',
+			'formula':    u'',
+			'aggregate':  0L,
 		}
 
 		if data:
