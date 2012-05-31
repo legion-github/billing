@@ -13,14 +13,21 @@ LOG = log.logger("wapi.metrics")
 def metricList(request):
 	""" Returns a list of all registered metrics """
 
-	ret = []
-	for m in metrics.get_all():
-		ret.append(m.values)
+	try:
+		ret = map(lambda m: m.values, metrics.get_all())
 
+	except Exception, e:
+		LOG.error(e)
+		return jsonrpc.methods.jsonrpc_result_error('ServerError',
+			{
+				'status':  'error',
+				'message': 'Unable to obtain metric list'
+			}
+		)
 	return jsonrpc.methods.jsonrpc_result(
 		{
-			'metrics': ret,
-			'status':'ok'
+			'status':'ok',
+			'metrics': ret
 		}
 	)
 
@@ -46,8 +53,12 @@ def metricAdd(request):
 		metrics.add(m)
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('InvalidRequest', { 'status': 'error' })
-
+		return jsonrpc.methods.jsonrpc_result_error('ServerError',
+			{
+				'status':  'error',
+				'message': 'Unable to add new metric'
+			}
+		)
 	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
 
 
@@ -64,6 +75,10 @@ def metricGet(request):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('InvalidParams', { 'status': 'error' })
-
+		return jsonrpc.methods.jsonrpc_result_error('ServerError',
+			{
+				'status':  'error',
+				'message': 'Unable to get metric'
+			}
+		)
 	return jsonrpc.methods.jsonrpc_result({ 'metric': m.values, 'status':'ok' })
