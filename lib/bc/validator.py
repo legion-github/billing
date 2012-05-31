@@ -71,7 +71,14 @@ class Validate(object):
 
 
 	def _check_type(self, typ):
-		if not isinstance(self.value, typ):
+		if typ in [ int, long ]:
+			t = (int,long)
+		elif typ == unicode:
+			t = (basestring,unicode)
+		else:
+			t = typ
+
+		if not isinstance(self.value, t):
 			raise ValidError(self.curname, "Wrong type")
 
 

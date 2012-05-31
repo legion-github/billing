@@ -23,8 +23,15 @@ class BaseObject(object):
 
 			typ = type(self.__values__[n])
 
-			if not isinstance(o[n], typ):
-				raise TypeError("Type of {0} is {1}, not {2}".format(o[n], type(o[n]),typ))
+			if typ in [ int, long ]:
+				t = (int,long)
+			elif typ == unicode:
+				t = (basestring,unicode)
+			else:
+				t = typ
+
+			if not isinstance(o[n], t):
+				raise TypeError("Type of {0} is {1}, not {2}".format(o[n], type(o[n]), typ))
 
 			self.__values__[n] = o[n]
 
