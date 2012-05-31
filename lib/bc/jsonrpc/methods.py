@@ -103,8 +103,8 @@ def jsonrpc_process(request):
 			return (res[1], res[2], res[3])
 
 	except ValidError, e:
-		return error('InvalidParams')
+		return error('InvalidParams', str(e))
 
 	except Exception, e:
-		LOG.exception("Unable to process request")
+		LOG.exception("Unable to process request", e)
 		return error('InternalError')
