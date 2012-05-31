@@ -9,6 +9,7 @@ from bc.jsonrpc import message
 LOG = log.logger("client", syslog=False)
 
 host = 'localhost:10004'
+auth = {'role':'admin','secret':'qwerty'}
 
 try:
 	conn = httplib.HTTPConnection(host, timeout = 30)
@@ -19,8 +20,9 @@ except Exception as e:
 	LOG.exception("Failed to connect to %s: %s.", host, e)
 	sys.exit(1)
 
-try:
-	auth    = {'role':'admin','secret':'qwerty'}
+
+
+def process_metrics():
 	metrics = [
 		{ 'id': 'os_types',                  'formula': 'unit',  'type': 'time',        'aggregate': 1 },
 		{ 'id': 'service_monitoring',        'formula': 'unit',  'type': 'time',        'aggregate': 1 },
@@ -36,10 +38,42 @@ try:
 		{ 'id': 'traffic_external_incoming', 'formula': 'unit',  'type': 'bytes',       'aggregate': 1 },
 		{ 'id': 'traffic_external_outgoing', 'formula': 'unit',  'type': 'bytes',       'aggregate': 1 },
 	]
-	for m in metrics:
-		print '->', m
-		r = http.jsonrpc_http_request(conn, "metricAdd", m, auth_data=auth)
+	for o in metrics:
+		print '->', o
+		r = http.jsonrpc_http_request(conn, "metricAdd", o, auth_data=auth)
 		print '<-', r
+
+
+def process_customers():
+	customers = [
+		{
+			'login':          'google.com',
+			'name_short':     'Google',
+			'name_full':      'Google OOO (Moscow)',
+			'comment':        'Important client',
+#			'tariff_id':      '',
+			'contact_person': 'Ted Person',
+			'contact_email':  'ted.person@gmail.com',
+#			'contact_phone':  '',
+			'wallet':         1234567890,
+#			'wallet_mode':    0,
+		},
+		{
+			'login':          'testy.org',
+			'name_short':     'Test',
+			'name_full':      'Test Inc.',
+			'comment':        'Simple client',
+		}
+	]
+	for o in customers:
+		print '->', o
+		r = http.jsonrpc_http_request(conn, "customerAdd", o, auth_data=auth)
+		print '<-', r
+
+
+try:
+	process_metrics()
+	process_customers()
 
 except Exception, e:
 	print 'Error:', e

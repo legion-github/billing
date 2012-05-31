@@ -212,6 +212,12 @@ class DBConnect(object):
 		return self.connect().escape_string(str(string))
 
 
+	def exeute(self, fmt, *args):
+		self.connect().cursor().execute(fmt, *args)
+		if self.autocommit:
+			self.commit()
+
+
 	def delete(self, table, dictionary):
 		query = "DELETE FROM {0} WHERE {1};".format(table,
 			" AND ".join(map(lambda x: "{0}='{1}'".format(x[0], self.escape(x[1])), dictionary.iteritems())))
@@ -273,10 +279,10 @@ SCHEMA = {
 			  `customer` varchar(36) NOT NULL,
 			  `rid` varchar(36) NOT NULL,
 			  `state` enum('DONE','PROCESSING','AGGREGATE') NOT NULL,
-			  `value` bigint(20) NOT NULL DEFAULT '1',
+			  `value` bigint(8) NOT NULL DEFAULT '1',
 			  `time_check` int(11) NOT NULL,
 			  `time_create` int(11) NOT NULL,
-			  `time_destroy` int(11) NOT NULL,
+			  `time_destroy` int(11) NOT NULL DEFAULT '0',
 			  `target_user` varchar(36) DEFAULT '',
 			  `target_uuid` varchar(36) DEFAULT '',
 			  `target_description` varchar(36) DEFAULT '',
@@ -315,6 +321,29 @@ SCHEMA = {
 			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`tariff_id`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",
+	'customers': """
+			CREATE TABLE `{0}` (
+			  `id` varchar(36) NOT NULL,
+			  `login` varchar(64) NOT NULL,
+			  `name_short` varchar(255)  NOT NULL,
+			  `name_full` varchar(1024) NOT NULL DEFAULT '',
+			  `comment` varchar(1024) NOT NULL DEFAULT '',
+			  `contract_client` varchar(255) NOT NULL DEFAULT '',
+			  `contract_service` varchar(255) NOT NULL DEFAULT '',
+			  `tariff_id` varchar(36) NOT NULL DEFAULT '',
+			  `contact_person` varchar(255) NOT NULL DEFAULT '',
+			  `contact_email` varchar(255) NOT NULL DEFAULT '',
+			  `contact_phone` varchar(30) NOT NULL DEFAULT '',
+			  `state` int NOT NULL DEFAULT '0',
+			  `time_create` int(11) NOT NULL,
+			  `time_destroy` int(11) NOT NULL DEFAULT '0',
+			  `wallet` bigint NOT NULL DEFAULT '0',
+			  `wallet_mode` int NOT NULL DEFAULT '0',
+			  PRIMARY KEY (`id`),
+			  UNIQUE KEY `id_UNIQUE` (`id`),
+			  UNIQUE KEY `main_UNIQUE` (`login`, `state`)
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	""",
 	'auth_roles': """
 			CREATE TABLE `{0}` (
 			  `role` varchar(64) NOT NULL,

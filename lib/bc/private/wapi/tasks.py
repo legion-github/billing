@@ -2,8 +2,7 @@
 
 __version__ = '1.0'
 
-from billing import customers
-
+from bc.private   import customers
 from bc.private   import queue
 from bc.private   import tasks
 from bc.validator import Validate as V
@@ -31,11 +30,26 @@ def taskOpen(request):
 	if 'time-create' not in request:
 		request['time-create'] = int(time.time())
 
-	customer = customers.get(request['customer'], ignore_wallets = True)
+	customer = customers.get(request['customer'])
+
+	if not customer:
+		return jsonrpc.methods.jsonrpc_result_error('InvalidParams',
+			{
+				'status':  'error',
+				'message': 'Invalid customer'
+			}
+		)
+
+
 	rid, rate  = queue.resolve(request['type'], customer['tariff'], request['arg'])
 
 	if not rid:
-		return jsonrpc.methods.jsonrpc_result({'status':'fail'})
+		return jsonrpc.methods.jsonrpc_result_error('InvalidParams',
+			{
+				'status':  'error',
+				'message': 'Unable to find rate'
+			}
+		)
 
 	try:
 		t = tasks.Task()
@@ -51,13 +65,16 @@ def taskOpen(request):
 			'target_uuid':  request['uuid'],
 			'target_descr': request['descr'],
 		})
-
 		tasks.add(request['type'], t)
 
 	except Exception, e:
 		LOG.exception("Unable to add new task: %s", e)
-		return jsonrpc.methods.jsonrpc_result({'status':'fail'})
-
+		return jsonrpc.methods.jsonrpc_result_error('ServerError',
+			{
+				'status':  'error',
+				'message': 'Unable to add new task'
+			}
+		)
 	return jsonrpc.methods.jsonrpc_result({'status':'ok'})
 
 
