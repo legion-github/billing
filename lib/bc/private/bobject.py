@@ -18,6 +18,9 @@ class BaseObject(object):
 				h[n](n, o[n])
 				continue
 
+			if o[n] == None:
+				continue
+
 			typ = type(self.__values__[n])
 
 			if not isinstance(o[n], typ):
