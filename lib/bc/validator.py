@@ -13,6 +13,11 @@ class ValidError(Exception):
 		self.message = unicode(error).format(*args) if len(args) else unicode(str(error))
 		Exception.__init__(self, self.message)
 
+
+	def __str__(self):
+		return "{0}: {1}".format(self.value, self.message)
+
+
 	def to_json(self):
 		return json.dumps({
 			'code':    self.code,
