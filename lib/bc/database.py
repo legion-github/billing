@@ -200,6 +200,91 @@ class DBConnect(object):
 		return False
 
 
+	def sql_where(self, query, sort=False):
+
+		def sql_bool(x):
+			if x == None:
+				return 'NULL'
+			return str(bool(x))
+
+		def sql_optimize_operation(op, value):
+			if op == '$eq':
+				if isinstance(value, bool) or value == None:
+					return '$is'
+				if isinstance(value, list):
+					return '$in'
+			if op == '$ne':
+				if isinstance(value, bool) or value == None:
+					return '$notis'
+				if isinstance(value, list):
+					return '$nin'
+			return op
+
+		def sql_quote(op, value):
+			if op in ['$is','$notis']:
+				return sql_bool(value)
+
+			if op in ['$in','$nin']:
+				return ",".join(map(self.literal, value))
+
+			if isinstance(value, dict) and op in ['$gt','$ge','$lt','$le','$eq','$ne']:
+				if '$field' not in value:
+					raise ValueError('Unsupported value type')
+				return value['$field']
+
+			return self.literal(value)
+
+		concatenation = {
+			'$and':    lambda x: " AND ".join(x),
+			'$or':     lambda x:  " OR ".join(x),
+		}
+		operation = {
+			'$gt':     lambda x,y: x + " > "          + y,
+			'$ge':     lambda x,y: x + " >= "         + y,
+			'$lt':     lambda x,y: x + " < "          + y,
+			'$le':     lambda x,y: x + " <= "         + y,
+			'$eq':     lambda x,y: x + " = "          + y,
+			'$ne':     lambda x,y: x + " != "         + y,
+			'$is':     lambda x,y: x + " IS "         + y,
+			'$notis':  lambda x,y: x + " IS NOT "     + y,
+			'$regex':  lambda x,y: x + " REGEXP "     + y,
+			'$nregex': lambda x,y: x + " NOT REGEXP " + y,
+			'$like':   lambda x,y: x + " LIKE "       + y,
+			'$nlike':  lambda x,y: x + " NOT LIKE "   + y,
+			'$in':     lambda x,y: x + " IN ("        + y + ")",
+			'$nin':    lambda x,y: x + " NOT IN ("    + y + ")",
+		}
+		result = []
+		for name, conditions in query.iteritems():
+			if name == '$not':
+				s = " NOT (" + self.sql_where(conditions, sort) + ")"
+			elif name in concatenation:
+				s = concatenation[name](map(
+					lambda x: "(" + self.sql_where(x, sort) + ")",
+					conditions))
+			elif isinstance(conditions, dict):
+				a = []
+				for o, value in conditions.iteritems():
+					o = sql_optimize_operation(o, value)
+					v = sql_quote(o,value)
+					r = operation[o](name,v)
+					a.append(r)
+				if sort:
+					a.sort()
+				s = concatenation['$and'](a)
+			else:
+				o = sql_optimize_operation('$eq', conditions)
+				v = sql_quote(o, conditions)
+				s = operation[o](name, v)
+
+			result.append(s)
+
+		if sort:
+			result.sort()
+
+		return concatenation['$and'](result)
+
+
 	def commit(self):
 		self.connect().commit()
 
@@ -212,42 +297,70 @@ class DBConnect(object):
 		return self.connect().escape_string(str(string))
 
 
+	def literal(self, string):
+		return "'{0}'".format(self.escape(string))
+
+
 	def exeute(self, fmt, *args):
 		self.connect().cursor().execute(fmt, *args)
 		if self.autocommit:
 			self.commit()
 
 
-	def delete(self, table, dictionary):
-		query = "DELETE FROM {0} WHERE {1};".format(table,
-			" AND ".join(map(lambda x: "{0}='{1}'".format(x[0], self.escape(x[1])), dictionary.iteritems())))
-		self.connect().cursor().execute(query)
+	def delete(self, table, where=None):
+		cond = ""
+		if where:
+			cond = "WHERE " + self.sql_where(where)
+		self.connect().cursor().execute("DELETE FROM {0} {1};".format(table,cond))
 		if self.autocommit:
 			self.commit()
 
 
 	def insert(self, table, dictionary):
-		join = lambda x, y: "{0}, {0}".format(y).join(map(self.escape, x)).join([y,y])
 		query = "INSERT INTO {0} ({1}) VALUES ({2});".format(table,
-				join(dictionary.keys(),'`'),
-				join(dictionary.values(),"'"))
+				",".join(dictionary.keys()),
+				",".join(map(self.literal, dictionary.values())))
 		self.connect().cursor().execute(query)
 		if self.autocommit:
 			self.commit()
 
 
 	def update(self, table, search_dict, set_dict):
-		query = "UPDATE {0} SET {1} WHERE {2};".format(table,
-				", ".join(map(lambda x: "{0}='{1}'".format(x[0], x[1]), set_dict.iteritems())),
-				" AND ".join(map(lambda x: "{0}='{1}'".format(x[0], self.escape(x[1])), search_dict.iteritems())),
-				)
-		self.connect().cursor().execute(query)
+		new  = ", ".join(map(lambda x: "{0}={1}".format(x[0], self.literal(x[1])), set_dict.iteritems()))
+		cond = self.sql_where(search_dict)
+		self.connect().cursor().execute("UPDATE {0} SET {1} WHERE {2};".format(table, new, cond))
 		if self.autocommit:
 			self.commit()
 
 
 	def query(self, fmt, *args):
 		return DBQuery(self.connect().cursor(), fmt, *args)
+
+
+	def find(self, table, spec=None, fields=None, skip=0, limit=0):
+		if isinstance(fields, list):
+			flist = ",".join(fields)
+		elif isinstance(fields, dict):
+			flist = ",".join(map(lambda x: "{0} as {1}".format(x[0],x[1]),fields.iteritems()))
+		else:
+			flist = '*'
+
+		fmt = "SELECT {0} FROM {1}".format(flist,table)
+
+		if isinstance(spec, dict):
+			fmt += " WHERE " + self.sql_where(spec)
+
+		if limit > 0:
+			fmt += " LIMIT " + str(limit)
+
+		if skip > 0:
+			fmt += " OFFSET " + str(skip)
+
+		return self.query(fmt)
+
+
+	def find_one(self, *args, **kwargs):
+		return self.find(*args, **kwargs).one()
 
 
 def create_schema(dbname=None, dbuser=None, dbpass=None):
