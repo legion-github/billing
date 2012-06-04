@@ -1,7 +1,7 @@
 import copy
 import unithelper
 
-from bc.private import rates
+from bc import rates
 
 class Test(unithelper.TestCase):
 	def test_new_metric(self):

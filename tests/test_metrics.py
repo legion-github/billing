@@ -1,7 +1,7 @@
 import copy
 import unittest2 as unittest
 import unithelper
-from bc.private import metrics
+from bc import metrics
 
 
 class Test(unithelper.DBTestCase):

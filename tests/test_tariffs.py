@@ -2,8 +2,7 @@ import unithelper
 import uuid
 
 from bc import database
-
-from bc.private import tariff
+from bc import tariff
 
 class Test(unithelper.DBTestCase):
 

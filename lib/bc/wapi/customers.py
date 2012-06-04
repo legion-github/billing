@@ -1,9 +1,9 @@
 __version__ = '1.0'
 
-from bc.private import customers
 from bc.validator import Validate as V
 from bc import jsonrpc
 from bc import log
+from bc import customers
 
 LOG = log.logger("wapi.customers")
 

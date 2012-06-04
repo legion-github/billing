@@ -36,7 +36,6 @@ setup(
 		# Billing library
 		'bc',
 		'bc/jsonrpc',
-		'bc/private',
 		'bc/wapi',
 	],
 	data_files  = [

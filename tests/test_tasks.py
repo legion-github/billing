@@ -1,6 +1,6 @@
 import time
 import unithelper
-from bc.private import tasks
+from bc import tasks
 
 class Test(unithelper.TestCase):
 	def test_new_task(self):

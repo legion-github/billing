@@ -1,5 +1,5 @@
-from private.tasks import task_done
-from private import metrics
+from bc.tasks import task_done
+from bc import metrics
 
 def calculate(task, metric, nostate=False):
 	"""

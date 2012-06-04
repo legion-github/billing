@@ -1,5 +1,5 @@
 import unithelper
-from bc.private import readonly
+from bc import readonly
 
 class TestConstants(object):
 	__metaclass__ = readonly.metaClass

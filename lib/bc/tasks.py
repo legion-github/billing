@@ -8,8 +8,8 @@ import time
 
 from bc import database
 
-from bc.private import readonly
-from bc.private import bobject
+from bc import readonly
+from bc import bobject
 
 
 class TaskConstants(object):

@@ -1,8 +1,8 @@
 import time
 import unithelper
-from bc.private import tasks
 from bc.calculate import calculate
-from bc.private import metrics
+from bc import metrics
+from bc import tasks
 
 class Test(unithelper.TestCase):
 	def test_new_task(self):
