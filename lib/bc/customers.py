@@ -101,15 +101,19 @@ def add(obj):
 			db.insert('customers', obj.values)
 
 
-def remove(cid):
-	"""Disables customer by ID"""
+def remove(typ, value):
+	"""Disables customer"""
+
+	if typ == 'id':
+		query = { 'id': value }
+	elif typ == 'login':
+		query = { 'login': value }
+	else:
+		raise ValueError("Unknown value: " + str(typ))
 
 	with database.DBConnect() as db:
 		c = CustomerConstants()
-		db.update("customers",
-			{
-				'id': cid,
-			},
+		db.update("customers", query,
 			{
 				'state': c.STATE_DELETED,
 				'time_destroy': int(time.time())

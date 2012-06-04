@@ -63,3 +63,42 @@ def customerAdd(params):
 		)
 	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
 
+
+@jsonrpc.methods.jsonrpc_method(
+	validate = V({ 'login': V(basestring, min=1, max=64) }),
+	auth = True)
+def customerRemove(params):
+	""" Remove customer by name """
+
+	try:
+		c = customers.remove('login', params['login'])
+
+	except Exception, e:
+		LOG.error(e)
+		return jsonrpc.methods.jsonrpc_result_error('ServerError',
+			{
+				'status':  'error',
+				'message': 'Unable to remove customer'
+			}
+		)
+	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+
+
+@jsonrpc.methods.jsonrpc_method(
+	validate = V({ 'id': V(basestring, min=36, max=36) }),
+	auth = True)
+def customerIdRemove(params):
+	""" Remove customer by id """
+
+	try:
+		c = customers.remove('id', params['id'])
+
+	except Exception, e:
+		LOG.error(e)
+		return jsonrpc.methods.jsonrpc_result_error('ServerError',
+			{
+				'status':  'error',
+				'message': 'Unable to remove customer'
+			}
+		)
+	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
