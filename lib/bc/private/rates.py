@@ -46,20 +46,20 @@ class Rate(bobject.BaseObject):
 
 def add(rate):
 	with database.DBConnect() as db:
-		r = db.query("SELECT id FROM rates WHERE id=%s", (rate.id,)).one()
+		r = db.find_one('rates', { 'id': rate.id }, fields=['id'])
 		if not r:
 			db.insert('rates', rate.values)
 
 
 def get_by_tariff(tid):
 	with database.DBConnect() as db:
-		for o in db.query('SELECT * FROM rates WHERE tariff_id=%s', (tid,)):
+		for o in db.find('rates', { 'tariff_id': tid }):
 			yield Rate(o)
 
 
 def get_by_id(rid):
 	with database.DBConnect() as db:
-		o = db.query("SELECT id FROM rates WHERE id=%s", (rid,)).one()
+		o = db.find_one('rates', { 'id': rid })
 		if o:
 			return Rate(o)
 		return None
@@ -67,7 +67,7 @@ def get_by_id(rid):
 
 def get_by_metric(tid, mtype):
 	with database.DBConnect() as db:
-		o = db.query("SELECT id FROM rates WHERE tariff_id=%s AND mtype=%s", (tid,mtype,)).one()
+		o = db.find_one('rates', { 'tariff_id': tid, 'mtype': mtype })
 		if o:
 			return Rate(o)
 		return None
