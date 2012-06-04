@@ -34,11 +34,13 @@ def serialize(data, prefix = 'params'):
 
 def get_secret(role, method):
 	with database.DBConnect() as db:
-		o = db.query("SELECT secret"+
-		             "  FROM auth_roles"+
-		             " WHERE role=%s"+
-		             "   AND method=%s",
-		             (role, method)).one()
+		o = db.find_one('auth_roles',
+			{
+				'role': role,
+				'method': method
+			},
+			fields = [ 'secret' ]
+		)
 		if not o:
 			return None
 		return o['secret']
