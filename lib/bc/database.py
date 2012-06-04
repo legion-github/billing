@@ -337,26 +337,38 @@ class DBConnect(object):
 		return DBQuery(self.connect().cursor(), fmt, *args)
 
 
-	def find(self, table, spec=None, fields=None, skip=0, limit=0):
-		if isinstance(fields, list):
-			flist = ",".join(fields)
-		elif isinstance(fields, dict):
-			flist = ",".join(map(lambda x: "{0} as {1}".format(x[0],x[1]),fields.iteritems()))
-		else:
-			flist = '*'
+	def find(self, tables, spec=None, fields=None, skip=0, limit=0):
+		def delim(arr, delim=', '):
+			n = len(arr) - 1
+			for i in xrange(0, n):
+				yield arr[i]
+				yield delim
+			yield arr[n]
 
-		fmt = "SELECT {0} FROM {1}".format(flist,table)
+		def genlist(arg, default):
+			if isinstance(arg, list) and arg:
+				return delim(arg)
+			elif isinstance(arg, dict) and arg:
+				return delim(map(lambda x: x[0]+' as '+x[1], arg.iteritems()))
+			else:
+				return [ default ]
+
+		fmt = []
+		fmt.append(" SELECT ")
+		fmt.extend(genlist(fields, '*'))
+
+		fmt.append(" FROM ")
+		fmt.extend(genlist(tables, tables))
 
 		if isinstance(spec, dict):
-			fmt += " WHERE " + self.sql_where(spec)
-
+			fmt.extend([ " WHERE ", self.sql_where(spec) ])
 		if limit > 0:
-			fmt += " LIMIT " + str(limit)
-
+			fmt.extend([ " LIMIT ", str(limit) ])
 		if skip > 0:
-			fmt += " OFFSET " + str(skip)
+			fmt.extend([ " OFFSET ", str(skip) ])
 
-		return self.query(fmt)
+		return self.query("".join(fmt))
+
 
 
 	def find_one(self, *args, **kwargs):
