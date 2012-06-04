@@ -76,12 +76,14 @@ def jsonrpc_process(request):
 			if isinstance(params, list) and len(params) > 0 and auth.jsonrpc_is_auth(params[0]):
 				sign = params[0]
 				params = params[1:]
-				auth.jsonrpc_auth(sign, request)
+				if not auth.jsonrpc_auth(sign, request):
+					return error('AuthFailure')
 
 			elif isinstance(params, dict) and auth.jsonrpc_is_auth(params.get('auth',None)):
 				sign = params['auth']
 				del params['auth']
-				auth.jsonrpc_auth(sign, request)
+				if not auth.jsonrpc_auth(sign, request):
+					return error('AuthFailure')
 			else:
 				return error('AuthFailure')
 
