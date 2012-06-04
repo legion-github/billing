@@ -64,7 +64,7 @@ def get(cid):
 	"""Finds customer by ID"""
 
 	with database.DBConnect() as db:
-		r = db.query("SELECT * FROM customers WHERE id=%s",(cid,)).one()
+		r = db.find_one('customers', { 'id': cid })
 		if r:
 			return Customer(r)
 		return None
@@ -75,7 +75,7 @@ def get_all():
 
 	with database.DBConnect() as db:
 		c = CustomerConstants()
-		for i in db.query("SELECT * FROM customers WHERE state = %s;", (c.STATE_ENABLED,)):
+		for i in db.find('customers', { 'state': c.STATE_ENABLED }):
 			yield Customer(i)
 
 
@@ -91,8 +91,12 @@ def add(obj):
 		raise TypeError('Wrong wallet_mode')
 
 	with database.DBConnect() as db:
-		r = db.query("SELECT id FROM customers WHERE login=%s AND state = %s",
-			(obj.login, c.STATE_ENABLED)).one()
+		r = db.find_one('customers',
+			{
+				'login': obj.login,
+				'state': c.STATE_ENABLED
+			}
+		)
 		if not r:
 			db.insert('customers', obj.values)
 
@@ -102,7 +106,7 @@ def remove(cid):
 
 	with database.DBConnect() as db:
 		c = CustomerConstants()
-		db.execute("customers",
+		db.update("customers",
 			{
 				'id': cid,
 			},
