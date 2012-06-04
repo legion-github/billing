@@ -4,7 +4,7 @@ from bc import log
 from bc import config
 from bc import jsonrpc
 
-import bc.private.wapi
+import bc.wapi
 
 LOG = log.logger("wapi")
 
