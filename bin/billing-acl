@@ -62,17 +62,23 @@ def set_dbpass(arg):
 	dbpass = getpass.getpass()
 
 
-def process_rule(method, role, secret):
+def process_rule(method, role, secret, host):
 	with database.DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db:
-		res = db.query("SELECT role FROM auth_roles WHERE role=%s AND method=%s", (role, method)).one()
+		res = db.find_one("auth",
+			{
+				'role': role,
+				'method':method
+			}
+		)
 
 		if not res:
 			if mode == 'insert' or mode == 'upsert':
-				db.insert('auth_roles',
+				db.insert('auth',
 					{
 						'method': method,
 						'role':   role,
-						'secret': secret
+						'secret': secret,
+						'host': host,
 					}
 				)
 				return
@@ -82,7 +88,7 @@ def process_rule(method, role, secret):
 				fatal('role={0}, method={1} already in database'.format(role, method))
 
 			if mode == 'delete':
-				db.delete('auth_roles',
+				db.delete('auth',
 					{
 						'method': method,
 						'role':   role
@@ -91,13 +97,14 @@ def process_rule(method, role, secret):
 				return
 
 			# upsert or update
-			db.update('auth_roles',
+			db.update('auth',
 				{
 					'method': method,
 					'role':   role
 				},
 				{
-					'secret': secret
+					'secret': secret,
+					'host': host
 				}
 			)
 
@@ -116,7 +123,7 @@ def read_input(fd):
 
 		a = s.split('\t')
 
-		req = 3
+		req = 4
 		if mode == 'delete':
 			req = 2
 
@@ -125,11 +132,11 @@ def read_input(fd):
 			continue
 
 		if mode != 'delete':
-			role, method, secret = a[0:3]
-			process_rule(method, role, secret)
+			role, method, secret, host = a[0:req]
+			process_rule(method, role, secret, host)
 		else:
-			role, method = a[0:2]
-			process_rule(method, role, None)
+			role, method = a[0:req]
+			process_rule(method, role, None, None)
 		i += 1
 
 
@@ -165,15 +172,15 @@ if mode not in ['list','insert','update','upsert','delete']:
 if mode == 'list':
 	with database.DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db:
 		if not quiet:
-			print "#<role>\t<method>\t<secret>"
-		c = db.query("SELECT method,role,secret FROM auth_roles ORDER BY role,method")
+			print "#<role>\t<method>\t<secret>\t<host-fnmatch>"
+		c = db.query("SELECT method,role,secret,host FROM auth ORDER BY role,method")
 		for rule in c:
-			print '{0}\t{1}\t{2}'.format(rule['role'],rule['method'],rule['secret'])
+			print '{0}\t{1}\t{2}\t{3}'.format(rule['role'],rule['method'],rule['secret'], rule['host'])
 	sys.exit(0)
 
 if len(args) == 0:
 	if not quiet:
-		print "# Format: <role>\\t<method>\\t<secret>"
+		print "# Format: <role>\\t<method>\\t<secret>\\t<host-fnmatch>"
 	read_input(sys.stdin)
 	sys.exit(0)
 

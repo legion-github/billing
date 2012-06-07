@@ -469,11 +469,12 @@ SCHEMA = {
 			  UNIQUE KEY `main_UNIQUE` (`login`, `state`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	""",
-	'auth_roles': """
+	'auth': """
 			CREATE TABLE `{0}` (
 			  `role` varchar(64) NOT NULL,
 			  `method` varchar(64) NOT NULL,
 			  `secret` varchar(1024) NOT NULL,
+			  `host` varchar(255) NOT NULL DEFAULT '',
 			  UNIQUE KEY `main_UNIQUE` USING BTREE (`role`, `method`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	""",

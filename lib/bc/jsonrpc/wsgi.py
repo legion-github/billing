@@ -14,6 +14,15 @@ LOG = logging.getLogger("jsonrpc.wsgi")
 MAX_REQUEST_SIZE = 1024 * 1024 # 1 Mb
 """Maximum request size."""
 
+HTTP_CGI_HEADERS = [
+	"DOCUMENT_ROOT", "HTTP_ACCEPT", "HTTP_ACCEPT_ENCODING", "HTTP_HOST",
+	"AUTH_TYPE", "CONTENT_LENGTH", "CONTENT_TYPE", "GATEWAY_INTERFACE",
+	"PATH_INFO", "PATH_TRANSLATED", "QUERY_STRING", "REMOTE_ADDR",
+	"REMOTE_HOST", "REMOTE_IDENT", "REMOTE_USER", "REQUEST_METHOD",
+	"SCRIPT_NAME", "SERVER_NAME", "SERVER_PORT", "SERVER_PROTOCOL",
+	"SERVER_SOFTWARE"
+]
+
 
 def jsonrpc_handle(environ, start_response):
 	"""Handles an HTTP request."""
@@ -30,6 +39,11 @@ def jsonrpc_handle(environ, start_response):
 	if request_length > MAX_REQUEST_SIZE:
 		return answer('400 Bad Request')
 
+	headers = {}
+	for n,v in environ.iteritems():
+		if n in HTTP_CGI_HEADERS or n.startswith("X_"):
+			headers[n] = v
+
 	try:
 		response = ""
 		request_body = environ["wsgi.input"].read(request_length)
@@ -38,7 +52,7 @@ def jsonrpc_handle(environ, start_response):
 			if not r:
 				continue
 
-			result = methods.jsonrpc_process(json.loads(r))
+			result = methods.jsonrpc_process(headers, json.loads(r))
 
 			if not result:
 				continue

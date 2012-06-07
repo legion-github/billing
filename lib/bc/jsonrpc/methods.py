@@ -51,7 +51,7 @@ def jsonrpc_result_http(http_code, http_body = "", http_headers = []):
 	return (JSONRPC_HTTP, http_code, http_body, http_headers)
 
 
-def jsonrpc_process(request):
+def jsonrpc_process(headers, request):
 	notification = 'id' not in request
 
 	LOG.info(repr(request) + ": notification=" + str(notification))
@@ -76,13 +76,13 @@ def jsonrpc_process(request):
 			if isinstance(params, list) and len(params) > 0 and auth.jsonrpc_is_auth(params[0]):
 				sign = params[0]
 				params = params[1:]
-				if not auth.jsonrpc_auth(sign, request):
+				if not auth.jsonrpc_auth(headers, sign, request):
 					return error('AuthFailure')
 
 			elif isinstance(params, dict) and auth.jsonrpc_is_auth(params.get('auth',None)):
 				sign = params['auth']
 				del params['auth']
-				if not auth.jsonrpc_auth(sign, request):
+				if not auth.jsonrpc_auth(headers, sign, request):
 					return error('AuthFailure')
 			else:
 				return error('AuthFailure')

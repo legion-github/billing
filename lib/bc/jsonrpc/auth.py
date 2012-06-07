@@ -4,14 +4,14 @@ __version__ = '1.0'
 
 __all__ = [ 'jsonrpc_is_auth', 'jsonrpc_auth', 'jsonrpc_sign_request' ]
 
-import base64, hmac, hashlib, uuid, logging, string, time
+import base64, hmac, hashlib, uuid, logging, string, time, fnmatch
 from bc import database
 
 LOG = logging.getLogger("jsonrpc.auth")
 
 def serialize(data, prefix = 'params'):
 	if not data:
-		return prefix + " = null"
+		return [ prefix + " = null" ]
 	res = []
 
 	if isinstance(data, dict):
@@ -34,16 +34,12 @@ def serialize(data, prefix = 'params'):
 
 def get_secret(role, method):
 	with database.DBConnect() as db:
-		o = db.find_one('auth_roles',
+		return db.find_one('auth',
 			{
 				'role': role,
 				'method': method
-			},
-			fields = [ 'secret' ]
+			}
 		)
-		if not o:
-			return None
-		return o['secret']
 
 
 def sign_string(secret, string):
@@ -57,13 +53,22 @@ def jsonrpc_is_auth(data):
 	return set(['role','sign']) == set(data.keys())
 
 
-def jsonrpc_auth(sign, request):
+def jsonrpc_auth(headers, sign, request):
 	role   = sign.get('role')
 	method = request.get('method')
-	secret = get_secret(role, method)
+	auth   = get_secret(role, method)
 
-	if not secret:
+	if not auth or not auth['secret'] or not auth['host']:
 		return False
+
+	if headers:
+		for n in [ 'REMOTE_ADDR', 'REMOTE_HOST' ]:
+			if n not in headers:
+				continue
+			if fnmatch.fnmatch(headers[n], auth['host']):
+				break
+		else:
+			return False
 
 	data  = {
 			'auth': {
@@ -72,10 +77,13 @@ def jsonrpc_auth(sign, request):
 			},
 			'data': request
 	}
-	return sign.get('sign') == sign_string(str(secret), serialize(data))
+	return sign.get('sign') == sign_string(str(auth['secret']), serialize(data))
 
 
 def jsonrpc_sign(role, secret, request):
+	if 'params' not in request:
+		request['params'] = {}
+
 	data  = {
 			'auth': {
 				'role': role,
@@ -87,9 +95,6 @@ def jsonrpc_sign(role, secret, request):
 		'role': role,
 		'sign': sign_string(secret, serialize(data))
 	}
-
-	if 'params' not in request:
-		request['params'] = {}
 
 	if isinstance(request['params'], dict):
 		request['params']['auth'] = auth
