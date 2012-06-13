@@ -24,7 +24,7 @@ class Tariff(bobject.BaseObject):
 
 		self.__values__ = {
 			'create_time': int(time.time()),
-			'tariff_id':   str(uuid.uuid4()),
+			'id':          str(uuid.uuid4()),
 			'name':        '',
 			'description': '',
 			'currency':    rate.constants.CURRENCY_RUB,
@@ -38,7 +38,7 @@ class Tariff(bobject.BaseObject):
 	def get_rates(self):
 		""" Gets all tariff's metric rates """
 
-		return rate.get_by_tariff(self.tariff_id)
+		return rate.get_by_tariff(self.id)
 
 
 	def export(self):
@@ -52,7 +52,7 @@ class Tariff(bobject.BaseObject):
 	def set_state(self, state, tid = None):
 		""" Change tariffs state """
 
-		tariff_id = (tid or self.tariff_id)
+		tariff_id = (tid or self.id)
 
 		c = TariffConstants()
 
@@ -61,7 +61,7 @@ class Tariff(bobject.BaseObject):
 
 		with database.DBConnect() as db:
 			db.update('tariffs',
-				{'tariff_id': tariff_id},
+				{'id': tariff_id},
 				{'state': state}
 				)
 		return self
@@ -78,7 +78,7 @@ class Tariff(bobject.BaseObject):
 		for r in rate_list:
 			if 'rid' in r:
 				del r['rid']
-			r['tid'] = self.tariff_id
+			r['tid'] = self.id
 
 			tr = rate.Rate(r)
 			tr.add()

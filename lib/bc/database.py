@@ -492,9 +492,9 @@ SCHEMA = {
 			  `currency` enum('RUR','USD','EUR') NOT NULL,
 			  `create_time` int(11) NOT NULL,
 			  `state` enum('ENABLE','DISABLE') NOT NULL,
-			  PRIMARY KEY (`tariff_id`),
-			  UNIQUE KEY `tariff_id_UNIQUE` (`tariff_id`),
-			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`tariff_id`)
+			  PRIMARY KEY (`id`),
+			  UNIQUE KEY `id_UNIQUE` (`id`),
+			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`id`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",
 	'customers': """
