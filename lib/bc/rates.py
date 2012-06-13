@@ -32,7 +32,6 @@ class Rate(bobject.BaseObject):
 			'description':  '',
 			'mtype':        '',
 			'tariff_id':    '',
-			'arg':          '',
 			'rate':         0L,
 			'currency':     c.CURRENCY_RUB,
 			'state':        c.STATE_ACTIVE,

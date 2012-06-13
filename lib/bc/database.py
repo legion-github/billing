@@ -479,10 +479,9 @@ SCHEMA = {
 			  `state` enum('ACTIVE','ARCHIVE','UPDATING') NOT NULL,
 			  `time_create` int(11) NOT NULL,
 			  `time_destroy` int(11) NOT NULL,
-			  `arg` varchar(36) DEFAULT '',
 			  PRIMARY KEY (`id`),
 			  UNIQUE KEY `id_UNIQUE` (`id`),
-			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`mtype`,`tariff_id`,`arg`)
+			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`mtype`,`tariff_id`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",
 	'tariffs': """

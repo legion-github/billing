@@ -19,7 +19,6 @@ LOG = log.logger("wapi.tasks")
 			'user':		V(basestring, min=1,  max=64),
 			'value':	V(int),
 			'descr':	V(basestring),
-			'arg':		V(basestring),
 			'time-create':	V(int),
 			'time-destroy':	V(int, default=0),
 	}),
@@ -30,42 +29,42 @@ def taskOpen(request):
 	if 'time-create' not in request:
 		request['time-create'] = int(time.time())
 
-	customer = customers.get(request['customer'])
-
-	if not customer:
-		return jsonrpc.methods.jsonrpc_result_error('InvalidParams',
-			{
-				'status':  'error',
-				'message': 'Invalid customer'
-			}
-		)
-
-
-	rid, rate  = queue.resolve(request['type'], customer['tariff'], request['arg'])
-
-	if not rid:
-		return jsonrpc.methods.jsonrpc_result_error('InvalidParams',
-			{
-				'status':  'error',
-				'message': 'Unable to find rate'
-			}
-		)
-
 	try:
-		t = tasks.Task()
-		t.set({
-			'id':           request['uuid'],
-			'customer':     customer['_id'],
+		customer = customers.get(request['customer'])
 
-			'time_create':  request['time-create'],
-			'time_check':   request['time-create'],
-			'time_destroy': request['time-destroy'],
+		if not customer:
+			return jsonrpc.methods.jsonrpc_result_error('InvalidParams',
+				{
+					'status':  'error',
+					'message': 'Invalid customer'
+				}
+			)
 
-			'target_user':  request['user'],
-			'target_uuid':  request['uuid'],
-			'target_descr': request['descr'],
-		})
-		tasks.add(request['type'], t)
+		rid, rate  = queue.resolve(request['type'], customer['tariff'])
+
+		if not rid:
+			return jsonrpc.methods.jsonrpc_result_error('InvalidParams',
+				{
+					'status':  'error',
+					'message': 'Unable to find rate'
+				}
+			)
+
+		t = tasks.Task(
+			{
+				'id':           request['uuid'],
+				'customer':     customer['_id'],
+
+				'time_create':  request['time-create'],
+				'time_check':   request['time-create'],
+				'time_destroy': request['time-destroy'],
+
+				'target_user':  request['user'],
+				'target_uuid':  request['uuid'],
+				'target_descr': request['descr'],
+			}
+		)
+		tasks.add(t)
 
 	except Exception, e:
 		LOG.exception("Unable to add new task: %s", e)

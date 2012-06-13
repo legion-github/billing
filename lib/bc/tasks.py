@@ -63,12 +63,12 @@ class Task(bobject.BaseObject):
 			self.set(data)
 
 
-def add(mtype, task):
+def add(task):
 	with database.DBConnect(primarykey=task.id) as db:
 		db.insert('queue', task.values)
 
 
-def set_done(mtype, task):
+def set_done(task):
 	with database.DBConnect(primarykey=task.id) as db:
 		c = TaskConstants()
 		db.update('queue',
