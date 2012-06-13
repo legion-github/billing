@@ -9,7 +9,7 @@ from bc import database
 class Test(unithelper.DBTestCase):
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_short_form(self):
-		"""Check syntax statment short form"""
+		"""Check syntax statment short form for WHERE statment in UPDATE"""
 
 		testList = [
 			(
@@ -28,7 +28,7 @@ class Test(unithelper.DBTestCase):
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_fields(self):
-		"""Check syntax statment for columns compare"""
+		"""Check '$field' syntax for WHERE statment in UPDATE"""
 
 		testList = [
 			(
@@ -52,7 +52,7 @@ class Test(unithelper.DBTestCase):
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_simple_compare(self):
-		"""Check syntax compare"""
+		"""Check syntax compare for WHERE statment in UPDATE"""
 
 		testList = [
 			(
@@ -86,7 +86,7 @@ class Test(unithelper.DBTestCase):
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_or(self):
-		"""Check syntax OR statment"""
+		"""Check OR syntax for WHERE statment in UPDATE"""
 
 		testList = [
 			(
@@ -130,7 +130,7 @@ class Test(unithelper.DBTestCase):
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_and(self):
-		"""Check syntax AND statment"""
+		"""Check AND syntax for WHERE statment in UPDATE"""
 
 		testList = [
 			(
@@ -150,7 +150,7 @@ class Test(unithelper.DBTestCase):
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_not(self):
-		"""Check syntax NOT statment"""
+		"""Check NOT syntax for WHERE statment in UPDATE"""
 
 		testList = [
 			(
@@ -170,7 +170,7 @@ class Test(unithelper.DBTestCase):
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_is(self):
-		"""Check syntax IS statment"""
+		"""Check IS syntax for WHERE statment in UPDATE"""
 
 		testList = [
 			(
@@ -205,7 +205,7 @@ class Test(unithelper.DBTestCase):
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_in(self):
-		"""Check syntax IN statment"""
+		"""Check IN syntax for WHERE statment in UPDATE"""
 
 		testList = [
 			(
@@ -235,7 +235,7 @@ class Test(unithelper.DBTestCase):
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_like(self):
-		"""Check syntax LIKE statment"""
+		"""Check LIKE syntax for WHERE statment in UPDATE"""
 
 		testList = [
 			(
@@ -258,7 +258,7 @@ class Test(unithelper.DBTestCase):
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_regex(self):
-		"""Check syntax REGEX statment"""
+		"""Check REGEXP syntax for WHERE statment in UPDATE"""
 
 		testList = [
 			(

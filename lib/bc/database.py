@@ -200,6 +200,67 @@ class DBConnect(object):
 		return False
 
 
+	def sql_update(self, query, sort=False):
+		bit_ops = {
+			'and':    lambda x: '&'  + arg(x),
+			'or':     lambda x: '|'  + arg(x),
+			'xor':    lambda x: '^'  + arg(x),
+			'rshift': lambda x: '>>' + arg(x),
+			'lshift': lambda x: '<<' + arg(x),
+		}
+		func_ops = {
+			'$field': lambda x: (str(x),),
+			'$abs':   lambda x: ('ABS('   + arg(x) + ')',),
+			'$ceil':  lambda x: ('CEIL('  + arg(x) + ')',),
+			'$crc32': lambda x: ('CRC32(' + arg(x) + ')',),
+			'$floor': lambda x: ('FLOOR(' + arg(x) + ')',),
+			'$mod':   lambda x: ('MOD('   + arg(x[0]) + ',' + arg(x[1]) + ')',),
+			'$round': lambda x: (len(x) == 2 and 'ROUND(' + arg(x[0]) + ',' + arg(x[1]) + ')' or 'ROUND(' + arg(x[0]) + ')',),
+		}
+		ops = {
+			'$bit':    lambda x:   bit_ops[x[0]](x[1]),
+			'$set':    lambda x,y: x + "=" + arg(y),
+			'$dec':    lambda x,y: x + "=" + x + "-" + arg(y),
+			'$inc':    lambda x,y: x + "=" + x + "+" + arg(y),
+			'$div':    lambda x,y: x + "=" + x + "/" + arg(y),
+			'$mult':   lambda x,y: x + "=" + x + "*" + arg(y),
+			'$concat': lambda x,y: x + "=CONCAT(" + x + "," +  self.literal(y) + ")",
+		}
+
+		def arg(x):
+			if isinstance(x, basestring):
+				return self.literal(x)
+			if isinstance(x, tuple):
+				return x[0]
+			return str(x)
+
+		def resole_op(arg):
+			k,v = arg.popitem()
+			if isinstance(v, dict):
+				return func_ops[k](resole_op(v))
+			return func_ops[k](v)
+
+		res = []
+		for op,cond in query.iteritems():
+			if op in [ '$set', '$inc', '$dec', '$div', '$mult' ]:
+				for n,v in cond.iteritems():
+					if isinstance(v, dict):
+						res.append(ops[op](n, resole_op(v)))
+					else:
+						res.append(ops[op](n, v))
+			elif op == '$concat':
+				res.extend(map(lambda x: ops[op](x[0],x[1]),cond.iteritems()))
+			elif op == '$bit':
+				res.extend(map(lambda x: x[0]+"="+x[0]+"".join(map(ops[op],x[1].iteritems())),cond.iteritems()))
+			else:
+				res.append(op + "=" + self.literal(cond))
+
+		if sort:
+			res.sort()
+
+		return ", ".join(res)
+
+
 	def sql_where(self, query, sort=False):
 
 		def sql_bool(x):
@@ -301,36 +362,27 @@ class DBConnect(object):
 		return "'{0}'".format(self.escape(string))
 
 
-	def exeute(self, fmt, *args):
+	def execute(self, fmt, *args):
 		self.connect().cursor().execute(fmt, *args)
 		if self.autocommit:
 			self.commit()
 
 
 	def delete(self, table, where=None):
-		cond = ""
-		if where:
-			cond = "WHERE " + self.sql_where(where)
-		self.connect().cursor().execute("DELETE FROM {0} {1};".format(table,cond))
-		if self.autocommit:
-			self.commit()
+		self.execute("DELETE FROM {0} {1};".format(table,
+			(where == None and "" or "WHERE " + self.sql_where(where))))
 
 
 	def insert(self, table, dictionary):
-		query = "INSERT INTO {0} ({1}) VALUES ({2});".format(table,
-				",".join(dictionary.keys()),
-				",".join(map(self.literal, dictionary.values())))
-		self.connect().cursor().execute(query)
-		if self.autocommit:
-			self.commit()
+		self.execute("INSERT INTO {0} ({1}) VALUES ({2});".format(table,
+			",".join(dictionary.keys()),
+			",".join(map(self.literal, dictionary.values()))))
 
 
 	def update(self, table, search_dict, set_dict):
-		new  = ", ".join(map(lambda x: "{0}={1}".format(x[0], self.literal(x[1])), set_dict.iteritems()))
-		cond = self.sql_where(search_dict)
-		self.connect().cursor().execute("UPDATE {0} SET {1} WHERE {2};".format(table, new, cond))
-		if self.autocommit:
-			self.commit()
+		self.execute("UPDATE {0} SET {1} WHERE {2};".format(table,
+			self.sql_update(set_dict),
+			self.sql_where(search_dict)))
 
 
 	def query(self, fmt, *args):
