@@ -102,3 +102,27 @@ def customerIdRemove(params):
 			}
 		)
 	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+
+
+@jsonrpc.methods.jsonrpc_method(
+	validate = V({
+		'id':    V(basestring, min=36, max=36),
+		'value': V(int)
+	}),
+	auth = True)
+def customerDeposit(params):
+	""" Make deposit to customer """
+
+	try:
+		if params['value'] != 0:
+			customers.deposit(params['id'], params['value'])
+
+	except Exception, e:
+		LOG.error(e)
+		return jsonrpc.methods.jsonrpc_result_error('ServerError',
+			{
+				'status':  'error',
+				'message': 'Unable to make a deposit'
+			}
+		)
+	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })

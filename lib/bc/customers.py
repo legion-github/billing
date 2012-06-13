@@ -119,3 +119,15 @@ def remove(typ, value):
 				'time_destroy': int(time.time())
 			}
 		)
+
+
+def deposit(cid, ammount):
+	""" Make deposit to customer """
+
+	c = CustomerConstants()
+
+	with database.DBConnect() as db:
+		db.update('customers',
+			{ 'id': cid },
+			{ '$inc': { 'wallet': ammount } }
+		)
