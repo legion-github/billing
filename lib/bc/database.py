@@ -487,7 +487,7 @@ SCHEMA = {
 		""",
 	'tariffs': """
 			CREATE TABLE `{0}` (
-			  `tariff_id` varchar(36) NOT NULL,
+			  `id` varchar(36) NOT NULL,
 			  `name` varchar(45) NOT NULL,
 			  `description` varchar(1024) NOT NULL,
 			  `currency` enum('RUR','USD','EUR') NOT NULL,
