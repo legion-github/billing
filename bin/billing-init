@@ -71,9 +71,40 @@ def process_customers():
 		print '<-', r
 
 
+def process_tariffs():
+	internal = {
+		'id': '*',
+		'name': 'Service tariff',
+		'description': 'This is service tariff record is not for ordinary customers'
+	}
+	print '->', internal
+	r = http.jsonrpc_http_request(conn, "tariffAddInternal", internal, auth_data=auth)
+	print '<-', r
+
+	tariffs = [
+		{
+			'name': 'Simple testing',
+			'description': 'This is try-buy tariff for new customers'
+		},
+		{
+			'name': 'Big rich man',
+			'description': 'This tariff for big customers'
+		},
+		{
+			'name': 'Hungry student',
+			'description': 'This tariff for startups and little companies'
+		}
+	]
+	for o in tariffs:
+		print '->', o
+		r = http.jsonrpc_http_request(conn, "tariffAdd", o, auth_data=auth)
+		print '<-', r
+
+
 try:
 	process_metrics()
 	process_customers()
+	process_tariffs()
 
 except Exception, e:
 	print 'Error:', e

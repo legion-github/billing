@@ -486,11 +486,11 @@ SCHEMA = {
 	'tariffs': """
 			CREATE TABLE `{0}` (
 			  `id` varchar(36) NOT NULL,
-			  `name` varchar(45) NOT NULL,
+			  `name` varchar(64) NOT NULL,
 			  `description` varchar(1024) NOT NULL,
-			  `currency` enum('RUR','USD','EUR') NOT NULL,
-			  `create_time` int(11) NOT NULL,
-			  `state` enum('ENABLE','DISABLE') NOT NULL,
+			  `time_create` int(11) NOT NULL,
+			  `time_destroy` int(11) NOT NULL,
+			  `state` int NOT NULL,
 			  PRIMARY KEY (`id`),
 			  UNIQUE KEY `id_UNIQUE` (`id`),
 			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`id`)
