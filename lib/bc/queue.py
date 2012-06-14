@@ -10,7 +10,10 @@ def resolve(mtype, tid):
 			{
 				'state':     rates.constants.STATE_ACTIVE,
 				'mtype':     mtype,
-				'tariff_id': tid,
+				'$or': [
+					{ 'tariff_id': tid },
+					{ 'tariff_id': '*' }
+				]
 			},
 			fields=['rid','rate']
 		)
