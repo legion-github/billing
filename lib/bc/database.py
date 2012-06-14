@@ -320,9 +320,8 @@ class DBConnect(object):
 			if name == '$not':
 				s = " NOT (" + self.sql_where(conditions, sort) + ")"
 			elif name in concatenation:
-				s = concatenation[name](map(
-					lambda x: "(" + self.sql_where(x, sort) + ")",
-					conditions))
+				a = map(lambda x: "(" + self.sql_where(x, sort) + ")", conditions)
+				s = "(" + concatenation[name](a) + ")"
 			elif isinstance(conditions, dict):
 				a = []
 				for o, value in conditions.iteritems():

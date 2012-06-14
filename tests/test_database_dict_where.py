@@ -96,7 +96,18 @@ class Test(unithelper.DBTestCase):
 						{ 'a': { '$lt': 2 } },
 					]
 				},
-				"(a > '1') OR (a < '2')"
+				"((a > '1') OR (a < '2'))"
+			),
+			(
+				{
+					'a': 1,
+					'b': 2,
+					'$or': [
+						{ 'c': { '$gt': 1 } },
+						{ 'c': { '$lt': 2 } },
+					]
+				},
+				"((c > '1') OR (c < '2')) AND a = '1' AND b = '2'"
 			),
 			(
 				{
@@ -105,7 +116,7 @@ class Test(unithelper.DBTestCase):
 						{ 'b': { '$eq': 3 } },
 					]
 				},
-				"(a < '2' AND a > '1') OR (b = '3')"
+				"((a < '2' AND a > '1') OR (b = '3'))"
 			),
 			(
 				{
@@ -120,7 +131,7 @@ class Test(unithelper.DBTestCase):
 						}
 					]
 				},
-				"(a < '2' AND a > '1') OR (b = '3') OR ((c != '4') OR (d <= '6' AND d >= '5'))"
+				"((a < '2' AND a > '1') OR (b = '3') OR (((c != '4') OR (d <= '6' AND d >= '5'))))"
 			),
 		]
 		with database.DBConnect() as db:
@@ -140,7 +151,7 @@ class Test(unithelper.DBTestCase):
 						{ 'b': { '$eq': 3 } },
 					]
 				},
-				"(a < '2' AND a > '1') AND (b = '3')"
+				"((a < '2' AND a > '1') AND (b = '3'))"
 			)
 		]
 		with database.DBConnect() as db:
