@@ -1,3 +1,4 @@
+import sys
 import logging
 from logging.handlers import SysLogHandler
 
@@ -13,69 +14,48 @@ log_level_mapping = {
 
 default_log_format  = '%(asctime)s.%(msecs)03d: %(levelname)s: %(filename)s: %(lineno)d: %(message)s'
 default_date_format = '%Y.%m.%d %H:%M:%S'
-default_namespace   = ''
 
+LOGGER = None
 
-def logger(name, **kwargs):
-	"""Sets up simple logging"""
+def logger(subname, **kwargs):
+	global LOGGER
 
-	conf = config.read()
+	if LOGGER:
+		return LOGGER
 
-	if kwargs.get('syslog', True) and conf['logging']['type'] == 'syslog':
-		return syslog(**kwargs)
+	conf      = config.read()
+	log_type  = kwargs.get('type', conf['logging']['type']) or 'syslog'
+	log_level = log_level_mapping[kwargs.get('level', conf['logging']['level']).lower()]
 
-	name          = kwargs.get('name', 'billing')
-	log_level     = kwargs.get('level', conf['logging']['level'])
-	log_file      = kwargs.get('log_file', conf['logging']['logdir']) + '/' + name + '.log'
-	log_max_bytes = unitconvert.convert_from(conf['logging']['logsize'])
-	log_count     = conf['logging']['backcount']
-	log_format    = kwargs.get('log_format',  default_log_format)
-	date_format   = kwargs.get('date_format', default_date_format)
-	namespace     = kwargs.get('namespace',   default_namespace)
+	if log_type == 'file':
+		name          = kwargs.get('name', 'billing')
+		log_file      = kwargs.get('log_file', conf['logging']['logdir']) + '/' + name + '.log'
+		log_max_bytes = unitconvert.convert_from(conf['logging']['logsize'])
+		log_count     = conf['logging']['backcount']
 
-	log = logging.getLogger(namespace)
-	log.setLevel(log_level_mapping[log_level])
+		handler = logging.handlers.RotatingFileHandler(
+			log_file,
+			maxBytes=log_max_bytes,
+			backupCount=log_count)
 
-	handler = logging.handlers.RotatingFileHandler(
-		log_file,
-		maxBytes = log_max_bytes,
-		backupCount = log_count)
+	elif log_type == 'syslog':
+		log_address   = kwargs.get('address', str(conf['logging']['address']))
+		log_facility  = kwargs.get('facility', conf['logging']['facility'])
 
-	handler.setFormatter(logging.Formatter(log_format, date_format))
-	log.addHandler(handler)
+		handler = SysLogHandler(
+			address=log_address,
+			facility=SysLogHandler.facility_names[log_facility])
 
-	if not name:
-		return log
-	return logging.getLogger(namespace + "." + name)
+	elif log_type == 'stderr':
+		handler = logging.StreamHandler(sys.stderr)
 
+	LOGGER = logging.getLogger()
+	LOGGER.setLevel(log_level)
 
+	handler.setFormatter(logging.Formatter(
+		kwargs.get('log_format',  default_log_format),
+		kwargs.get('date_format', default_date_format)))
 
-def syslog(**kwargs):
-	"""Sets up syslog logging"""
+	LOGGER.addHandler(handler)
 
-	conf = config.read()
-
-	name          = kwargs.get('name', None)
-	log_level     = kwargs.get('level', conf['logging']['level'])
-	log_address   = kwargs.get('address', str(conf['logging']['address']))
-	log_facility  = kwargs.get('facility', conf['logging']['facility'])
-	log_format    = kwargs.get('log_format',  default_log_format)
-	date_format   = kwargs.get('date_format', default_date_format)
-	namespace     = kwargs.get('namespace',   default_namespace)
-
-	log = logging.getLogger(namespace)
-	log.setLevel(log_level_mapping[log_level])
-
-	syslog = SysLogHandler(
-		address = log_address,
-		facility = SysLogHandler.facility_names[log_facility])
-
-	formatter = logging.Formatter(log_format or '%(name)s: %(levelname)s: %(message)s',
-	                              date_format or '%Y.%m.%d %H:%M:%S')
-
-	syslog.setFormatter(formatter)
-	log.addHandler(syslog)
-
-	if not name:
-		return log
-	return logging.getLogger(namespace + "." + name)
+	return LOGGER
