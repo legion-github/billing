@@ -1,10 +1,15 @@
+import os
 import time
 import uuid
+import logging
 import MySQLdb
 from MySQLdb import cursors
 
-import config
-import hashing
+from bc import config
+from bc import hashing
+from bc import log
+
+LOG = logging.getLogger("database")
 
 class DBError(Exception):
 	"""The base class for database exceptions that our code throws"""
@@ -368,20 +373,35 @@ class DBConnect(object):
 
 
 	def delete(self, table, where=None):
-		self.execute("DELETE FROM {0} {1};".format(table,
-			(where == None and "" or "WHERE " + self.sql_where(where))))
+		qs = "DELETE FROM {0} {1};".format(table,
+			(where == None and "" or "WHERE " + self.sql_where(where)))
+
+		if os.environ.get('BILLING_SQL_DESCRIBE', False):
+			LOG.debug("SQL: " + qs)
+
+		self.execute(qs)
 
 
 	def insert(self, table, dictionary):
-		self.execute("INSERT INTO {0} ({1}) VALUES ({2});".format(table,
+		qs = "INSERT INTO {0} ({1}) VALUES ({2});".format(table,
 			",".join(dictionary.keys()),
-			",".join(map(self.literal, dictionary.values()))))
+			",".join(map(self.literal, dictionary.values())))
+
+		if os.environ.get('BILLING_SQL_DESCRIBE', False):
+			LOG.debug("SQL: " + qs)
+
+		self.execute(qs)
 
 
 	def update(self, table, search_dict, set_dict):
-		self.execute("UPDATE {0} SET {1} WHERE {2};".format(table,
+		qs = "UPDATE {0} SET {1} WHERE {2};".format(table,
 			self.sql_update(set_dict),
-			self.sql_where(search_dict)))
+			self.sql_where(search_dict))
+
+		if os.environ.get('BILLING_SQL_DESCRIBE', False):
+			LOG.debug("SQL: " + qs)
+
+		self.execute(qs)
 
 
 	def query(self, fmt, *args):
@@ -418,8 +438,12 @@ class DBConnect(object):
 		if skip > 0:
 			fmt.extend([ " OFFSET ", str(skip) ])
 
-		return self.query("".join(fmt))
+		qs = "".join(fmt)
 
+		if os.environ.get('BILLING_SQL_DESCRIBE', False):
+			LOG.debug("SQL: " + qs)
+
+		return self.query(qs)
 
 
 	def find_one(self, *args, **kwargs):
