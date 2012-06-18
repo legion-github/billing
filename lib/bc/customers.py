@@ -60,11 +60,19 @@ class Customer(bobject.BaseObject):
 			self.set(data)
 
 
-def get(cid):
-	"""Finds customer by ID"""
+def get(val, typ='id'):
+	"""Finds customer by ID or Login"""
+
+	if typ not in [ 'id', 'login' ]:
+		raise ValueError("Unknown type: " + str(typ))
+
+	query = {
+		'login': { 'login': val, 'state': c.STATE_ENABLED },
+		'id': { 'id': val }
+	}
 
 	with database.DBConnect() as db:
-		r = db.find_one('customers', { 'id': cid })
+		r = db.find_one('customers', query[typ])
 		if r:
 			return Customer(r)
 		return None
