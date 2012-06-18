@@ -124,3 +124,19 @@ class Test(unithelper.TestCase):
 		self.assertEqual({'a':'x'}, tmpl.check({'a':'x'}))
 		self.assertEqual({'a':1},   tmpl.check({'a':1}))
 		self.assertRaises(ValidError, lambda: tmpl.check({'a':[1]}))
+
+
+	def test_unknown(self):
+		"""Check unknown"""
+
+		tmpl = V({'a':V(int)}, unknown=True)
+		data = { 'a': 1 }
+		self.assertEqual(data, tmpl.check(data))
+
+		tmpl = V({'a':V(int)}, unknown=True)
+		data = { 'a': 1, 'b': 2 }
+		self.assertEqual(data, tmpl.check(data))
+
+		tmpl = V({'a':V(int)}, unknown=False)
+		data = { 'a': 1, 'b': 2 }
+		self.assertRaises(ValidError, lambda: tmpl.check({'a':[1]}))
