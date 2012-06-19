@@ -140,3 +140,15 @@ class Test(unithelper.TestCase):
 		tmpl = V({'a':V(int)}, unknown=False)
 		data = { 'a': 1, 'b': 2 }
 		self.assertRaises(ValidError, lambda: tmpl.check({'a':[1]}))
+
+
+	def test_unspecified(self):
+		"""Check unspecified"""
+
+		tmpl = V({ 'a':V(int), 'b':V(int, required=False), 'c':V(int, required=False) })
+		data = { 'a': 1, 'b': None, 'c': None }
+		self.assertEqual(data, tmpl.check(data))
+
+		tmpl = V({ 'a':V(int), 'b':V(int, required=False), 'c':V(int, required=False) }, drop_optional=True)
+		data = { 'a': 1 }
+		self.assertEqual(data, tmpl.check(data))

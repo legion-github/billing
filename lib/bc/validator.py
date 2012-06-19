@@ -30,6 +30,7 @@ class Validate(object):
 
 	def __init__(self, arg,
 			required=True,
+			drop_optional=False,
 			unknown=False,
 			default=None,
 			variants=None,
@@ -54,6 +55,7 @@ class Validate(object):
 		"""
 		self.arg = arg
 		self.default = default
+		self.drop_optional = bool(drop_optional)
 		self.required = bool(required)
 		self.unknown = bool(unknown)
 		self.variants = variants
@@ -119,7 +121,9 @@ class Validate(object):
 			try:
 				o.path = self.path[:-1]
 				o.path.append(self.path[-1] + '[' +  str(i) + ']')
-				return o.check(self.value)
+				v = o.check(self.value)
+				if v != None or not self.drop_optional:
+					return o.check(v)
 			except ValidError, err:
 				pass
 			i += 1
@@ -139,7 +143,9 @@ class Validate(object):
 
 			self._check_variants(o.path, self.value[i])
 
-			res.append(o.check(self.value[i]))
+			v = o.check(self.value[i])
+			if v != None or not self.drop_optional:
+				res.append(v)
 			i += 1
 		return res
 
@@ -155,7 +161,9 @@ class Validate(object):
 
 			self._check_variants(o.path, val)
 
-			res[k] = o.check(val)
+			v = o.check(val)
+			if v != None or not self.drop_optional:
+				res[k] = v
 
 		if self.unknown:
 			for k,o in self.value.iteritems():
@@ -189,6 +197,7 @@ class Validate(object):
 
 		if self._check_ignore():
 			return None
+
 		self._check_maxmin(self.value)
 
 		return getattr(self, '_process_' + self.vtype)()
