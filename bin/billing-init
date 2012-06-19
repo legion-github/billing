@@ -56,7 +56,7 @@ def process_customers():
 			'contact_email':  'ted.person@gmail.com',
 #			'contact_phone':  '',
 			'wallet':         1234567890,
-#			'wallet_mode':    0,
+			'wallet_mode':    'limit',
 		},
 		{
 			'login':          'testy.org',

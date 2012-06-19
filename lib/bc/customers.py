@@ -21,6 +21,23 @@ class CustomerConstants(object):
 		'WALLET_MODE_MAXVALUE':  2,
 	}
 
+	def import_state(self, val):
+		x = {
+			'enable':  self.__readonly__['STATE_ENABLED'],
+			'disable': self.__readonly__['STATE_DISABLED'],
+			'delete':  self.__readonly__['STATE_DELETED']
+		}
+		return x.get(val, None)
+
+
+	def import_wallet_mode(self, val):
+		x = {
+			'limit':   self.__readonly__['WALLET_MODE_LIMITED'],
+			'unlimit': self.__readonly__['WALLET_MODE_UNLIMITED'],
+		}
+		return x.get(val, None)
+
+
 constants = CustomerConstants()
 
 class Customer(bobject.BaseObject):
@@ -107,6 +124,37 @@ def add(obj):
 		)
 		if not r:
 			db.insert('customers', obj.values)
+
+
+def modify(typ, val, params):
+	"""Modify customer"""
+
+	c = CustomerConstants()
+
+	if typ not in [ 'id', 'login' ]:
+		raise ValueError("Unknown type: " + str(typ))
+
+	# Final internal validation
+	o = Customer(params)
+
+	if o.state < 0 or o.state >= c.STATE_MAXVALUE:
+		raise TypeError('Wrong state')
+
+	if o.wallet_mode < 0 or o.wallet_mode >= c.WALLET_MODE_MAXVALUE:
+		raise TypeError('Wrong wallet_mode')
+
+	query = {
+		'login': {
+			'login': val,
+			'$or': [ { 'state': c.STATE_ENABLED }, { 'state': c.STATE_DISABLED } ]
+		},
+		'id': {
+			'id': val
+		}
+	}
+
+	with database.DBConnect() as db:
+		db.update("customers", query[typ], params)
 
 
 def remove(typ, value):
