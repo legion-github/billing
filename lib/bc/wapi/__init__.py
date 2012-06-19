@@ -1,5 +1,5 @@
-import testy
-import tariffs
-import tasks
-import metrics
-import customers
+import wapi_testy
+import wapi_tariffs
+import wapi_tasks
+import wapi_metrics
+import wapi_customers
