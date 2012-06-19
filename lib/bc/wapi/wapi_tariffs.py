@@ -97,6 +97,38 @@ def tariffAddInternal(params):
 
 
 @jsonrpc.methods.jsonrpc_method(
+	validate = V({
+		'id':          V(basestring, min=36, max=36),
+		'state':       V(basestring, required=False, max=7),
+		'name':        V(basestring, required=False, min=3, max=64),
+		'description': V(basestring, required=False, min=3, max=1024),
+	}, drop_optional=True),
+	auth = True)
+def tariffModify(params):
+	try:
+		if len(params) == 1:
+			return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+
+		if 'state' in params:
+			v = tariffs.constants.import_state(params['state'])
+			if v == None or v == tariffs.constants.STATE_DELETED:
+				raise TypeError('Wrong state: ' + str(params['state']))
+			params['state'] = v
+
+		tariffs.modify('id', params['id'], params)
+
+	except Exception, e:
+		LOG.error(e)
+		return jsonrpc.methods.jsonrpc_result_error('ServerError',
+			{
+				'status':  'error',
+				'message': 'Unable to modify tariff'
+			}
+		)
+	return jsonrpc.methods.jsonrpc_result({ 'status': 'ok' })
+
+
+@jsonrpc.methods.jsonrpc_method(
 	validate = V({ 'name': V(basestring, min=3, max=64) }),
 	auth = True)
 def tariffRemove(params):

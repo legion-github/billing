@@ -15,6 +15,14 @@ class TariffConstants(object):
 		'STATE_MAXVALUE': 3,
 	}
 
+	def import_state(self, val):
+		x = {
+			'enable':  self.__readonly__['STATE_ENABLED'],
+			'disable': self.__readonly__['STATE_DISABLED'],
+			'delete':  self.__readonly__['STATE_DELETED']
+		}
+		return x.get(val, None)
+
 constants = TariffConstants()
 
 class Tariff(bobject.BaseObject):
@@ -69,6 +77,31 @@ def add(obj):
 		)
 		if not r:
 			db.insert('tariffs', obj.values)
+
+
+def modify(typ, val, params):
+	"""Modify customer"""
+
+	c = TariffConstants()
+
+	if typ not in [ 'id' ]:
+		raise ValueError("Unknown type: " + str(typ))
+
+	# Final internal validation
+	o = Tariff(params)
+
+	if o.state < 0 or o.state >= c.STATE_MAXVALUE:
+		raise TypeError('Wrong state')
+
+	query = {
+		'id': {
+			'id': val,
+			'$or': [ { 'state': c.STATE_ENABLED }, { 'state': c.STATE_DISABLED } ]
+		}
+	}
+
+	with database.DBConnect() as db:
+		db.update("tariffs", query[typ], params)
 
 
 def remove(typ, value):
