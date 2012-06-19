@@ -31,6 +31,29 @@ def customerList(request):
 
 
 @jsonrpc.methods.jsonrpc_method(
+	validate = V({ 'id': V(basestring, min=36, max=36) }),
+	auth = True)
+def customerGet(params):
+	try:
+		ret = customers.get(params['id'], 'id')
+
+	except Exception, e:
+		LOG.error(e)
+		return jsonrpc.methods.jsonrpc_result_error('ServerError',
+			{
+				'status':  'error',
+				'message': 'Unable to obtain customer'
+			}
+		)
+	return jsonrpc.methods.jsonrpc_result(
+		{
+			'status':'ok',
+			'customer': ret
+		}
+	)
+
+
+@jsonrpc.methods.jsonrpc_method(
 	validate = V({
 		'login':            V(basestring, max=64),
 		'wallet_mode':      V(basestring, max=7),
