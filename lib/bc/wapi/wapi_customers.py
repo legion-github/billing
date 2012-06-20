@@ -25,7 +25,7 @@ def customerList(request):
 	return jsonrpc.methods.jsonrpc_result(
 		{
 			'status':'ok',
-			'metrics': ret
+			'customers': ret
 		}
 	)
 
@@ -37,6 +37,13 @@ def customerGet(params):
 	try:
 		ret = customers.get(params['id'], 'id')
 
+		if not ret:
+			return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
+				{
+					'status':  'error',
+					'message': 'Customer not found'
+				}
+			)
 	except Exception, e:
 		LOG.error(e)
 		return jsonrpc.methods.jsonrpc_result_error('ServerError',
@@ -48,7 +55,7 @@ def customerGet(params):
 	return jsonrpc.methods.jsonrpc_result(
 		{
 			'status':'ok',
-			'customer': ret
+			'customer': ret.values
 		}
 	)
 

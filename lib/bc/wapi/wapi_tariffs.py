@@ -35,6 +35,13 @@ def tariffGet(params):
 	try:
 		ret = tariffs.get(params['id'])
 
+		if not ret:
+			return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
+				{
+					'status':  'error',
+					'message': 'Tariff not found'
+				}
+			)
 	except Exception, e:
 		LOG.error(e)
 		return jsonrpc.methods.jsonrpc_result_error('ServerError',
@@ -45,8 +52,8 @@ def tariffGet(params):
 		)
 	return jsonrpc.methods.jsonrpc_result(
 		{
-			'status':'ok',
-			'tariff': ret
+			'status': 'ok',
+			'tariff': ret.values
 		}
 	)
 
