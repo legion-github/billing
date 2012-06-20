@@ -66,14 +66,26 @@ def metricGet(request):
 	""" Return metric object by name """
 
 	try:
-		m = metrics.get(request.get('id'))
+		ret = metrics.get(request.get('id'))
 
+		if not ret
+			return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
+				{
+					'status':  'error',
+					'message': 'Metric not found'
+				}
+			)
 	except Exception, e:
 		LOG.error(e)
 		return jsonrpc.methods.jsonrpc_result_error('ServerError',
 			{
 				'status':  'error',
-				'message': 'Unable to get metric'
+				'message': 'Unable to obtain metric'
 			}
 		)
-	return jsonrpc.methods.jsonrpc_result({ 'metric': m.values, 'status':'ok' })
+	return jsonrpc.methods.jsonrpc_result(
+		{
+			'status': 'ok',
+			'metric': ret.values
+		}
+	)
