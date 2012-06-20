@@ -80,6 +80,8 @@ class Customer(bobject.BaseObject):
 def get(val, typ='id'):
 	"""Finds customer by ID or Login"""
 
+	c = CustomerConstants()
+
 	if typ not in [ 'id', 'login' ]:
 		raise ValueError("Unknown type: " + str(typ))
 
