@@ -495,7 +495,7 @@ SCHEMA = {
 			CREATE TABLE `{0}` (
 			  `id` varchar(36) NOT NULL,
 			  `description` varchar(1024) NOT NULL,
-			  `mtype` varchar(128) NOT NULL,
+			  `metric_id` varchar(128) NOT NULL,
 			  `tariff_id` varchar(36) NOT NULL,
 			  `rate` bigint(20) NOT NULL,
 			  `currency` enum('RUR','USD','EUR') NOT NULL,
