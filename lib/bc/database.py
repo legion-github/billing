@@ -504,7 +504,7 @@ SCHEMA = {
 			  `time_destroy` int(11) NOT NULL,
 			  PRIMARY KEY (`id`),
 			  UNIQUE KEY `id_UNIQUE` (`id`),
-			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`mtype`,`tariff_id`)
+			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`metric_id`,`tariff_id`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",
 	'tariffs': """
