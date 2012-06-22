@@ -495,7 +495,7 @@ SCHEMA = {
 			CREATE TABLE `{0}` (
 			  `id` varchar(36) NOT NULL,
 			  `description` varchar(1024) NOT NULL,
-			  `mtype` varchar(128) NOT NULL,
+			  `metric_id` varchar(128) NOT NULL,
 			  `tariff_id` varchar(36) NOT NULL,
 			  `rate` bigint(20) NOT NULL,
 			  `currency` enum('RUR','USD','EUR') NOT NULL,
@@ -504,7 +504,7 @@ SCHEMA = {
 			  `time_destroy` int(11) NOT NULL,
 			  PRIMARY KEY (`id`),
 			  UNIQUE KEY `id_UNIQUE` (`id`),
-			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`mtype`,`tariff_id`)
+			  UNIQUE KEY `main_UNIQUE` USING BTREE (`state`,`metric_id`,`tariff_id`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 		""",
 	'tariffs': """

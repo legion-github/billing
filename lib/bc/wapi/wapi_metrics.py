@@ -68,7 +68,7 @@ def metricGet(request):
 	try:
 		ret = metrics.get(request.get('id'))
 
-		if not ret
+		if not ret:
 			return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
 				{
 					'status':  'error',

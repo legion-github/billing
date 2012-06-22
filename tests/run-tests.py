@@ -7,7 +7,12 @@ import imp
 import unittest2 as unittest
 
 sys.path.insert(0, '../lib')
+
+from bc import log
+
 suite = unittest.TestSuite()
+
+LOG = log.logger("unittests", type='stderr', level='debug')
 
 for testpath in sorted(glob.glob('./test_*.py')):
 	name = os.path.basename(testpath)[:-3]

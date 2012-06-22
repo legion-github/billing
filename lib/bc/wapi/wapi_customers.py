@@ -37,7 +37,7 @@ def customerGet(params):
 	try:
 		ret = customers.get(params['id'], 'id')
 
-		if not ret
+		if not ret:
 			return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
 				{
 					'status':  'error',
