@@ -1,8 +1,9 @@
 import unithelper
 import uuid
+import time
 
 from bc import database
-from bc import tariff
+from bc import tariffs
 
 class Test(unithelper.DBTestCase):
 
@@ -13,18 +14,17 @@ class Test(unithelper.DBTestCase):
 
 		tariff_description1 = str(uuid.uuid4())
 
-		tar = tariff.Tariff(
+		tar = tariffs.Tariff(
 			data={
 				"name": tariff_name1,
 				"description": tariff_description1,
 				"currency": 'USD'
 			}
 		)
-		tar.create()
+		tariffs.add(tar)
 		with database.DBConnect() as db:
-			t1 = db.query("SELECT * FROM `tariffs` WHERE `tariff_id`='{0}';".format(tar.values['tariff_id'])).one()
-		self.assertEquals(t1["name"], tariff_name1)
-		self.assertEquals(t1["description"], tariff_description1)
+			t1 = db.find_one('tariffs', {'id':tar.id})
+		self.assertEquals(tariffs.Tariff(t1), tar)
 
 
 	def test_tariff_delete(self):
@@ -34,16 +34,19 @@ class Test(unithelper.DBTestCase):
 
 		tariff_description1 = str(uuid.uuid4())
 
-		tar = tariff.Tariff(
+		tar = tariffs.Tariff(
 			data={
 				"name": tariff_name1,
 				"description": tariff_description1,
 				"currency": 'USD'
 			}
 		)
-		tar.create()
-		tar.set_state("DISABLE")
+		tariffs.add(tar)
+		tariffs.remove('id', tar.id)
+		tar.set({'state': tariffs.constants.STATE_DELETED,
+			'time_destroy': int(time.time())})
 
 		with database.DBConnect() as db:
-			t1 = db.query("SELECT * FROM `tariffs` WHERE `tariff_id`='{0}';".format(tar.values['tariff_id'])).one()
-		self.assertEquals(t1["state"], "DISABLE")
+			t1 = db.find_one('tariffs', {'id': tar.id})
+
+		self.assertEquals(tariffs.Tariff(t1), tar)
