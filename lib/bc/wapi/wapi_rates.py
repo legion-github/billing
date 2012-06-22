@@ -8,7 +8,7 @@ from bc import rates
 LOG = log.logger("wapi.rates")
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 		'tariff_id': V(basestring, required=False, min=36, max=36),
 	}, drop_optional=True),
@@ -23,21 +23,13 @@ def rateList(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to obtain rate list'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result(
-		{
-			'status':'ok',
-			'rates': ret
-		}
-	)
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to obtain rate list' })
+
+	return jsonrpc.result({ 'status':'ok', 'rates': ret })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 		'id':        V(basestring, required=False, min=36, max=36),
 		'tariff_id': V(basestring, required=False, min=36, max=36),
@@ -48,56 +40,34 @@ def rateGet(params):
 	try:
 		if len(params) == 1:
 			if 'id' not in params:
-				return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
-					{
-						'status':  'error',
-						'message': 'Wrong parameters'
-					}
-				)
+				return jsonrpc.result_error('InvalidRequest',
+					{ 'status': 'error', 'message': 'Wrong parameters' })
+
 			ret = rates.get_by_id(params['id'])
 
 		elif len(params) == 2:
 			if 'tariff_id' not in params or 'metric_id' not in params:
-				return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
-					{
-						'status':  'error',
-						'message': 'Wrong parameters'
-					}
-				)
+				return jsonrpc.result_error('InvalidRequest',
+					{ 'status': 'error', 'message': 'Wrong parameters' })
+
 			ret = rates.get_by_tariff(params['tariff_id'], params['metric_id'])
 		else:
-			return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
-				{
-					'status':  'error',
-					'message': 'Wrong parameters'
-				}
-			)
+			return jsonrpc.result_error('InvalidRequest',
+				{ 'status': 'error', 'message': 'Wrong parameters' })
 
 		if not ret:
-			return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
-				{
-					'status':  'error',
-					'message': 'Rate not found'
-				}
-			)
+			return jsonrpc.result_error('InvalidRequest',
+				{ 'status': 'error', 'message': 'Rate not found' })
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to obtain rate list'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result(
-		{
-			'status':'ok',
-			'rate': ret.value
-		}
-	)
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to obtain rate list' })
+
+	return jsonrpc.result({ 'status':'ok', 'rate': ret.value })
 
 
-@jsonrpc.methods.jsonrpc_method(auth=0)
+@jsonrpc.method(auth=0)
 def rateAdd(params):
 	""" Adds new rate """
 
@@ -107,16 +77,13 @@ def rateAdd(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to add new rate'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to add new rate' })
+
+	return jsonrpc.result({ 'status':'ok' })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 		'id':          V(basestring, min=36, max=36),
 		'state':       V(basestring, required=False, max=7),
@@ -129,7 +96,7 @@ def rateModify(params):
 
 	try:
 		if len(params) == 1:
-			return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+			return jsonrpc.result({ 'status':'ok' })
 
 		if 'state' in params:
 			v = rates.constants.import_state(params['state'])
@@ -147,16 +114,13 @@ def rateModify(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to modify rate'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to modify rate' })
+
+	return jsonrpc.result({ 'status':'ok' })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({ 'id': V(basestring, min=36, max=36) }),
 	auth = True)
 def rateRemove(params):
@@ -165,10 +129,7 @@ def rateRemove(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to remove rate'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to remove rate' })
+
+	return jsonrpc.result({ 'status':'ok' })

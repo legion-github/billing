@@ -5,6 +5,6 @@ from bc import log
 
 LOG = log.logger("wapi.testy")
 
-@jsonrpc.methods.jsonrpc_method(auth=0)
+@jsonrpc.method(auth=0)
 def test(params):
-	return jsonrpc.methods.jsonrpc_result({'status':'ok'})
+	return jsonrpc.result({'status':'ok'})

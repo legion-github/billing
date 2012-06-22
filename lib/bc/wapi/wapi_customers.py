@@ -8,29 +8,22 @@ from bc import customers
 LOG = log.logger("wapi.customers")
 
 
-@jsonrpc.methods.jsonrpc_method(validate = False, auth = True)
+@jsonrpc.method(validate = False, auth = True)
 def customerList(request):
 	""" Returns a list of all registered customers """
 
 	try:
 		ret = map(lambda c: c.values, customers.get_all())
+
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to obtain customer list'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result(
-		{
-			'status':'ok',
-			'customers': ret
-		}
-	)
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to obtain customer list' })
+
+	return jsonrpc.result({ 'status':'ok', 'customers': ret })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({ 'id': V(basestring, min=36, max=36) }),
 	auth = True)
 def customerGet(params):
@@ -38,29 +31,18 @@ def customerGet(params):
 		ret = customers.get(params['id'], 'id')
 
 		if not ret:
-			return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
-				{
-					'status':  'error',
-					'message': 'Customer not found'
-				}
-			)
+			return jsonrpc.result_error('InvalidRequest',
+				{ 'status': 'error', 'message': 'Customer not found' })
+
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to obtain customer'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result(
-		{
-			'status':'ok',
-			'customer': ret.values
-		}
-	)
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to obtain customer' })
+
+	return jsonrpc.result({ 'status':'ok', 'customers': ret.values })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 		'login':            V(basestring, max=64),
 		'wallet_mode':      V(basestring, max=7),
@@ -92,16 +74,13 @@ def customerAdd(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to add new customer'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to add new customer' })
+
+	return jsonrpc.result({ 'status':'ok' })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 		'login':            V(basestring, max=64),
 		'state':            V(basestring, required=False, max=7),
@@ -122,7 +101,7 @@ def customerModify(params):
 
 	try:
 		if len(params) == 1:
-			return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+			return jsonrpc.result({ 'status':'ok' })
 
 		if 'state' in params:
 			v = customers.constants.import_state(params['state'])
@@ -140,16 +119,13 @@ def customerModify(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to modify customer'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to modify customer' })
+
+	return jsonrpc.result({ 'status':'ok' })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({ 'login': V(basestring, min=1, max=64) }),
 	auth = True)
 def customerRemove(params):
@@ -160,16 +136,13 @@ def customerRemove(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to remove customer'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to remove customer' })
+
+	return jsonrpc.result({ 'status':'ok' })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({ 'id': V(basestring, min=36, max=36) }),
 	auth = True)
 def customerIdRemove(params):
@@ -180,16 +153,13 @@ def customerIdRemove(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to remove customer'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to remove customer' })
+
+	return jsonrpc.result({ 'status':'ok' })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 		'id':    V(basestring, min=36, max=36),
 		'value': V(int)
@@ -204,10 +174,7 @@ def customerDeposit(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to make a deposit'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to make a deposit' })
+
+	return jsonrpc.result({ 'status':'ok' })

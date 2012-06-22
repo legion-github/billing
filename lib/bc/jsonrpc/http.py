@@ -1,12 +1,10 @@
 __version__ = '1.0'
 
-__all__ = ['JsonRpcHttpError', 'jsonrpc_http_request']
-
 import json
 import httplib
 
-from bc.jsonrpc import auth
-from bc.jsonrpc import message
+import secure
+import message
 
 class JsonRpcHttpError(Exception):
 	def __init__(self, fmt, *args):
@@ -17,7 +15,7 @@ def jsonrpc_http_request(conn, method, params=None, auth_data=None, req_limit=No
 	req = message.jsonrpc_request(method, params)
 
 	if auth_data:
-		req = auth.jsonrpc_sign(auth_data['role'], auth_data['secret'], req)
+		req = secure.jsonrpc_sign(auth_data['role'], auth_data['secret'], req)
 
 	conn.request("POST", "/", json.dumps(req))
 	response = conn.getresponse()
