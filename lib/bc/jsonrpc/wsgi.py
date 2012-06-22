@@ -2,12 +2,10 @@
 
 __version__ = '1.0'
 
-__all__ = [ 'MAX_REQUEST_SIZE', 'jsonrpc_handle' ]
-
 import json
 import logging
 
-from bc.jsonrpc import methods
+import methods
 
 LOG = logging.getLogger("jsonrpc.wsgi")
 

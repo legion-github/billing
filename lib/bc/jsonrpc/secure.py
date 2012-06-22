@@ -2,8 +2,6 @@
 
 __version__ = '1.0'
 
-__all__ = [ 'jsonrpc_is_auth', 'jsonrpc_auth', 'jsonrpc_sign_request' ]
-
 import base64, hmac, hashlib, uuid, logging, string, time, fnmatch
 from bc import database
 

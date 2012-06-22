@@ -2,16 +2,10 @@
 
 __version__ = '1.0'
 
-__all__ = [
-	'JSONRPC_ERROR', 'JSONRPC_RESULT', 'JSONRPC_HTTP',
-	'jsonrpc_result', 'jsonrpc_result_error', 'jsonrpc_result_http',
-	'jsonrpc_method', 'jsonrpc_process'
-]
-
 import logging
 
-from bc.jsonrpc import message
-from bc.jsonrpc import auth
+import message
+import secure
 
 from bc.validator import ValidError
 from bc.validator import Validate as V
@@ -73,16 +67,16 @@ def jsonrpc_process(headers, request):
 		params = request.get('params',None)
 
 		if method['auth']:
-			if isinstance(params, list) and len(params) > 0 and auth.jsonrpc_is_auth(params[0]):
+			if isinstance(params, list) and len(params) > 0 and secure.jsonrpc_is_auth(params[0]):
 				sign = params[0]
 				params = params[1:]
-				if not auth.jsonrpc_auth(headers, sign, request):
+				if not secure.jsonrpc_auth(headers, sign, request):
 					return error('AuthFailure')
 
-			elif isinstance(params, dict) and auth.jsonrpc_is_auth(params.get('auth',None)):
+			elif isinstance(params, dict) and secure.jsonrpc_is_auth(params.get('auth',None)):
 				sign = params['auth']
 				del params['auth']
-				if not auth.jsonrpc_auth(headers, sign, request):
+				if not secure.jsonrpc_auth(headers, sign, request):
 					return error('AuthFailure')
 			else:
 				return error('AuthFailure')

@@ -11,7 +11,7 @@ from bc import tasks
 
 LOG = log.logger("wapi.tasks")
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 			'type':		V(basestring),
 			'customer':	V(basestring, min=36, max=36, default=None),
@@ -33,22 +33,14 @@ def taskOpen(request):
 		customer = customers.get(request['customer'])
 
 		if not customer:
-			return jsonrpc.methods.jsonrpc_result_error('InvalidParams',
-				{
-					'status':  'error',
-					'message': 'Invalid customer'
-				}
-			)
+			return jsonrpc.result_error('InvalidParams',
+				{ 'status': 'error', 'message': 'Invalid customer' })
 
 		rid, rate  = queue.resolve(request['type'], customer['tariff'])
 
 		if not rid:
-			return jsonrpc.methods.jsonrpc_result_error('InvalidParams',
-				{
-					'status':  'error',
-					'message': 'Unable to find rate'
-				}
-			)
+			return jsonrpc.result_error('InvalidParams',
+				{ 'status': 'error', 'message': 'Unable to find rate' })
 
 		t = tasks.Task(
 			{
@@ -68,27 +60,24 @@ def taskOpen(request):
 
 	except Exception, e:
 		LOG.exception("Unable to add new task: %s", e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to add new task'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({'status':'ok'})
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to add new task' })
+
+	return jsonrpc.result({'status':'ok'})
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = False,
 	auth = False)
 def taskReopen(request):
 	LOG.info(request)
-	return jsonrpc.methods.jsonrpc_result({'status':'ok'})
+	return jsonrpc.result({'status':'ok'})
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = False,
 	auth = True)
 def taskClose(request):
 	LOG.info(request)
-	return jsonrpc.methods.jsonrpc_result({'status':'ok'})
+	return jsonrpc.result({'status':'ok'})
 

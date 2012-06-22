@@ -9,7 +9,7 @@ from bc import log
 
 LOG = log.logger("wapi.metrics")
 
-@jsonrpc.methods.jsonrpc_method(validate = False, auth = True)
+@jsonrpc.method(validate = False, auth = True)
 def metricList(request):
 	""" Returns a list of all registered metrics """
 
@@ -18,21 +18,13 @@ def metricList(request):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to obtain metric list'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result(
-		{
-			'status':'ok',
-			'metrics': ret
-		}
-	)
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to obtain metric list' })
+
+	return jsonrpc.result({ 'status': 'ok', 'metrics': ret })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 		'id':         V(basestring, min=1, max=128),
 		'type':       V(basestring, min=1, max=32),
@@ -48,16 +40,13 @@ def metricAdd(request):
 		metrics.add(m)
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to add new metric'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to add new metric' })
+
+	return jsonrpc.result({ 'status':'ok' })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 		'id': V(basestring, min=1, max=128)
 	}),
@@ -69,23 +58,12 @@ def metricGet(request):
 		ret = metrics.get(request.get('id'))
 
 		if not ret:
-			return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
-				{
-					'status':  'error',
-					'message': 'Metric not found'
-				}
-			)
+			return jsonrpc.result_error('InvalidRequest',
+				{ 'status': 'error', 'message': 'Metric not found' })
+
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to obtain metric'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result(
-		{
-			'status': 'ok',
-			'metric': ret.values
-		}
-	)
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to obtain metric' })
+
+	return jsonrpc.result({ 'status': 'ok', 'metric': ret.values })

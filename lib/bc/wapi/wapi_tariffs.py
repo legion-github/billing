@@ -8,27 +8,20 @@ from bc import tariffs
 LOG = log.logger("wapi.tariffs")
 
 
-@jsonrpc.methods.jsonrpc_method(validate=False, auth=True)
+@jsonrpc.method(validate=False, auth=True)
 def tariffList(params):
 	try:
 		ret = map(lambda c: c.values, tariffs.get_all())
+
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to obtain tariff list'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result(
-		{
-			'status':'ok',
-			'tariffs': ret
-		}
-	)
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to obtain tariff list' })
+
+	return jsonrpc.result({ 'status':'ok', 'tariffs': ret })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({ 'id': V(basestring, min=36, max=36) }),
 	auth = True)
 def tariffGet(params):
@@ -36,29 +29,17 @@ def tariffGet(params):
 		ret = tariffs.get(params['id'])
 
 		if not ret:
-			return jsonrpc.methods.jsonrpc_result_error('InvalidRequest',
-				{
-					'status':  'error',
-					'message': 'Tariff not found'
-				}
-			)
+			return jsonrpc.result_error('InvalidRequest',
+				{ 'status': 'error', 'message': 'Tariff not found' })
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to obtain tariff'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result(
-		{
-			'status': 'ok',
-			'tariff': ret.values
-		}
-	)
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to obtain tariff' })
+
+	return jsonrpc.result({ 'status': 'ok', 'tariff': ret.values })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 		'name':        V(basestring, min=3, max=64),
 		'description': V(basestring, min=3, max=1024),
@@ -71,16 +52,13 @@ def tariffAdd(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to add new tariff'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status': 'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to add new tariff' })
+
+	return jsonrpc.result({ 'status': 'ok' })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 		'id':          V(basestring),
 		'name':        V(basestring, min=3, max=64),
@@ -94,16 +72,13 @@ def tariffAddInternal(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to add new tariff'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status': 'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to add new tariff' })
+
+	return jsonrpc.result({ 'status': 'ok' })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({
 		'id':          V(basestring, min=36, max=36),
 		'state':       V(basestring, required=False, max=7),
@@ -114,7 +89,7 @@ def tariffAddInternal(params):
 def tariffModify(params):
 	try:
 		if len(params) == 1:
-			return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+			return jsonrpc.result({ 'status':'ok' })
 
 		if 'state' in params:
 			v = tariffs.constants.import_state(params['state'])
@@ -126,16 +101,13 @@ def tariffModify(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to modify tariff'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status': 'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to modify tariff' })
+
+	return jsonrpc.result({ 'status': 'ok' })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({ 'name': V(basestring, min=3, max=64) }),
 	auth = True)
 def tariffRemove(params):
@@ -144,16 +116,13 @@ def tariffRemove(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to remove tariff'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to remove tariff' })
+
+	return jsonrpc.result({ 'status':'ok' })
 
 
-@jsonrpc.methods.jsonrpc_method(
+@jsonrpc.method(
 	validate = V({ 'id': V(basestring, min=36, max=36) }),
 	auth = True)
 def tariffIdRemove(params):
@@ -162,10 +131,7 @@ def tariffIdRemove(params):
 
 	except Exception, e:
 		LOG.error(e)
-		return jsonrpc.methods.jsonrpc_result_error('ServerError',
-			{
-				'status':  'error',
-				'message': 'Unable to remove tariff'
-			}
-		)
-	return jsonrpc.methods.jsonrpc_result({ 'status':'ok' })
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to remove tariff' })
+
+	return jsonrpc.result({ 'status':'ok' })
