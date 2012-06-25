@@ -20,7 +20,6 @@ setup(
 	author_email= 'gladkov.alexey@gmail.com',
 	requires    = [
 		'msgpack',
-		'pymongo',
 		'unittest2',
 	],
 	scripts     = [
