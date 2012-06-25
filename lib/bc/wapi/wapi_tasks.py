@@ -23,7 +23,7 @@ LOG = log.logger("wapi.tasks")
 			'time-destroy':	V(int, default=0),
 	}),
 	auth = False)
-def taskOpen(request):
+def taskAdd(request):
 	""" Open new billing task """
 
 	if 'time-create' not in request:
@@ -69,7 +69,7 @@ def taskOpen(request):
 @jsonrpc.method(
 	validate = False,
 	auth = False)
-def taskReopen(request):
+def taskModify(request):
 	LOG.info(request)
 	return jsonrpc.result({'status':'ok'})
 
@@ -77,7 +77,7 @@ def taskReopen(request):
 @jsonrpc.method(
 	validate = False,
 	auth = True)
-def taskClose(request):
+def taskRemove(request):
 	LOG.info(request)
 	return jsonrpc.result({'status':'ok'})
 
