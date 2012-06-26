@@ -91,3 +91,7 @@ class BaseObject(object):
 
 	def __ne__(self, over):
 		return self.values != over.values
+
+
+	def __hash__(self):
+		return hash((self.values[key] for key in sorted(self.values.iterkeys())))
