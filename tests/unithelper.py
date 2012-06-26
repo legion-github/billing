@@ -11,7 +11,8 @@ confstr = """
 		"name": "testing",
 		"server": "127.0.0.1",
 		"user": "root",
-		"pass": "qwerty"
+		"pass": "qwerty",
+		"shards": ["127.0.0.1"]
 	}
 }
 """
