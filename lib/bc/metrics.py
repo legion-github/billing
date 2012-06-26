@@ -20,7 +20,7 @@ class Metric(bobject.BaseObject):
 			'id':         u'',
 			'type':       u'',
 			'formula':    u'',
-			'aggregate':  0L,
+			'aggregate':  0,
 		}
 
 		if data:
