@@ -49,13 +49,7 @@ class Test(unithelper.DBTestCase):
 			db.insert('tariffs', data)
 			db.insert('tariffs', data1)
 
-		#TODO nekolyanich: more syntax nice check
-		all=list(tariffs.get_all())
-		self.assertTrue(tar in all)
-		self.assertTrue(tar1 in all)
-		self.assertTrue(all[0] in [tar, tar1])
-		self.assertTrue(all[1] in [tar, tar1])
-
+		self.assertEquals(set(list(tariffs.get_all())), set([tar, tar1]))
 
 	def test_tariff_creation(self):
 		"""Check the creating of the tariff"""

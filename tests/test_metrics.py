@@ -77,10 +77,5 @@ class Test(unithelper.DBTestCase):
 			db.insert('metrics', data)
 			db.insert('metrics', data1)
 
-		#TODO nekolyanich: more syntax nice check
-		all=list(metrics.get_all())
-		self.assertTrue(met in all)
-		self.assertTrue(met1 in all)
-		self.assertTrue(all[0] in [met, met1])
-		self.assertTrue(all[1] in [met, met1])
+		self.assertEquals(set(list(metrics.get_all())), set([met,met1]))
 
