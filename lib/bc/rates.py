@@ -125,7 +125,7 @@ def get_all():
 	c = RateConstants()
 
 	with database.DBConnect() as db:
-		for o in db.find('rates', { '$lt': { 'state': c.STATE_DELETED }}):
+		for o in db.find('rates', { 'state': { '$lt': c.STATE_DELETED }}):
 			yield Rate(o)
 
 
@@ -145,7 +145,7 @@ def get_by_id(rid):
 
 def get_by_metric(tid, mid):
 	with database.DBConnect() as db:
-		o = db.find_one('rates', { 'tariff_id': tid, 'mtype': mid })
+		o = db.find_one('rates', { 'tariff_id': tid, 'metric_id': mid })
 		if o:
 			return Rate(o)
 		return None
