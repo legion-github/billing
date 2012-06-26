@@ -1,4 +1,4 @@
-from bc.tasks import task_done
+from bc import tasks
 from bc import metrics
 
 def calculate(task, metric, nostate=False):
@@ -9,7 +9,7 @@ def calculate(task, metric, nostate=False):
 	if int(task.time_destroy) > 0:
 		delta_ts = int(task.time_destroy) - int(task.time_check)
 		if not nostate:
-			task_done(task, metric)
+			tasks.task_done(task, metric)
 	else:
 		delta_ts = int(task.time_now) - int(task.time_check)
 

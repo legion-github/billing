@@ -117,7 +117,7 @@ def remove(typ, value):
 		raise ValueError("Unknown value: " + str(typ))
 
 	with database.DBConnect() as db:
-		db.update("customers", query,
+		db.update("tariffs", query,
 			{
 				'state': c.STATE_DELETED,
 				'time_destroy': int(time.time())

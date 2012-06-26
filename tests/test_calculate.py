@@ -1,48 +1,71 @@
 import time
 import unithelper
+import random
 from bc.calculate import calculate
 from bc import metrics
 from bc import tasks
 
 class Test(unithelper.TestCase):
-	def test_new_task(self):
-		"""Check task calculation"""
-
-		now = int(time.time())
-		delay = 40
-		values = {
-			'uuid':           '',
-			'customer':       'customer_id',
-			'rid':            '',
-			'rate':           '931322574615478515625000',
-			'description':    '',
+	def setUp(self):
+		self.values = {
+			'id':             '123',
+			'customer':       'qq',
 			'state':          tasks.constants.STATE_PROCESSING,
-			'value':          1024,
-			'time_now':       now-delay,
+		}
+		self.task = tasks.Task(self.values)
+		self.metric = metrics.Metric()
+
+	def test_destroyed_task(self):
+		"""Check destroyed task calculation, with checktime in start"""
+
+		now   = int(time.time())
+		delay = random.randint(10, 1000)
+
+		values = {
+			'rate':           random.randint(10**4, 10**10),
+			'value':          random.randint(10**4, 10**10),
 			'time_check':     now-delay,
 			'time_create':    now-delay,
 			'time_destroy':   now,
-			'target_user':    '',
-			'target_uuid':    '',
-			'target_descr':   '',
 		}
+		self.task.set(values)
 
-		t = tasks.Task()
-		t.set(values)
+		self.metric.set({'formula': metrics.constants.FORMULA_TIME})
+		self.assertEqual(
+				(self.values['customer'], int(values['rate']) * delay),
+				calculate(self.task, self.metric, nostate=True)
+		)
+
+		self.metric.set({'formula': metrics.constants.FORMULA_UNIT})
+		self.assertEqual(
+				(self.values['customer'], int(values['rate']) * values['value']),
+				calculate(self.task, self.metric, nostate=True)
+				)
+
+		self.metric.set({'formula': metrics.constants.FORMULA_SPEED})
+		self.assertEqual(
+				(self.values['customer'], int(values['rate']) * values['value']* delay),
+				calculate(self.task, self.metric, nostate=True)
+				)
+
+		self.task.set({'time_create': now-3*3*3*delay})
+
+		self.metric.set({'formula': metrics.constants.FORMULA_TIME})
+		self.assertEqual(
+				(self.values['customer'], int(values['rate']) * delay),
+				calculate(self.task, self.metric, nostate=True)
+		)
+
+		self.metric.set({'formula': metrics.constants.FORMULA_UNIT})
+		self.assertEqual(
+				(self.values['customer'], int(values['rate']) * values['value']),
+				calculate(self.task, self.metric, nostate=True)
+				)
+
+		self.metric.set({'formula': metrics.constants.FORMULA_SPEED})
+		self.assertEqual(
+				(self.values['customer'], int(values['rate']) * values['value']* delay),
+				calculate(self.task, self.metric, nostate=True)
+				)
 
 
-		metric = {
-			'mtype':           '',
-			'count_dimention': {},
-			'time_dimention':  {},
-			'time_type':       1,
-			'aggregate':       0,
-		}
-
-		m = metrics.Metric(metric)
-
-		self.assertEqual((values['customer'], int(values['rate']) * values['value'] * delay), calculate(t, m, nostate=True))
-
-		m.time_type=0
-
-		self.assertEqual((values['customer'], int(values['rate']) * values['value']), calculate(t, m, nostate=True))
