@@ -15,10 +15,21 @@ from bc import bobject
 class TaskConstants(object):
 	__metaclass__ = readonly.metaClass
 	__readonly__  = {
-		'STATE_PROCESSING': 'processing',
-		'STATE_DONE':       'done',
-		'STATE_AGGREGATE':  'aggregate',
+		'STATE_ENABLED':   1,
+		'STATE_DISABLED':  2,
+		'STATE_DELETED':   3,
+		'STATE_AGGREGATE': 4,
+		'STATE_MAXVALUE':  5,
 	}
+
+	def import_state(self, val):
+		x = {
+			'enable':    self.__readonly__['STATE_ENABLED'],
+			'disable':   self.__readonly__['STATE_DISABLED'],
+			'delete':    self.__readonly__['STATE_DELETED'],
+			'aggregate': self.__readonly__['STATE_AGGREGATE']
+		}
+		return x.get(val, None)
 
 constants = TaskConstants()
 
@@ -42,7 +53,7 @@ class Task(bobject.BaseObject):
 			'rate':           0L,
 
 			# Текущее состояние задания
-			'state':          c.STATE_PROCESSING,
+			'state':          c.STATE_ENABLED,
 
 			# Значение ресурса задания. Это может быть время или штуки
 			'value':          0L,
@@ -65,18 +76,46 @@ class Task(bobject.BaseObject):
 
 def add(task):
 	with database.DBConnect(primarykey=task.id) as db:
-		db.insert('queue', task.values)
+		v = task.values
+		del v['time_now']
+		db.insert('queue', v)
 
 
-def set_done(task):
-	with database.DBConnect(primarykey=task.id) as db:
-		c = TaskConstants()
-		db.update('queue',
+def modify(typ, val, params):
+	"""Modify customer"""
+
+	c = TaskConstants()
+
+	if typ not in [ 'id' ]:
+		raise ValueError("Unknown type: " + str(typ))
+
+	# Final internal validation
+	o = Task(params)
+
+	if o.state < 0 or o.state >= c.STATE_MAXVALUE:
+		raise TypeError('Wrong state')
+
+	with database.DBConnect(primarykey=val) as db:
+		db.update("queue", { 'id': val }, params)
+
+
+def remove(typ, value, ts=0):
+	"""Disables tariff"""
+
+	c = TaskConstants()
+
+	if typ == 'id':
+		query = { 'id': value }
+	else:
+		raise ValueError("Unknown value: " + str(typ))
+
+	if ts == 0:
+		ts == int(time.time())
+
+	with database.DBConnect(primarykey=value) as db:
+		db.update("queue", query,
 			{
-				'id':    task.id,
-				'state': c.STATE_PROCESSING
-			},
-			{
-				'state': c.STATE_DONE
+				'state': c.STATE_DELETED,
+				'time_destroy': ts
 			}
 		)

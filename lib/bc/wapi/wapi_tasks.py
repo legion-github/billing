@@ -13,20 +13,27 @@ LOG = log.logger("wapi.tasks")
 
 @jsonrpc.method(
 	validate = V({
+			# Metric
 			'type':		V(basestring),
-			'customer':	V(basestring, min=36, max=36, default=None),
-			'uuid':		V(basestring, min=36, max=36),
-			'user':		V(basestring, min=1,  max=64),
+
+			'customer':	V(basestring, min=36, max=36),
+
 			'value':	V(int),
+
+			# Info
+			'user':		V(basestring, min=1,  max=64),
+			'uuid':		V(basestring, min=36, max=36),
 			'descr':	V(basestring),
-			'time-create':	V(int),
+
+			# Timings
+			'time-create':	V(int, default=0),
 			'time-destroy':	V(int, default=0),
 	}),
 	auth = False)
 def taskAdd(request):
 	""" Open new billing task """
 
-	if 'time-create' not in request:
+	if request['time-create'] == 0:
 		request['time-create'] = int(time.time())
 
 	try:
@@ -45,7 +52,9 @@ def taskAdd(request):
 		t = tasks.Task(
 			{
 				'id':           request['uuid'],
-				'customer':     customer['_id'],
+				'customer':     customer['id'],
+
+				'value':        request['value'],
 
 				'time_create':  request['time-create'],
 				'time_check':   request['time-create'],
@@ -75,9 +84,22 @@ def taskModify(request):
 
 
 @jsonrpc.method(
-	validate = False,
+	validate = V({
+		'id':           V(basestring, min=36, max=36),
+		'time-destroy':	V(int, default=0),
+	}),
 	auth = True)
 def taskRemove(request):
-	LOG.info(request)
-	return jsonrpc.result({'status':'ok'})
 
+	if request['time-destroy'] == 0:
+		request['time-destroy'] = int(time.time())
+
+	try:
+		tasks.remove('id', params['id'], request['time-destroy'])
+
+	except Exception, e:
+		LOG.error(e)
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to remove task' })
+
+	return jsonrpc.result({ 'status':'ok' })
