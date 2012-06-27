@@ -2,7 +2,6 @@
 
 import re
 import json
-import string
 import cStringIO
 
 from bc import utils
@@ -46,30 +45,25 @@ def read(filename = CONFIG_FILE, inline = None, force = False):
 	if CONFIG and not force:
 		return CONFIG
 
-	arrconf = []
-	pattern_trash = re.compile('(^\s+|\s+$|\s*#.*$)')
-
 	if isinstance(inline, basestring):
 		f = cStringIO.StringIO(inline)
 	else:
 		f = open(filename, 'r')
 
+	arrconf = []
 	while True:
 		line = f.readline()
 		if not line:
 			break
 
-		# Remove tailing '\n'
-		line = line[:-1]
-
 		# Remove trash from line
-		line = re.sub(pattern_trash, '', line)
+		line = re.sub(r'(^\s+|\s+$|\s*#.*$)', '', line)
 
 		# Ignore empty string
-		if not line:
-			continue
+		if line:
+			arrconf.append(line)
 
-		arrconf.append(line)
+	s = re.sub(r'([^,:\{\[])\s+("[^"\\]+":)', r'\1, \2', " ".join(arrconf))
 
-	CONFIG = utils.dict_merge(_TEMPLATE_CONFIG, json.loads(string.join(arrconf, ' ')))
+	CONFIG = utils.dict_merge(_TEMPLATE_CONFIG, json.loads(s))
 	return CONFIG
