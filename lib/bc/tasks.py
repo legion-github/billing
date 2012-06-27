@@ -76,7 +76,8 @@ class Task(bobject.BaseObject):
 
 def add(task):
 	with database.DBConnect(primarykey=task.id) as db:
-		v = task.values
+		v = {}
+		v.update(task.values)
 		del v['time_now']
 		db.insert('queue', v)
 
