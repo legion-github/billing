@@ -21,19 +21,7 @@ class BaseObject(object):
 			if o[n] == None:
 				continue
 
-			typ = type(self.__values__[n])
-
-			if typ in [ int, long ]:
-				t = (int,long)
-			elif typ == unicode:
-				t = (basestring,unicode)
-			else:
-				t = typ
-
-			if not isinstance(o[n], t):
-				raise TypeError("Type of {0} is {1}, not {2}".format(o[n], type(o[n]), typ))
-
-			self.__values__[n] = o[n]
+			self.__assign(n, o[n])
 
 		return self
 
@@ -55,7 +43,17 @@ class BaseObject(object):
 
 
 	def __setattr__(self, name, value):
-		if name in ['__values__', '__getter__', '__setter__']:
+		if name == '__values__':
+			if '__values__' not in self.__dict__:
+				self.__dict__['__values__'] = {}
+			for k,v in value.iteritems():
+				if isinstance(v, int):
+					self.__dict__['__values__'][k] = long(v)
+				else:
+					self.__dict__['__values__'][k] = v
+			return
+
+		if name in ['__getter__', '__setter__']:
 			self.__dict__[name] = value
 			return
 
@@ -69,12 +67,7 @@ class BaseObject(object):
 			h[name](name, value)
 			return
 
-		typ = type(o.get(name))
-
-		if not isinstance(value, typ):
-			raise TypeError
-
-		o[name] = value
+		self.__assign(name, value)
 
 
 	def __delattr__(self, name):
@@ -95,3 +88,21 @@ class BaseObject(object):
 
 	def __hash__(self):
 		return hash((self.values[key] for key in sorted(self.values.iterkeys())))
+
+
+	def __assign(self, name, value, check=True):
+		o = self.__values__
+
+		if check:
+			t = typ = type(o[name])
+
+			if typ in [ int, long ]: t = (int,long)
+			elif typ == unicode:     t = (basestring,unicode)
+
+			if not isinstance(value, t):
+				raise TypeError("Type of {0} is {1}, not {2}".format(name, typ, type(value)))
+
+		if isinstance(value, int):
+			o[name] = long(value)
+		else:
+			o[name] = value
