@@ -58,7 +58,7 @@ class Test(unithelper.DBTestCase):
 
 
 	def test_task_creation(self):
-		"""Check add new task"""
+		"""Check add new task to database"""
 
 		o = tasks.Task({
 			"name":     str(uuid.uuid4()),

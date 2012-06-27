@@ -10,7 +10,7 @@ class Test(unithelper.TestCase):
 		self.values = {
 			'id':             '123',
 			'customer':       'qq',
-			'state':          tasks.constants.STATE_PROCESSING,
+			'state':          tasks.constants.STATE_ENABLED,
 		}
 		self.task = tasks.Task(self.values)
 		self.metric = metrics.Metric()
