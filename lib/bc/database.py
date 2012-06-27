@@ -408,7 +408,7 @@ class DBConnect(object):
 		return DBQuery(self.connect().cursor(), fmt, *args)
 
 
-	def find(self, tables, spec=None, fields=None, skip=0, limit=0):
+	def find(self, tables, spec=None, fields=None, skip=0, limit=0, lock=None):
 		def delim(arr, delim=', '):
 			n = len(arr) - 1
 			for i in xrange(0, n):
@@ -437,6 +437,11 @@ class DBConnect(object):
 			fmt.extend([ " LIMIT ", str(limit) ])
 		if skip > 0:
 			fmt.extend([ " OFFSET ", str(skip) ])
+
+		if lock == 'update':
+			fmt.append(" FOR UPDATE")
+		elif lock == 'shared':
+			fmt.append(" LOCK IN SHARE MODE")
 
 		qs = "".join(fmt)
 
