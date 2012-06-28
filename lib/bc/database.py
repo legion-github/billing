@@ -2,14 +2,27 @@ import os
 import time
 import uuid
 import logging
-import MySQLdb
-from MySQLdb import cursors
 
 from bc import config
 from bc import hashing
 from bc import log
 
 from bc import database_schema
+
+DATABASE_BACKEND = 'mysql'
+
+if DATABASE_BACKEND == 'mysql':
+	import MySQLdb
+	from MySQLdb import cursors
+
+	# Backend exceptions:
+	OperationalError = MySQLdb.OperationalError
+	ProgrammingError = MySQLdb.ProgrammingError
+
+	# Backend methods
+	DBBackend_Connect = MySQLdb.connect
+	DBBackend_Cursor  = cursors.SSDictCursor
+
 
 LOG = logging.getLogger("database")
 
@@ -40,7 +53,7 @@ def _runtime_decorator(obj, n):
 	return x
 
 
-class DBDictServCursor(cursors.SSDictCursor):
+class DBDictServCursor(DBBackend_Cursor):
 	reconnect_timeout = 1
 	reconnect_count = 0
 
@@ -58,7 +71,7 @@ class DBDictServCursor(cursors.SSDictCursor):
 		while True:
 			try:
 				return func(*args, **kwargs)
-			except (AttributeError, MySQLdb.OperationalError), e:
+			except (AttributeError, OperationalError), e:
 				err = e
 
 			if i == 0:
@@ -111,7 +124,7 @@ class DBPool(object):
 				'key':    key,
 				'ids':    ids,
 				'status': 'free',
-				'socket': MySQLdb.connect(
+				'socket': DBBackend_Connect(
 						host        = dbhost,
 						db          = dbname,
 						user        = dbuser,
@@ -180,20 +193,19 @@ class DBQuery(object):
 			return self.cursor.fetchall()
 		return None
 
-	def __del__(self):
-		self.cursor.close()
-
 
 DB = DBPool()
 
 class DBConnect(object):
-	autocommit  = True
-	transaction = False
+	_autocommit  = True
+	_transaction = False
+	_conn        = None
+	_cursor      = None
 
 	def __init__(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, primarykey=None, commit=True):
-		self.conn = DB.get_item(dbhost, dbname, dbuser, dbpass, primarykey)
-		self.autocommit = commit
-		self.transaction = False
+		self._conn = DB.get_item(dbhost, dbname, dbuser, dbpass, primarykey)
+		self._autocommit = commit
+		self._transaction = False
 
 
 	def __enter__(self):
@@ -201,36 +213,59 @@ class DBConnect(object):
 
 
 	def __exit__(self, exc_type, exc_value, traceback):
-		DB.free_connection(self.conn)
+		if self._cursor:
+			self.commit()
+			self._cursor = None
+		DB.free_connection(self._conn)
 		return False
 
 
 	def connect(self):
-		return self.conn['socket']
+		return self._conn['socket']
 
 
 	def cursor(self):
-		return DBDictServCursor(self.connect())
+		if not self._cursor:
+			self._cursor = DBDictServCursor(self.connect())
+		return self._cursor
 
 
 	def begin(self):
-		if self.transaction:
+		if self._transaction:
 			return
 		self.cursor().execute("START TRANSACTION")
-		self.transaction = True
+		self._transaction = True
 
 	def commit(self):
-		if not self.transaction:
+		if not self._transaction:
 			return
-		self.cursor().execute("COMMIT")
-		self.transaction = False
+		try:
+			self.cursor().execute("COMMIT")
+		except ProgrammingError:
+			pass
+		self._transaction = False
 
 
 	def rollback(self):
-		if not self.transaction:
+		if not self._transaction:
 			return
-		self.cursor().execute("ROLLBACK")
-		self.transaction = False
+		try:
+			self.cursor().execute("ROLLBACK")
+		except ProgrammingError:
+			pass
+		self._transaction = False
+
+
+	def execute(self, fmt, *args):
+		self.begin()
+		self.cursor().execute(fmt, *args)
+		if self._autocommit:
+			self.commit()
+
+
+	def query(self, fmt, *args):
+		self.begin()
+		return DBQuery(self.cursor(), fmt, *args)
 
 
 	def sql_update(self, query, sort=False):
@@ -387,13 +422,6 @@ class DBConnect(object):
 		return "'{0}'".format(self.escape(string))
 
 
-	def execute(self, fmt, *args):
-		self.begin()
-		self.cursor().execute(fmt, *args)
-		if self.autocommit:
-			self.commit()
-
-
 	def delete(self, table, where=None):
 		qs = "DELETE FROM {0} {1};".format(table,
 			(where == None and "" or "WHERE " + self.sql_where(where)))
@@ -424,10 +452,6 @@ class DBConnect(object):
 			LOG.debug("SQL: " + qs)
 
 		self.execute(qs)
-
-
-	def query(self, fmt, *args):
-		return DBQuery(self.cursor(), fmt, *args)
 
 
 	def find(self, tables, spec=None, fields=None, skip=0, limit=0, lock=None):
