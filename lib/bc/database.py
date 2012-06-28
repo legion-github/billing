@@ -112,8 +112,6 @@ class DBPool(object):
 				'ids':    ids,
 				'status': 'free',
 				'socket': MySQLdb.connect(
-						cursorclass = DBDictServCursor,
-						init_command= "SET autocommit=0",
 						host        = dbhost,
 						db          = dbname,
 						user        = dbuser,
@@ -189,13 +187,13 @@ class DBQuery(object):
 DB = DBPool()
 
 class DBConnect(object):
+	autocommit  = True
+	transaction = False
+
 	def __init__(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, primarykey=None, commit=True):
 		self.conn = DB.get_item(dbhost, dbname, dbuser, dbpass, primarykey)
 		self.autocommit = commit
-
-
-	def connect(self):
-		return self.conn['socket']
+		self.transaction = False
 
 
 	def __enter__(self):
@@ -205,6 +203,34 @@ class DBConnect(object):
 	def __exit__(self, exc_type, exc_value, traceback):
 		DB.free_connection(self.conn)
 		return False
+
+
+	def connect(self):
+		return self.conn['socket']
+
+
+	def cursor(self):
+		return DBDictServCursor(self.connect())
+
+
+	def begin(self):
+		if self.transaction:
+			return
+		self.cursor().execute("START TRANSACTION")
+		self.transaction = True
+
+	def commit(self):
+		if not self.transaction:
+			return
+		self.cursor().execute("COMMIT")
+		self.transaction = False
+
+
+	def rollback(self):
+		if not self.transaction:
+			return
+		self.cursor().execute("ROLLBACK")
+		self.transaction = False
 
 
 	def sql_update(self, query, sort=False):
@@ -352,13 +378,6 @@ class DBConnect(object):
 		return concatenation['$and'](result)
 
 
-	def commit(self):
-		self.connect().commit()
-
-
-	def rollback(self):
-		self.connect().rollback()
-
 
 	def escape(self, string):
 		return self.connect().escape_string(str(string))
@@ -369,7 +388,8 @@ class DBConnect(object):
 
 
 	def execute(self, fmt, *args):
-		self.connect().cursor().execute(fmt, *args)
+		self.begin()
+		self.cursor().execute(fmt, *args)
 		if self.autocommit:
 			self.commit()
 
@@ -407,7 +427,7 @@ class DBConnect(object):
 
 
 	def query(self, fmt, *args):
-		return DBQuery(self.connect().cursor(), fmt, *args)
+		return DBQuery(self.cursor(), fmt, *args)
 
 
 	def find(self, tables, spec=None, fields=None, skip=0, limit=0, lock=None):
@@ -458,13 +478,15 @@ class DBConnect(object):
 
 
 def create_schema(dbname=None, dbuser=None, dbpass=None):
-	with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db:
+	with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass, commit=False) as db:
 		for name, query in database_schema.SCHEMA.iteritems():
-			db.connect().cursor().execute(query.format(name))
+			db.execute(query.format(name))
+		db.commit()
 
 
 def destroy_schema(dbname=None, dbuser=None, dbpass=None):
-	with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass) as db:
+	with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass, commit=False) as db:
 		for name in database_schema.SCHEMA.keys():
-			db.connect().cursor().execute("DROP TABLE IF EXISTS {0}".format(name))
+			db.execute("DROP TABLE IF EXISTS {0}".format(name))
+		db.commit()
 
