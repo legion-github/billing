@@ -25,7 +25,7 @@ def get_host(key=None):
 
 	conf = config.read()
 
-	if isinstance(key, basestring):
+	if len(conf['database']['shards']) > 0 and isinstance(key, basestring):
 		ring = hashing.HashRing(conf['database']['shards'])
 		host = ring.get_node(key)
 	else:
