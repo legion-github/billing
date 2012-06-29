@@ -5,6 +5,8 @@ import random
 import itertools
 
 from bc import rates
+from bc import tariffs
+from bc import metrics
 from bc import database
 
 class Test(unithelper.DBTestCase):
@@ -87,3 +89,38 @@ class Test(unithelper.DBTestCase):
 
 		for tar_id in rat.keys():
 			self.assertEquals(set(list(rates.get_by_tariff(tar_id))), set(rat[tar_id].values()))
+
+
+	def test_rates_creation(self):
+		"""Check the creating of the rates"""
+
+		rat = rates.Rate(
+			{
+				'id':           str(uuid.uuid4()),
+				'description':  str(uuid.uuid4()),
+				'metric_id':    str(uuid.uuid4()),
+				'tariff_id':    str(uuid.uuid4()),
+				'rate':         long(random.randint(10**3, 10**10)),
+				'currency':     rates.constants.CURRENCY_RUB,
+				'state':        rates.constants.STATE_ACTIVE,
+				'time_create':  int(time.time()),
+				'time_destroy': 0
+			}
+		)
+
+		with self.assertRaises(ValueError):
+			rates.add(rat)
+
+		tariffs.add(tariffs.Tariff({'id':rat.tariff_id}))
+
+		with self.assertRaises(ValueError):
+			rates.add(rat)
+
+		metrics.add(metrics.Metric({'id':rat.metric_id}))
+
+		rates.add(rat)
+
+		with database.DBConnect() as db:
+			r1 = db.find_one('rates', {'id':rat.id})
+
+		self.assertEquals(rates.Rate(r1), rat)
