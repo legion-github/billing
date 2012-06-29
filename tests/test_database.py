@@ -1,6 +1,7 @@
 import unithelper
 import uuid
 import time
+import random
 
 import unittest2 as unittest
 from bc import database
@@ -39,6 +40,45 @@ class Test(unithelper.DBTestCase):
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
+	def test_insert_autocommit_false(self):
+		"""transaction insert test"""
+		with database.DBConnect(commit=False) as db:
+			data = []
+			for i in range(random.randint(5,10)):
+				dictionary = {
+						'uuid': str(uuid.uuid4()),
+						'big': 2**32,
+						'time': int(time.time())
+						}
+				db.insert('new_table', dictionary)
+				data.append(dictionary)
+
+
+			with database.DBConnect() as db1:
+			#Must return empty set, because not commited yet
+				self.assertEqual(
+						set(),
+						set(list(db1.query("SELECT * FROM `new_table`;").all()))
+						)
+
+			get_id = lambda x:x['uuid']
+			#Must return all inserted data, because in transaction
+			self.assertEqual(
+					set(map(get_id, data)),
+					set(map(get_id, db.query("SELECT * FROM `new_table`;").all()))
+					)
+
+			db.commit()
+		with database.DBConnect() as db2:
+		#Must return all inserted data, because transaction was commited
+			self.assertEqual(
+					set(map(get_id, data)),
+					set(map(get_id, db2.query("SELECT * FROM `new_table`;").all()))
+					)
+
+
+
+	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_update(self):
 		"""update test"""
 		with database.DBConnect() as db:
@@ -59,3 +99,4 @@ class Test(unithelper.DBTestCase):
 
 			c = db.query("SELECT * FROM new_table WHERE uuid='{0}';".format(dictionary['uuid']))
 			self.assertEqual(dictionary, c.one())
+	
