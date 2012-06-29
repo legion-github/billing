@@ -17,7 +17,6 @@ if DATABASE_BACKEND == 'mysql':
 
 	# Backend exceptions:
 	OperationalError = MySQLdb.OperationalError
-	ProgrammingError = MySQLdb.ProgrammingError
 
 	# Backend methods
 	DBBackend_Connect = MySQLdb.connect
@@ -175,23 +174,33 @@ class DBPool(object):
 class DBQuery(object):
 	cursor = None
 
-	def __init__(self, cursor, fmt, *args):
+	def __init__(self, cursor, trans, fmt, *args):
 		self.cursor = cursor
+		self.trans  = trans
+		if self.trans:
+			cursor.execute("START TRANSACTION")
 		cursor.execute(fmt, *args)
+
+	def close(self):
+		self.cursor.fetchall()
+		if self.trans:
+			self.cursor.execute("COMMIT")
+		self.cursor.close()
 
 	def __iter__(self):
 		for o in self.cursor:
 			yield o
+		self.close()
 
 	def one(self):
-		if self.cursor:
-			return self.cursor.fetchone()
-		return None
+		r = self.cursor.fetchone()
+		self.close()
+		return r
 
 	def all(self):
-		if self.cursor:
-			return self.cursor.fetchall()
-		return None
+		r = self.cursor.fetchall()
+		self.close()
+		return r
 
 
 DB = DBPool()
@@ -215,6 +224,7 @@ class DBConnect(object):
 	def __exit__(self, exc_type, exc_value, traceback):
 		if self._cursor:
 			self.commit()
+			self._cursor.close()
 			self._cursor = None
 		DB.free_connection(self._conn)
 		return False
@@ -239,20 +249,14 @@ class DBConnect(object):
 	def commit(self):
 		if not self._transaction:
 			return
-		try:
-			self.cursor().execute("COMMIT")
-		except ProgrammingError:
-			pass
+		self.cursor().execute("COMMIT")
 		self._transaction = False
 
 
 	def rollback(self):
 		if not self._transaction:
 			return
-		try:
-			self.cursor().execute("ROLLBACK")
-		except ProgrammingError:
-			pass
+		self.cursor().execute("ROLLBACK")
 		self._transaction = False
 
 
@@ -264,8 +268,8 @@ class DBConnect(object):
 
 
 	def query(self, fmt, *args):
-		self.begin()
-		return DBQuery(self.cursor(), fmt, *args)
+		cur = DBDictServCursor(self.connect())
+		return DBQuery(cur, self._autocommit, fmt, *args)
 
 
 	def sql_update(self, query, sort=False):
