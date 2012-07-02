@@ -124,3 +124,73 @@ class Test(unithelper.DBTestCase):
 			r1 = db.find_one('rates', {'id':rat.id})
 
 		self.assertEquals(rates.Rate(r1), rat)
+
+
+	def test_rate_delete(self):
+		"""Check state changing"""
+
+		rat = rates.Rate(
+			{
+				'id':           str(uuid.uuid4()),
+				'description':  str(uuid.uuid4()),
+				'metric_id':    str(uuid.uuid4()),
+				'tariff_id':    str(uuid.uuid4()),
+				'rate':         long(random.randint(10**3, 10**10)),
+				'currency':     rates.constants.CURRENCY_RUB,
+				'state':        rates.constants.STATE_ACTIVE,
+				'time_create':  int(time.time()),
+				'time_destroy': 0
+			}
+		)
+		tariffs.add(tariffs.Tariff({'id':rat.tariff_id}))
+		metrics.add(metrics.Metric({'id':rat.metric_id}))
+		rates.add(rat)
+
+		rat.set({'state': rates.constants.STATE_DELETED,
+			'time_destroy': int(time.time())})
+
+		with self.assertRaises(ValueError):
+			rates.remove('state', rat.id)
+
+		rates.remove('id', rat.id)
+
+		with database.DBConnect() as db:
+			r1 = db.find_one('rates', {'id': rat.id})
+
+		self.assertEquals(rates.Rate(r1), rat)
+
+
+	def test_rate_modification(self):
+		""" Check modification attributes"""
+
+		rat = rates.Rate(
+			{
+				'id':           str(uuid.uuid4()),
+				'description':  str(uuid.uuid4()),
+				'metric_id':    str(uuid.uuid4()),
+				'tariff_id':    str(uuid.uuid4()),
+				'rate':         long(random.randint(10**3, 10**10)),
+				'currency':     rates.constants.CURRENCY_RUB,
+				'state':        rates.constants.STATE_ACTIVE,
+				'time_create':  int(time.time()),
+				'time_destroy': 0
+			}
+		)
+		tariffs.add(tariffs.Tariff({'id':rat.tariff_id}))
+		metrics.add(metrics.Metric({'id':rat.metric_id}))
+		rates.add(rat)
+
+		data = {'description':  str(uuid.uuid4())}
+		rates.modify('id', rat.id, data)
+		rat.set(data)
+
+		with self.assertRaises(TypeError):
+			tariffs.modify('id', rat.id, {'state':rates.constants.STATE_MAXVALUE+1})
+
+		with self.assertRaises(ValueError):
+			tariffs.modify('name', rat.id, {})
+
+		with database.DBConnect() as db:
+			r1 = db.find_one('rates', {'id': rat.id})
+
+		self.assertEquals(rates.Rate(r1), rat)

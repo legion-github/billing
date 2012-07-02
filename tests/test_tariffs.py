@@ -51,6 +51,7 @@ class Test(unithelper.DBTestCase):
 
 		self.assertEquals(set(list(tariffs.get_all())), set([tar, tar1]))
 
+
 	def test_tariff_creation(self):
 		"""Check the creating of the tariff"""
 
@@ -90,6 +91,7 @@ class Test(unithelper.DBTestCase):
 			t1 = db.find_one('tariffs', {'id': tar.id})
 
 		self.assertEquals(tariffs.Tariff(t1), tar)
+
 
 	def test_tariff_modification(self):
 		""" Check modification attributes"""
