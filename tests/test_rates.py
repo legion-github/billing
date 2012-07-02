@@ -185,10 +185,10 @@ class Test(unithelper.DBTestCase):
 		rat.set(data)
 
 		with self.assertRaises(TypeError):
-			tariffs.modify('id', rat.id, {'state':rates.constants.STATE_MAXVALUE+1})
+			rates.modify('id', rat.id, {'state':rates.constants.STATE_MAXVALUE+1})
 
 		with self.assertRaises(ValueError):
-			tariffs.modify('name', rat.id, {})
+			rates.modify('name', rat.id, {})
 
 		with database.DBConnect() as db:
 			r1 = db.find_one('rates', {'id': rat.id})
