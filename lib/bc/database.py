@@ -10,6 +10,7 @@ from bc import log
 from bc import database_schema
 
 DATABASE_BACKEND = 'mysql'
+#DATABASE_BACKEND = 'pgsql'
 
 if DATABASE_BACKEND == 'mysql':
 	import MySQLdb
@@ -19,8 +20,33 @@ if DATABASE_BACKEND == 'mysql':
 	OperationalError = MySQLdb.OperationalError
 
 	# Backend methods
-	DBBackend_Connect = MySQLdb.connect
 	DBBackend_Cursor  = cursors.SSDictCursor
+
+	def DBBackend_Connect(*args, **kwargs):
+		return MySQLdb.connect(
+			host         = kwargs['dbhost'],
+			db           = kwargs['dbname'],
+			user         = kwargs['dbuser'],
+			passwd       = kwargs['dbpass'],
+		)
+
+elif DATABASE_BACKEND == 'pgsql':
+	import psycopg2
+	from psycopg2 import extras
+
+	# Backend exceptions:
+	OperationalError = psycopg2.OperationalError
+
+	# Backend methods
+	DBBackend_Cursor  = extras.RealDictCursor
+
+	def DBBackend_Connect(*args, **kwargs):
+		return psycopg2.connect(
+			host         = kwargs['dbhost'],
+			database     = kwargs['dbname'],
+			user         = kwargs['dbuser'],
+			password     = kwargs['dbpass'],
+		)
 
 
 LOG = logging.getLogger("database")
@@ -52,7 +78,7 @@ def _runtime_decorator(obj, n):
 	return x
 
 
-class DBDictServCursor(DBBackend_Cursor):
+class DBCursor(DBBackend_Cursor):
 	reconnect_timeout = 1
 	reconnect_count = 0
 
@@ -124,10 +150,10 @@ class DBPool(object):
 				'ids':    ids,
 				'status': 'free',
 				'socket': DBBackend_Connect(
-						host        = dbhost,
-						db          = dbname,
-						user        = dbuser,
-						passwd      = dbpass)
+						dbhost = dbhost,
+						dbname = dbname,
+						dbuser = dbuser,
+						dbpass = dbpass)
 			}
 
 
@@ -174,16 +200,16 @@ class DBPool(object):
 class DBQuery(object):
 	cursor = None
 
-	def __init__(self, cursor, trans, fmt, *args):
+	def __init__(self, cursor, autocommit, fmt, *args):
 		self.cursor = cursor
-		self.trans  = trans
-		if self.trans:
+		self.autocommit = autocommit
+		if self.autocommit:
 			cursor.execute("START TRANSACTION")
 		cursor.execute(fmt, *args)
 
 	def close(self):
 		self.cursor.fetchall()
-		if self.trans:
+		if self.autocommit:
 			self.cursor.execute("COMMIT")
 		self.cursor.close()
 
@@ -236,7 +262,7 @@ class DBConnect(object):
 
 	def cursor(self):
 		if not self._cursor:
-			self._cursor = DBDictServCursor(self.connect())
+			self._cursor = DBCursor(self.connect())
 		return self._cursor
 
 
@@ -268,7 +294,7 @@ class DBConnect(object):
 
 
 	def query(self, fmt, *args):
-		cur = DBDictServCursor(self.connect())
+		cur = DBCursor(self.connect())
 		return DBQuery(cur, self._autocommit, fmt, *args)
 
 
@@ -419,7 +445,8 @@ class DBConnect(object):
 
 
 	def escape(self, string):
-		return self.connect().escape_string(str(string))
+		#return self.connect().escape_string(str(string))
+		return str(string)
 
 
 	def literal(self, string):
