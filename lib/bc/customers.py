@@ -69,7 +69,7 @@ class Customer(bobject.BaseObject):
 			'time_create':      int(time.time()),
 			'time_destroy':     0,
 
-			'wallet':           0,
+			'wallet':           0L,
 			'wallet_mode':      c.WALLET_MODE_LIMITED
 		}
 
@@ -181,8 +181,6 @@ def remove(typ, value):
 
 def deposit(cid, ammount):
 	""" Make deposit to customer """
-
-	c = CustomerConstants()
 
 	with database.DBConnect() as db:
 		db.update('customers',
