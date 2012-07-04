@@ -58,11 +58,11 @@ class Test(unithelper.DBTestCase):
 		"""Check getting rates from db"""
 
 
-		tariffs = [str(uuid.uuid4()) for i in range(5)]
+		tariffs_list = [str(uuid.uuid4()) for i in range(5)]
 		metrics = [str(uuid.uuid4()) for i in range(5)]
 
 		rat = {}
-		for tar in tariffs:
+		for tar in tariffs_list:
 			rat[tar] = {}
 			random.shuffle(metrics)
 			for met in metrics[:random.randint(1, 5)]:

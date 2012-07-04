@@ -1,6 +1,4 @@
 import unithelper
-import uuid
-import time
 
 import unittest2 as unittest
 from bc import database

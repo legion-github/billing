@@ -1,4 +1,3 @@
-import uuid
 import MySQLdb
 import unittest2 as unittest
 from bc import config
