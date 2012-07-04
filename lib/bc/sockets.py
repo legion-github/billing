@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.6
 
-import os, socket, threading, time, struct, errno, logging
+import socket, threading, time, struct, errno, logging
 import msgpack
 #import traceback
 

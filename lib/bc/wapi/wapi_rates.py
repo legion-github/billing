@@ -19,7 +19,7 @@ def rateList(params):
 			ret = map(lambda c: c.values, rates.get_all())
 
 		elif len(params) == 1:
-			ret = map(lambda c: c.values, rates.get_by_tariff(parmas['tariff_id']))
+			ret = map(lambda c: c.values, rates.get_by_tariff(params['tariff_id']))
 
 	except Exception, e:
 		LOG.error(e)

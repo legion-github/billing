@@ -6,7 +6,6 @@ import logging
 
 from bc import config
 from bc import hashing
-from bc import log
 
 import psycopg2
 from psycopg2 import extras

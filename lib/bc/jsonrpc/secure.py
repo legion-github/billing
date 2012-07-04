@@ -2,7 +2,7 @@
 
 __version__ = '1.0'
 
-import base64, hmac, hashlib, uuid, logging, string, time, fnmatch
+import base64, hmac, hashlib, logging, string, time, fnmatch
 from bc import database
 
 LOG = logging.getLogger("jsonrpc.auth")

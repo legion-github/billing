@@ -8,7 +8,6 @@ import message
 import secure
 
 from bc.validator import ValidError
-from bc.validator import Validate as V
 
 LOG = logging.getLogger("jsonrpc.methods")
 

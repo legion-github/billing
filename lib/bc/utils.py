@@ -1,4 +1,5 @@
 import hashlib
+import string
 
 
 def sha1(*args):

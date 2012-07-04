@@ -2,6 +2,7 @@
 
 __version__ = '1.0'
 
+import time
 from bc.validator import Validate as V
 from bc import jsonrpc
 from bc import log
@@ -95,7 +96,7 @@ def taskRemove(request):
 		request['time-destroy'] = int(time.time())
 
 	try:
-		tasks.remove('id', params['id'], request['time-destroy'])
+		tasks.remove('id', request['id'], request['time-destroy'])
 
 	except Exception, e:
 		LOG.error(e)
