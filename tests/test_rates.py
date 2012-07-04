@@ -59,13 +59,13 @@ class Test(unithelper.DBTestCase):
 
 
 		tariffs_list = [str(uuid.uuid4()) for i in range(5)]
-		metrics = [str(uuid.uuid4()) for i in range(5)]
+		metrics_list = [str(uuid.uuid4()) for i in range(5)]
 
 		rat = {}
 		for tar in tariffs_list:
 			rat[tar] = {}
-			random.shuffle(metrics)
-			for met in metrics[:random.randint(1, 5)]:
+			random.shuffle(metrics_list)
+			for met in metrics_list[:random.randint(1, 5)]:
 
 				data = {
 					'id':           str(uuid.uuid4()),
@@ -74,7 +74,9 @@ class Test(unithelper.DBTestCase):
 					'tariff_id':    tar,
 					'rate':         random.randint(10**3, 10**10),
 					'currency':     rates.constants.CURRENCY_RUB,
-					'state':        rates.constants.STATE_ACTIVE,
+					'state':        random.choice([rates.constants.STATE_ACTIVE,
+										rates.constants.STATE_DELETED,
+										rates.constants.STATE_UPDATE]),
 					'time_create':  int(time.time()),
 					'time_destroy': 0
 					}
@@ -84,8 +86,9 @@ class Test(unithelper.DBTestCase):
 				with database.DBConnect() as db:
 					db.insert('rates', data)
 
-		list_all = [rat[j].itervalues() for j in rat.iterkeys()]
-		self.assertEquals(set(list(rates.get_all())), set(itertools.chain(*list_all)))
+		list_all = itertools.chain(*[rat[j].itervalues() for j in rat.iterkeys()])
+		self.assertEquals(set(list(rates.get_all())),
+				set(filter(lambda x: x.state<rates.constants.STATE_DELETED,list_all)))
 
 		for tar_id in rat.keys():
 			self.assertEquals(set(list(rates.get_by_tariff(tar_id))), set(rat[tar_id].values()))
