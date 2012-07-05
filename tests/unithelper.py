@@ -1,4 +1,7 @@
-import MySQLdb
+import sys
+
+sys.path.insert(0, '../lib')
+
 import unittest2 as unittest
 from bc import config
 from bc import database
@@ -68,10 +71,6 @@ class TestCase(unittest.TestCase):
 
 
 def haveDatabase():
-	try:
-		database.DB.get_connection()
-	except MySQLdb.OperationalError, e:
-		return False
 	return True
 
 
