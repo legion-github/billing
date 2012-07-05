@@ -30,26 +30,23 @@ class Test(unithelper.DBTestCase):
 	def test_tariff_get_all(self):
 		"""Check getting tariffs from db"""
 
-		data = {
-			'id':           unicode(uuid.uuid4()),
-			'name':         str(uuid.uuid4()),
-			'description':  str(uuid.uuid4()),
-			'state':        tariffs.constants.STATE_ENABLED,
-			'time_create':  int(time.time()),
-			'time_destroy': 0,
-		}
-		data1 = data.copy()
-		data1['id'] = unicode(uuid.uuid4())
-		data1['name'] = str(uuid.uuid4())
+		data = []
+		for i in range(2, 10):
+			d = {
+				'id':           unicode(uuid.uuid4()),
+				'name':         str(uuid.uuid4()),
+				'description':  str(uuid.uuid4()),
+				'state':        tariffs.constants.STATE_ENABLED,
+				'time_create':  int(time.time()),
+				'time_destroy': 0,
+			}
 
-		tar = tariffs.Tariff(data)
-		tar1 = tariffs.Tariff(data1)
+			with database.DBConnect() as db:
+				db.insert('tariffs', d)
 
-		with database.DBConnect() as db:
-			db.insert('tariffs', data)
-			db.insert('tariffs', data1)
+			data.append(tariffs.Tariff(d))
 
-		self.assertEquals(set(list(tariffs.get_all())), set([tar, tar1]))
+		self.assertEquals(set(list(tariffs.get_all())), set(data))
 
 
 	def test_tariff_creation(self):
@@ -59,7 +56,6 @@ class Test(unithelper.DBTestCase):
 			data={
 				"name": str(uuid.uuid4()),
 				"description": str(uuid.uuid4()),
-				"currency": 'USD'
 			}
 		)
 		tariffs.add(tar)
@@ -72,14 +68,20 @@ class Test(unithelper.DBTestCase):
 	def test_tariff_delete(self):
 		"""Check state changing"""
 
-		tar = tariffs.Tariff(
-			data={
-				"name": str(uuid.uuid4()),
-				"description": str(uuid.uuid4()),
-				"currency": 'USD'
-			}
-		)
-		tariffs.add(tar)
+		data = {
+			'id':           unicode(uuid.uuid4()),
+			'name':         str(uuid.uuid4()),
+			'description':  str(uuid.uuid4()),
+			'state':        tariffs.constants.STATE_ENABLED,
+			'time_create':  int(time.time()),
+			'time_destroy': 0,
+		}
+
+		tar = tariffs.Tariff(data)
+
+		with database.DBConnect() as db:
+			db.insert('tariffs', data)
+
 		tariffs.remove('id', tar.id)
 		tar.set({'state': tariffs.constants.STATE_DELETED,
 			'time_destroy': int(time.time())})
@@ -96,14 +98,19 @@ class Test(unithelper.DBTestCase):
 	def test_tariff_modification(self):
 		""" Check modification attributes"""
 
-		tar = tariffs.Tariff(
-			data={
-				"name": str(uuid.uuid4()),
-				"description": str(uuid.uuid4()),
-				"currency": 'USD'
-			}
-		)
-		tariffs.add(tar)
+		data = {
+			'id':           unicode(uuid.uuid4()),
+			'name':         str(uuid.uuid4()),
+			'description':  str(uuid.uuid4()),
+			'state':        tariffs.constants.STATE_ENABLED,
+			'time_create':  int(time.time()),
+			'time_destroy': 0,
+		}
+
+		tar = tariffs.Tariff(data)
+
+		with database.DBConnect() as db:
+			db.insert('tariffs', data)
 
 		data = {
 			'name':         str(uuid.uuid4()),
