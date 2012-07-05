@@ -10,18 +10,18 @@ class Test(unithelper.DBTestCase):
 	def setUp(self):
 		with database.DBConnect() as db:
 			test_base_dropper = """
-			DROP TABLE IF EXISTS `new_table`;
+			DROP TABLE IF EXISTS new_table;
 			"""
 			test_base_creator="""
-			CREATE TABLE `new_table` (
-			`uuid` varchar(36) NOT NULL,
-			`big` bigint(20) NOT NULL,
-			`time` int(11) NOT NULL,
-			 PRIMARY KEY (`uuid`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+			CREATE TABLE new_table (
+			uuid varchar(36) NOT NULL PRIMARY KEY,
+			big bigint NOT NULL,
+			time int NOT NULL
+			);
 			"""
 			db.connect().cursor().execute(test_base_dropper)
 			db.connect().cursor().execute(test_base_creator)
+			db.connect().commit()
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -34,7 +34,7 @@ class Test(unithelper.DBTestCase):
 					'time': int(time.time())
 					}
 			db.insert('new_table', dictionary)
-			c = db.query("SELECT * FROM `new_table` WHERE `uuid`='{0}';".format(dictionary['uuid']))
+			c = db.query("SELECT * FROM new_table WHERE uuid='{0}';".format(dictionary['uuid']))
 			self.assertEqual(dictionary, c.one())
 
 
@@ -57,5 +57,5 @@ class Test(unithelper.DBTestCase):
 			del(dset['uuid'])
 			db.update('new_table', dsearch, dset)
 
-			c = db.query("SELECT * FROM `new_table` WHERE `uuid`='{0}';".format(dictionary['uuid']))
+			c = db.query("SELECT * FROM new_table WHERE uuid='{0}';".format(dictionary['uuid']))
 			self.assertEqual(dictionary, c.one())

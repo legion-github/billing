@@ -3,6 +3,7 @@ import MySQLdb
 import unittest2 as unittest
 from bc import config
 from bc import database
+from bc import database_schema
 
 
 confstr = """
@@ -79,11 +80,11 @@ class DBTestCase(TestCase):
 	def setUp(self):
 		if not haveDatabase():
 			return
-		database.destroy_schema()
-		database.create_schema()
+		database_schema.destroy_schema()
+		database_schema.create_schema()
 
 
 	def tearDown(self):
 		if not haveDatabase():
 			return
-		database.destroy_schema()
+		database_schema.destroy_schema()
