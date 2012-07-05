@@ -10,6 +10,8 @@ from bc import hashing
 import psycopg2
 from psycopg2 import extras
 
+MIN_OPEN_CONNECTIONS = 1
+
 # Backend exceptions:
 OperationalError = psycopg2.OperationalError
 
@@ -145,7 +147,7 @@ class DBPool(object):
 				if sock['status'] == 'free':
 					garbage.append(sock)
 
-			if len(garbage) <= 1:
+			if len(garbage) <= MIN_OPEN_CONNECTIONS:
 				continue
 
 			for sock in garbage:
