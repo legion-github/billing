@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import uuid
 import logging
@@ -7,46 +8,22 @@ from bc import config
 from bc import hashing
 from bc import log
 
-from bc import database_schema
+import psycopg2
+from psycopg2 import extras
 
-DATABASE_BACKEND = 'mysql'
-#DATABASE_BACKEND = 'pgsql'
+# Backend exceptions:
+OperationalError = psycopg2.OperationalError
 
-if DATABASE_BACKEND == 'mysql':
-	import MySQLdb
-	from MySQLdb import cursors
+# Backend methods
+DBBackend_Cursor  = extras.RealDictCursor
 
-	# Backend exceptions:
-	OperationalError = MySQLdb.OperationalError
-
-	# Backend methods
-	DBBackend_Cursor  = cursors.SSDictCursor
-
-	def DBBackend_Connect(*args, **kwargs):
-		return MySQLdb.connect(
-			host         = kwargs['dbhost'],
-			db           = kwargs['dbname'],
-			user         = kwargs['dbuser'],
-			passwd       = kwargs['dbpass'],
-		)
-
-elif DATABASE_BACKEND == 'pgsql':
-	import psycopg2
-	from psycopg2 import extras
-
-	# Backend exceptions:
-	OperationalError = psycopg2.OperationalError
-
-	# Backend methods
-	DBBackend_Cursor  = extras.RealDictCursor
-
-	def DBBackend_Connect(*args, **kwargs):
-		return psycopg2.connect(
-			host         = kwargs['dbhost'],
-			database     = kwargs['dbname'],
-			user         = kwargs['dbuser'],
-			password     = kwargs['dbpass'],
-		)
+def DBBackend_Connect(*args, **kwargs):
+	return psycopg2.connect(
+		host         = kwargs['dbhost'],
+		database     = kwargs['dbname'],
+		user         = kwargs['dbuser'],
+		password     = kwargs['dbpass'],
+	)
 
 
 LOG = logging.getLogger("database")
@@ -445,8 +422,10 @@ class DBConnect(object):
 
 
 	def escape(self, string):
-		#return self.connect().escape_string(str(string))
+		if isinstance(string, (basestring, unicode)):
+			return re.sub(r'([\'\"\\])', r'\\\1', str(string))
 		return str(string)
+		#return self.connect().escape_string(str(string))
 
 
 	def literal(self, string):
@@ -485,7 +464,7 @@ class DBConnect(object):
 		self.execute(qs)
 
 
-	def find(self, tables, spec=None, fields=None, skip=0, limit=0, lock=None):
+	def find(self, tables, spec=None, fields=None, skip=0, limit=0, lock=None, nowait=False):
 		def delim(arr, delim=', '):
 			n = len(arr) - 1
 			for i in xrange(0, n):
@@ -515,10 +494,18 @@ class DBConnect(object):
 		if skip > 0:
 			fmt.extend([ " OFFSET ", str(skip) ])
 
-		if lock == 'update':
-			fmt.append(" FOR UPDATE")
-		elif lock == 'shared':
-			fmt.append(" LOCK IN SHARE MODE")
+		if lock != None:
+			if lock == 'update':
+				fmt.append(" FOR UPDATE")
+
+			elif lock == 'share':
+				# Another syntax in MySQL: LOCK IN SHARE MODE
+				fmt.append(" FOR SHARE")
+
+			# Unsupported in MySQL
+			if nowait:
+				fmt.append(" NOWAIT")
+
 
 		qs = "".join(fmt)
 
@@ -530,18 +517,4 @@ class DBConnect(object):
 
 	def find_one(self, *args, **kwargs):
 		return self.find(*args, **kwargs).one()
-
-
-def create_schema(dbname=None, dbuser=None, dbpass=None):
-	with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass, commit=False) as db:
-		for name, query in database_schema.SCHEMA.iteritems():
-			db.execute(query.format(name))
-		db.commit()
-
-
-def destroy_schema(dbname=None, dbuser=None, dbpass=None):
-	with DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass, commit=False) as db:
-		for name in database_schema.SCHEMA.keys():
-			db.execute("DROP TABLE IF EXISTS {0}".format(name))
-		db.commit()
 
