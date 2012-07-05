@@ -58,14 +58,14 @@ class Test(unithelper.DBTestCase):
 			#Must return empty set, because not commited yet
 				self.assertEqual(
 						set(),
-						set(list(db1.query("SELECT * FROM `new_table`;").all()))
+						set(list(db1.query("SELECT * FROM new_table;").all()))
 						)
 
 			get_id = lambda x:x['uuid']
 			#Must return all inserted data, because in transaction
 			self.assertEqual(
 					set(map(get_id, data)),
-					set(map(get_id, db.query("SELECT * FROM `new_table`;").all()))
+					set(map(get_id, db.query("SELECT * FROM new_table;").all()))
 					)
 
 			db.commit()
@@ -73,7 +73,7 @@ class Test(unithelper.DBTestCase):
 		#Must return all inserted data, because transaction was commited
 			self.assertEqual(
 					set(map(get_id, data)),
-					set(map(get_id, db2.query("SELECT * FROM `new_table`;").all()))
+					set(map(get_id, db2.query("SELECT * FROM new_table;").all()))
 					)
 
 
