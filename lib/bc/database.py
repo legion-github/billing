@@ -55,11 +55,12 @@ def _runtime_decorator(obj, n):
 
 
 class DBCursor(DBBackend_Cursor):
-	reconnect_timeout = 1
-	reconnect_count = 0
 
 	def __init__(self, conn):
 		super(self.__class__, self).__init__(conn)
+
+		self.reconnect_timeout = 1
+		self.reconnect_count = 0
 
 		for n in ['fetchall','fetchmany','fetchone','scroll','execute','executemany','nextset']:
 			self.__dict__[n] = _runtime_decorator(self, n)
@@ -87,9 +88,8 @@ class DBCursor(DBBackend_Cursor):
 
 class DBPool(object):
 
-	_CONNECTIONS = {}
-
 	def __init__(self, reconnect=0, timeout=1):
+		self._CONNECTIONS = {}
 		self.reconnect = reconnect
 		self.timeout   = timeout
 
@@ -133,9 +133,9 @@ class DBPool(object):
 			}
 
 
-	def collect(self, key=None):
-		keys = [ key ]
-		if not key:
+	def collect(self, k=None):
+		keys = [ k ]
+		if k == None:
 			keys = self._CONNECTIONS.keys()
 
 		for key in keys:
@@ -145,10 +145,8 @@ class DBPool(object):
 				if sock['status'] == 'free':
 					garbage.append(sock)
 
-			if not garbage:
+			if len(garbage) <= 1:
 				continue
-
-			garbage.pop()
 
 			for sock in garbage:
 				self.close_connection(sock)
@@ -163,6 +161,7 @@ class DBPool(object):
 	def free_connection(self, conn):
 		conn['status'] = 'free'
 		self.collect()
+
 
 	def get_connection(self, dbname=None, primarykey=None):
 		pitem = self.get_item(dbname, primarykey)
