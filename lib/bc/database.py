@@ -464,7 +464,7 @@ class DBConnect(object):
 		self.execute(qs)
 
 
-	def find(self, tables, spec=None, fields=None, skip=0, limit=0, lock=None, nowait=False):
+	def find(self, tables, spec=None, fields=None, sort=None, skip=0, limit=0, lock=None, nowait=False):
 		def delim(arr, delim=', '):
 			n = len(arr) - 1
 			for i in xrange(0, n):
@@ -489,6 +489,11 @@ class DBConnect(object):
 
 		if isinstance(spec, dict):
 			fmt.extend([ " WHERE ", self.sql_where(spec) ])
+
+		if sort != None and len(sort) > 0:
+			fmt.append(" ORDER BY")
+			fmt.append(', '.join(map(lambda x: ' '.join(x), sort)))
+
 		if limit > 0:
 			fmt.extend([ " LIMIT ", str(limit) ])
 		if skip > 0:
