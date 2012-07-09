@@ -467,7 +467,7 @@ class DBConnect(object):
 		if isinstance(spec, dict) and len(spec) > 0:
 			fmt.extend([ " WHERE ", self.sql_where(spec) ])
 
-		need_return = isinstance(returning, dict)
+		need_return = isinstance(returning, (dict, list))
 
 		if need_return:
 			fmt.append(" RETURNING ")
@@ -507,7 +507,7 @@ class DBConnect(object):
 		fmt.extend([ "(", ",".join(document.keys()), ")" ])
 		fmt.extend([ " VALUES ", "(", ",".join(map(self.literal, document.values())), ")" ])
 
-		need_return = isinstance(returning, dict)
+		need_return = isinstance(returning, (dict, list))
 
 		if need_return:
 			fmt.append(" RETURNING ")
@@ -559,7 +559,7 @@ class DBConnect(object):
 		if len(spec) > 0:
 			fmt.extend([ " WHERE ", self.sql_where(spec) ])
 
-		need_return = isinstance(returning, dict)
+		need_return = isinstance(returning, (dict, list))
 
 		if need_return:
 			fmt.append(" RETURNING ")
