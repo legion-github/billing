@@ -502,13 +502,29 @@ class DBConnect(object):
 		           of the output list of find().
 		"""
 
-		#qs = "INSERT INTO {0} ({1}) VALUES ({2});".format(table,
-		#	",".join(document.keys()),
-		#	",".join(map(self.literal, document.values())))
+		if not isinstance(document, (dict, list)):
+			raise TypeError("Wrong type of 'document': {1}".format(type(document).__name__))
+
+		if len(document) == 0:
+			raise ValueError("The 'document' should not be empty")
+
+		if isinstance(document, (dict)):
+			document = [ document ]
 
 		fmt = [ " INSERT INTO ", table ]
-		fmt.extend([ "(", ",".join(document.keys()), ")" ])
-		fmt.extend([ " VALUES ", "(", ",".join(map(self.literal, document.values())), ")" ])
+
+		keys = sorted(document[0].keys())
+		fmt.extend([ "(", ",".join(keys), ")" ])
+
+		vals = []
+		for o in document:
+			# This is a simple protection against errors.
+			# We add value only by the keys from the first element.
+			vals.append("(")
+			vals.extend(self._delim(map(lambda x: self.literal(o[x]), keys)))
+			vals.extend([ ")", "," ])
+		vals.pop()
+		fmt.extend([ " VALUES ", "".join(vals) ] )
 
 		need_return = isinstance(returning, (dict, list))
 

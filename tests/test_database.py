@@ -39,6 +39,19 @@ class Test(unithelper.DBTestCase):
 			self.assertEqual(dictionary, c.one())
 
 
+	@unittest.skipUnless(unithelper.haveDatabase(), True)
+	def test_insert_many(self):
+		"""insert of many objects test"""
+		with database.DBConnect() as db:
+			l = [
+				{ 'uuid': str(uuid.uuid4()), 'big': 2, 'time': int(time.time()) },
+				{ 'uuid': str(uuid.uuid4()), 'big': 4, 'time': int(time.time()) },
+				{ 'uuid': str(uuid.uuid4()), 'big': 8, 'time': int(time.time()) },
+			]
+			c = db.insert('new_table', l, returning={})
+			self.assertEqual(l, c.all())
+
+
 	def test_insert_return(self):
 		"""insert with return test"""
 		with database.DBConnect() as db:
