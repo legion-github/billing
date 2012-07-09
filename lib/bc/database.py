@@ -449,9 +449,17 @@ class DBConnect(object):
 			return [ default ]
 
 
-	def delete(self, table, where=None):
+	def delete(self, table, spec=None):
+		"""Remove a document(s) from this table.
+
+		Parameters:
+
+		table:  specify a table name;
+		spec:   a dictionary specifying the documents to be removed.
+		"""
+
 		qs = "DELETE FROM {0} {1};".format(table,
-			(where == None and "" or "WHERE " + self.sql_where(where)))
+			(spec == None and "" or "WHERE " + self.sql_where(spec)))
 
 		if os.environ.get('BILLING_SQL_DESCRIBE', False):
 			LOG.debug("SQL: " + qs)
@@ -459,10 +467,18 @@ class DBConnect(object):
 		self.execute(qs)
 
 
-	def insert(self, table, dictionary):
+	def insert(self, table, document):
+		"""Insert a document(s) into this table.
+
+		Parameters:
+
+		table:     specify a table name;
+		document:  a document to be inserted.
+		"""
+
 		qs = "INSERT INTO {0} ({1}) VALUES ({2});".format(table,
-			",".join(dictionary.keys()),
-			",".join(map(self.literal, dictionary.values())))
+			",".join(document.keys()),
+			",".join(map(self.literal, document.values())))
 
 		if os.environ.get('BILLING_SQL_DESCRIBE', False):
 			LOG.debug("SQL: " + qs)
@@ -470,11 +486,23 @@ class DBConnect(object):
 		self.execute(qs)
 
 
-	def update(self, tables, search_dict, set_dict):
+	def update(self, tables, spec, document):
+		"""Update a document(s) in this table(s).
+
+		Parameters:
+
+		tables:   specify a table name or list of names;
+
+		spec:     a dict or SON instance specifying elements which
+		          must be present for a document to be updated;
+
+		document: a dict or SON instance specifying the document to be used
+		          for the update.
+		"""
 		qs = "UPDATE {0} SET {1} WHERE {2};".format(
 			"".join(self._genlist(tables, tables)),
-			self.sql_update(set_dict),
-			self.sql_where(search_dict))
+			self.sql_update(document),
+			self.sql_where(spec))
 
 		if os.environ.get('BILLING_SQL_DESCRIBE', False):
 			LOG.debug("SQL: " + qs)
@@ -483,6 +511,28 @@ class DBConnect(object):
 
 
 	def find(self, tables, spec=None, fields=None, sort=None, skip=0, limit=0, lock=None, nowait=False):
+		"""Query the database.
+
+		The spec argument is a prototype document that all results must match.
+		Returns an instance of Cursor corresponding to this query.
+
+		Parameters:
+
+		spec:   a SON object specifying elements which must be present
+		        for a document to be included in the result set;
+
+		fields: a list of field names that should be returned
+		        or a dict specifying the fields to return;
+
+		skip:   the number of documents to omit (from the start of the result set)
+		        when returning the results;
+
+		limit:  the maximum number of results to return;
+
+		sort:   a list of (key, direction) pairs specifying the sort order
+		        for this query.
+		"""
+
 		fmt = []
 		fmt.append(" SELECT ")
 		fmt.extend(self._genlist(fields, '*'))
@@ -524,5 +574,11 @@ class DBConnect(object):
 
 
 	def find_one(self, *args, **kwargs):
+		"""Get a single document from the database.
+
+		All arguments to find() are also valid arguments for find_one(),
+		although any limit argument will be ignored. Returns a single document,
+		or None if no matching document is found.
+		"""
 		return self.find(*args, **kwargs).one()
 
