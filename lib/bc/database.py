@@ -50,6 +50,11 @@ def get_host(key=None):
 	return host
 
 
+def sqldbg(qs):
+	if os.environ.get('BILLING_SQL_DESCRIBE', False):
+		LOG.debug("SQL: " + qs)
+
+
 def _runtime_decorator(obj, n):
 	def x(*args, **kwargs):
 		return obj._call_parent(getattr(super(obj.__class__, obj), n), *args, **kwargs)
@@ -477,9 +482,7 @@ class DBConnect(object):
 				fmt.append('*')
 
 		qs = "".join(fmt)
-
-		if os.environ.get('BILLING_SQL_DESCRIBE', False):
-			LOG.debug("SQL: " + qs)
+		sqldbg(qs)
 
 		if need_return:
 			return self.query(qs)
@@ -517,9 +520,7 @@ class DBConnect(object):
 				fmt.append('*')
 
 		qs = "".join(fmt)
-
-		if os.environ.get('BILLING_SQL_DESCRIBE', False):
-			LOG.debug("SQL: " + qs)
+		sqldbg(qs)
 
 		if need_return:
 			return self.query(qs)
@@ -569,13 +570,10 @@ class DBConnect(object):
 				fmt.append('*')
 
 		qs = "".join(fmt)
-
-		if os.environ.get('BILLING_SQL_DESCRIBE', False):
-			LOG.debug("SQL: " + qs)
+		sqldbg(qs)
 
 		if need_return:
 			return self.query(qs)
-
 		self.execute(qs)
 
 
@@ -633,11 +631,8 @@ class DBConnect(object):
 			if nowait:
 				fmt.append(" NOWAIT")
 
-
 		qs = "".join(fmt)
-
-		if os.environ.get('BILLING_SQL_DESCRIBE', False):
-			LOG.debug("SQL: " + qs)
+		sqldbg(qs)
 
 		return self.query(qs)
 
