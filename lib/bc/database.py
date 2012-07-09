@@ -499,10 +499,22 @@ class DBConnect(object):
 		document: a dict or SON instance specifying the document to be used
 		          for the update.
 		"""
-		qs = "UPDATE {0} SET {1} WHERE {2};".format(
-			"".join(self._genlist(tables, tables)),
-			self.sql_update(document),
-			self.sql_where(spec))
+
+		for n,o in [ ('document',document), ('spec',spec) ]:
+			if not isinstance(o, dict):
+				raise TypeError("Wrong type of '{0}': {1}".format(n, type(o).__name__))
+
+		if len(document) == 0:
+			raise ValueError("The 'document' should not be empty")
+
+		fmt = [ " UPDATE " ]
+		fmt.extend(self._genlist(tables, tables))
+		fmt.extend([ " SET ", self.sql_update(document) ])
+
+		if len(spec) > 0:
+			fmt.extend([ " WHERE ", self.sql_where(spec) ])
+
+		qs = "".join(fmt)
 
 		if os.environ.get('BILLING_SQL_DESCRIBE', False):
 			LOG.debug("SQL: " + qs)
