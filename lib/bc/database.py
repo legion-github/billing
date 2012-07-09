@@ -486,7 +486,7 @@ class DBConnect(object):
 		self.execute(qs)
 
 
-	def update(self, tables, spec, document):
+	def update(self, tables, spec, document, returning=None):
 		"""Update a document(s) in this table(s).
 
 		Parameters:
@@ -497,7 +497,12 @@ class DBConnect(object):
 		          must be present for a document to be updated;
 
 		document: a dict or SON instance specifying the document to be used
-		          for the update.
+		          for the update;
+
+		returning: The optional argument that causes update() to compute and
+		           return value(s) based on each row actually updated.
+		           The syntax of the 'returning' list is identical to that
+		           of the output list of find().
 		"""
 
 		for n,o in [ ('document',document), ('spec',spec) ]:
@@ -514,10 +519,22 @@ class DBConnect(object):
 		if len(spec) > 0:
 			fmt.extend([ " WHERE ", self.sql_where(spec) ])
 
+		need_return = isinstance(returning, dict)
+
+		if need_return:
+			fmt.append(" RETURNING ")
+			if len(returning) > 0:
+				fmt.extend(self._genlist(returning, '*'))
+			else:
+				fmt.append('*')
+
 		qs = "".join(fmt)
 
 		if os.environ.get('BILLING_SQL_DESCRIBE', False):
 			LOG.debug("SQL: " + qs)
+
+		if need_return:
+			return self.query(qs)
 
 		self.execute(qs)
 

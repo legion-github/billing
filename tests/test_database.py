@@ -99,4 +99,17 @@ class Test(unithelper.DBTestCase):
 
 			c = db.query("SELECT * FROM new_table WHERE uuid='{0}';".format(dictionary['uuid']))
 			self.assertEqual(dictionary, c.one())
-	
+
+
+	@unittest.skipUnless(unithelper.haveDatabase(), True)
+	def test_update_return(self):
+		"""update with return test"""
+		with database.DBConnect() as db:
+			uid = str(uuid.uuid4())
+			ts  = int(time.time())
+
+			db.insert('new_table', { 'uuid':uid, 'big':2**32, 'time':ts })
+			c = db.update('new_table', { 'uuid': uid }, { 'big': 2**30 }, returning={})
+
+			self.assertEqual(c.all(), [{ 'uuid':uid, 'big':2**30, 'time':ts }])
+
