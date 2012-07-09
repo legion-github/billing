@@ -432,6 +432,23 @@ class DBConnect(object):
 		return "'{0}'".format(self.escape(string))
 
 
+	def _delim(self, arr, delim=', '):
+		n = len(arr) - 1
+		for i in xrange(0, n):
+			yield arr[i]
+			yield delim
+		yield arr[n]
+
+
+	def _genlist(self, arg, default):
+		if isinstance(arg, list) and arg:
+			return self._delim(arg)
+		elif isinstance(arg, dict) and arg:
+			return self._delim(map(lambda x: x[0]+' as '+x[1], arg.iteritems()))
+		else:
+			return [ default ]
+
+
 	def delete(self, table, where=None):
 		qs = "DELETE FROM {0} {1};".format(table,
 			(where == None and "" or "WHERE " + self.sql_where(where)))
@@ -453,8 +470,9 @@ class DBConnect(object):
 		self.execute(qs)
 
 
-	def update(self, table, search_dict, set_dict):
-		qs = "UPDATE {0} SET {1} WHERE {2};".format(table,
+	def update(self, tables, search_dict, set_dict):
+		qs = "UPDATE {0} SET {1} WHERE {2};".format(
+			"".join(self._genlist(tables, tables)),
 			self.sql_update(set_dict),
 			self.sql_where(search_dict))
 
@@ -465,27 +483,12 @@ class DBConnect(object):
 
 
 	def find(self, tables, spec=None, fields=None, sort=None, skip=0, limit=0, lock=None, nowait=False):
-		def delim(arr, delim=', '):
-			n = len(arr) - 1
-			for i in xrange(0, n):
-				yield arr[i]
-				yield delim
-			yield arr[n]
-
-		def genlist(arg, default):
-			if isinstance(arg, list) and arg:
-				return delim(arg)
-			elif isinstance(arg, dict) and arg:
-				return delim(map(lambda x: x[0]+' as '+x[1], arg.iteritems()))
-			else:
-				return [ default ]
-
 		fmt = []
 		fmt.append(" SELECT ")
-		fmt.extend(genlist(fields, '*'))
+		fmt.extend(self._genlist(fields, '*'))
 
 		fmt.append(" FROM ")
-		fmt.extend(genlist(tables, tables))
+		fmt.extend(self._genlist(tables, tables))
 
 		if isinstance(spec, dict):
 			fmt.extend([ " WHERE ", self.sql_where(spec) ])
