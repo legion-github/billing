@@ -39,6 +39,19 @@ class Test(unithelper.DBTestCase):
 			self.assertEqual(dictionary, c.one())
 
 
+	def test_insert_return(self):
+		"""insert with return test"""
+		with database.DBConnect() as db:
+			o = {
+				'uuid': str(uuid.uuid4()),
+				'big': 2**32,
+				'time': int(time.time())
+			}
+
+			c = db.insert('new_table', o, returning={})
+			self.assertEqual(o, c.one())
+
+
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_insert_autocommit_false(self):
 		"""transaction insert test"""
