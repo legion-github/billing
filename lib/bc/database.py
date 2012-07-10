@@ -239,16 +239,22 @@ class DBConnect(object):
 
 
 	def connect(self):
+		"""Returns database connection
+		"""
 		return self._conn['socket']
 
 
 	def cursor(self):
+		"""Returns database cursor
+		"""
 		if not self._cursor:
 			self._cursor = DBCursor(self.connect())
 		return self._cursor
 
 
 	def begin(self):
+		"""Begins a new transaction block
+		"""
 		if self._transaction:
 			return
 		self.cursor().execute("START TRANSACTION")
@@ -256,6 +262,8 @@ class DBConnect(object):
 
 
 	def commit(self):
+		"""Commits the current transaction
+		"""
 		if not self._transaction:
 			return
 		self.cursor().execute("COMMIT")
@@ -300,6 +308,8 @@ class DBConnect(object):
 
 
 	def execute(self, fmt, *args):
+		"""Exetutes SQL command
+		"""
 		self.begin()
 		self.cursor().execute(fmt, *args)
 		if self._autocommit:
@@ -307,11 +317,15 @@ class DBConnect(object):
 
 
 	def query(self, fmt, *args):
+		"""Queries the database and returns DBCursor with result
+		"""
 		cur = DBCursor(self.connect())
 		return DBQuery(cur, self._autocommit, fmt, *args)
 
 
 	def sql_update(self, query, sort=False):
+		"""Converts mongo-like dictionary to SET condition for UPDATE statement
+		"""
 		bit_ops = {
 			'and':    lambda x: '&'  + arg(x),
 			'or':     lambda x: '|'  + arg(x),
@@ -373,7 +387,8 @@ class DBConnect(object):
 
 
 	def sql_where(self, query, sort=False):
-
+		"""Converts mongo-like dictionary to SQL WHERE statement
+		"""
 		def sql_bool(x):
 			if x == None:
 				return 'NULL'
@@ -458,6 +473,8 @@ class DBConnect(object):
 
 
 	def escape(self, string):
+		"""Escapes any special characters
+		"""
 		if isinstance(string, (basestring, unicode)):
 			return re.sub(r'([\'\"\\])', r'\\\1', str(string))
 		return str(string)
@@ -465,6 +482,12 @@ class DBConnect(object):
 
 
 	def literal(self, string):
+		"""Returns SQL string literal
+
+		If 'string' is a single object, returns an SQL literal as a string.
+		If 'string' is a non-string sequence, the items of the sequence are
+		converted and returned as a sequence.
+		"""
 		return "'{0}'".format(self.escape(string))
 
 
@@ -486,12 +509,14 @@ class DBConnect(object):
 
 
 	def delete(self, table, spec=None, returning=None):
-		"""Remove a document(s) from this table.
+		"""Removes a document(s) from this table
 
 		Parameters:
 
 		table:     specify a table name;
+
 		spec:      a dictionary specifying the documents to be removed;
+
 		returning: The optional argument that causes delete() to compute and
 		           return value(s) based on each row actually updated.
 		           The syntax of the 'returning' list is identical to that
@@ -521,12 +546,14 @@ class DBConnect(object):
 
 
 	def insert(self, table, document, returning=None):
-		"""Insert a document(s) into this table.
+		"""Inserts a document(s) into this table
 
 		Parameters:
 
 		table:     specify a table name;
+
 		document:  a document to be inserted.
+
 		returning: The optional argument that causes insert() to compute and
 		           return value(s) based on each row actually updated.
 		           The syntax of the 'returning' list is identical to that
@@ -575,7 +602,7 @@ class DBConnect(object):
 
 
 	def update(self, tables, spec, document, returning=None):
-		"""Update a document(s) in this table(s).
+		"""Updates a document(s) in this table(s)
 
 		Parameters:
 
@@ -625,7 +652,7 @@ class DBConnect(object):
 
 
 	def find(self, tables, spec=None, fields=None, sort=None, skip=0, limit=0, lock=None, nowait=False):
-		"""Query the database.
+		"""Query the database
 
 		The spec argument is a prototype document that all results must match.
 		Returns an instance of Cursor corresponding to this query.
@@ -685,7 +712,7 @@ class DBConnect(object):
 
 
 	def find_one(self, *args, **kwargs):
-		"""Get a single document from the database.
+		"""Gets a single document from the database
 
 		All arguments to find() are also valid arguments for find_one(),
 		although any limit argument will be ignored. Returns a single document,
