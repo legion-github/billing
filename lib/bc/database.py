@@ -254,6 +254,7 @@ class DBConnect(object):
 		self.cursor().execute("START TRANSACTION")
 		self._transaction = True
 
+
 	def commit(self):
 		if not self._transaction:
 			return
@@ -261,8 +262,38 @@ class DBConnect(object):
 		self._transaction = False
 
 
-	def rollback(self):
+	def savepoint(self, point, release=False):
+		"""Establishes (or removes) a savepoint within the current transaction
+
+		A savepoint is a special mark inside a transaction that allows all commands
+		that are executed after it was established to be rolled back, restoring
+		the transaction state to what it was at the time of the savepoint.
+
+		Parameters:
+
+		point:     the name of the savepoint;
+		release:   destroys a savepoint previously defined.
+		"""
 		if not self._transaction:
+			return
+		qs = (release) and "RELEASE SAVEPOINT %s" or "SAVEPOINT %s"
+		self.cursor().execute(qs, point)
+
+
+	def rollback(self, point=None):
+		"""Rolls back whole (or part) transaction
+
+		Function rolls back all commands that were executed after
+		the savepoint was established if 'point' parameter given.
+
+		Parameters:
+
+		point:   the name of the savepoint.
+		"""
+		if not self._transaction:
+			return
+		if point != None:
+			self.cursor().execute("ROLLBACK TO SAVEPOINT %s", point)
 			return
 		self.cursor().execute("ROLLBACK")
 		self._transaction = False
