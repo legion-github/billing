@@ -16,9 +16,9 @@ MIN_OPEN_CONNECTIONS = 1
 OperationalError = psycopg2.OperationalError
 
 # Backend methods
-DBBackend_Cursor  = extras.RealDictCursor
+DBCursor  = extras.RealDictCursor
 
-def DBBackend_Connect(*args, **kwargs):
+def _connect(*args, **kwargs):
 	return psycopg2.connect(
 		host         = kwargs['dbhost'],
 		database     = kwargs['dbname'],
@@ -55,50 +55,10 @@ def sqldbg(qs):
 		LOG.debug("SQL: " + qs)
 
 
-def _runtime_decorator(obj, n):
-	def x(*args, **kwargs):
-		return obj._call_parent(getattr(super(obj.__class__, obj), n), *args, **kwargs)
-	return x
-
-
-class DBCursor(DBBackend_Cursor):
-
-	def __init__(self, conn):
-		super(self.__class__, self).__init__(conn)
-
-		self.reconnect_timeout = 1
-		self.reconnect_count = 0
-
-		for n in ['fetchall','fetchmany','fetchone','scroll','execute','executemany','nextset']:
-			self.__dict__[n] = _runtime_decorator(self, n)
-
-
-	def _call_parent(self, func, *args, **kwargs):
-		err = None
-		i = self.reconnect_count
-
-		while True:
-			try:
-				return func(*args, **kwargs)
-			except (AttributeError, OperationalError), e:
-				err = e
-
-			if i == 0:
-				break
-			i -= 1
-
-			if self.reconnect_timeout > 0:
-				time.sleep(self.reconnect_timeout)
-
-		raise DBError("Unable to connect to database: {0}", err)
-
-
 class DBPool(object):
 
-	def __init__(self, reconnect=0, timeout=1):
+	def __init__(self):
 		self._CONNECTIONS = {}
-		self.reconnect = reconnect
-		self.timeout   = timeout
 
 
 	def get_item(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, primarykey=None):
@@ -132,7 +92,7 @@ class DBPool(object):
 				'key':    key,
 				'ids':    ids,
 				'status': 'free',
-				'socket': DBBackend_Connect(
+				'socket': _connect(
 						dbhost = dbhost,
 						dbname = dbname,
 						dbuser = dbuser,
