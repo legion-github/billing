@@ -86,3 +86,23 @@ class DBTestCase(TestCase):
 		if not haveDatabase():
 			return
 		database_schema.destroy_schema()
+
+
+class mocker(object):
+	def __init__(self, modulename, methodname):
+		self.__dict__.update(locals())
+
+	def __enter__(self):
+		import sys
+
+		def foo(*args, **kwargs):
+			raise Exception("Faked exception, for tests")
+
+		self.backup=getattr(sys.modules[self.modulename], self.methodname)
+		setattr(sys.modules[self.modulename], self.methodname, foo)
+
+		return True
+
+	def __exit__(self, type, vaue, traceback):
+		import sys
+		setattr(sys.modules[self.modulename], self.methodname, self.backup)
