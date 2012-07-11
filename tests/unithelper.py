@@ -106,3 +106,21 @@ class mocker(object):
 	def __exit__(self, type, vaue, traceback):
 		import sys
 		setattr(sys.modules[self.modulename], self.methodname, self.backup)
+
+
+def requestor(dictionary, state):
+	if state == 'error':
+		dictionary['status']=state
+		return ((01 << 1), 'InvalidRequest', dictionary)
+	elif state == 'servererror':
+		dictionary['status']='error'
+		return ((01 << 1), 'ServerError', dictionary)
+	elif state == 'ok':
+		dictionary['status']=state
+		return ((01 << 2), dictionary)
+
+class hashable_dict(dict):
+	def __hash__(self):
+		return hash((self[key] for key in sorted(self.iterkeys())))
+
+
