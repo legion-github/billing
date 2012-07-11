@@ -9,17 +9,20 @@ from bc.wapi import wapi_tariffs
 
 
 def requestor(dictionary, state):
-	dictionary['status']=state
 	if state == 'error':
+		dictionary['status']=state
 		return ((01 << 1), 'InvalidRequest', dictionary)
+	elif state == 'servererror':
+		dictionary['status']='error'
+		return ((01 << 1), 'ServerError', dictionary)
 	elif state == 'ok':
+		dictionary['status']=state
 		return ((01 << 2), dictionary)
 
 class hashable_dict(dict):
 	def __hash__(self):
 		return hash((self[key] for key in sorted(self.iterkeys())))
 
-#TODO nekolyanich: invent how to test servererror
 
 class Test(unithelper.DBTestCase):
 
@@ -43,6 +46,10 @@ class Test(unithelper.DBTestCase):
 
 		self.assertEquals(wapi_tariffs.tariffGet({'id':''}),
 				requestor({'message': 'Tariff not found' }, 'error'))
+
+		with unithelper.mocker('bc.tariffs', 'get'):
+			self.assertEquals(wapi_tariffs.tariffGet({'id':''}),
+				requestor({'message': 'Unable to obtain tariff' }, 'servererror'))
 
 
 	def test_tariff_get_list(self):
@@ -71,6 +78,10 @@ class Test(unithelper.DBTestCase):
 		self.assertEquals(set(map(lambda x: hashable_dict(x), ans[1]['tariffs'])),
 				set(map(lambda x: hashable_dict(x), data)))
 
+		with unithelper.mocker('bc.tariffs', 'get_all'):
+			self.assertEquals(wapi_tariffs.tariffList({'id':''}),
+				requestor({'message': 'Unable to obtain tariff list' }, 'servererror'))
+
 
 	def test_tariff_add(self):
 		"""Check the creating tariff with taeriffAdd"""
@@ -87,6 +98,10 @@ class Test(unithelper.DBTestCase):
 			t1 = db.find('tariffs').one()
 		self.assertEquals(data['name'], t1['name'])
 		self.assertEquals(data['description'], t1['description'])
+
+		with unithelper.mocker('bc.tariffs', 'add'):
+			self.assertEquals(wapi_tariffs.tariffAdd({'id':''}),
+				requestor({'message': 'Unable to add new tariff' }, 'servererror'))
 
 
 	def test_tariff_add_internal(self):
@@ -105,6 +120,10 @@ class Test(unithelper.DBTestCase):
 			t1 = db.find_one('tariffs', {'id': data['id']})
 		self.assertEquals(data['name'], t1['name'])
 		self.assertEquals(data['description'], t1['description'])
+
+		with unithelper.mocker('bc.tariffs', 'add'):
+			self.assertEquals(wapi_tariffs.tariffAdd({'id':''}),
+				requestor({'message': 'Unable to add new tariff' }, 'servererror'))
 
 
 	def test_tariff_id_remove(self):
@@ -132,6 +151,10 @@ class Test(unithelper.DBTestCase):
 
 		self.assertEquals(t1, data)
 
+		with unithelper.mocker('bc.tariffs', 'remove'):
+			self.assertEquals(wapi_tariffs.tariffIdRemove({'id':''}),
+				requestor({'message': 'Unable to remove tariff' }, 'servererror'))
+
 
 	def test_tariff_remove(self):
 		"""Check state changing with tariffRemove"""
@@ -157,6 +180,10 @@ class Test(unithelper.DBTestCase):
 			t1 = db.find_one('tariffs', {'id': data['id']})
 
 		self.assertEquals(t1, data)
+
+		with unithelper.mocker('bc.tariffs', 'remove'):
+			self.assertEquals(wapi_tariffs.tariffRemove({'id':''}),
+				requestor({'message': 'Unable to remove tariff' }, 'servererror'))
 
 
 	def test_tariff_modification(self):
@@ -189,11 +216,14 @@ class Test(unithelper.DBTestCase):
 		self.assertEqual(wapi_tariffs.tariffModify(data1),
 				requestor({}, 'ok'))
 
-#wait servererror todo
-#		self.assertEqual(
-#			wapi_tariffs.tariffModify({'id':'','state':tariffs.constants.STATE_DISABLED}),
-#				requestor({}, 'error')
-#		)
+
+		with unithelper.mocker('bc.tariffs', 'modify'):
+			self.assertEquals(wapi_tariffs.tariffModify(data1),
+				requestor({'message': 'Unable to modify tariff' }, 'servererror'))
+
+		self.assertEqual(
+			wapi_tariffs.tariffModify({'id':'','state':tariffs.constants.STATE_DISABLED}),
+			requestor({'message': 'Unable to modify tariff'}, 'servererror'))
 
 
 
