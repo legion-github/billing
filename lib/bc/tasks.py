@@ -83,7 +83,7 @@ def add(task):
 
 
 def modify(typ, val, params):
-	"""Modify customer"""
+	"""Modify task"""
 
 	c = TaskConstants()
 
@@ -101,22 +101,13 @@ def modify(typ, val, params):
 
 
 def remove(typ, value, ts=0):
-	"""Disables tariff"""
+	"""Disables task"""
 
 	c = TaskConstants()
 
-	if typ == 'id':
-		query = { 'id': value }
-	else:
-		raise ValueError("Unknown value: " + str(typ))
-
-	if ts == 0:
-		ts == int(time.time())
-
-	with database.DBConnect(primarykey=value) as db:
-		db.update("queue", query,
-			{
-				'state': c.STATE_DELETED,
-				'time_destroy': ts
-			}
-		)
+	modify(typ, value,
+		{
+			'state': c.STATE_DELETED,
+			'time_destroy': ts or int(time.time())
+		}
+	)
