@@ -2,6 +2,7 @@ import os
 import re
 import time
 import uuid
+import inspect
 import logging
 
 from bc import config
@@ -53,6 +54,21 @@ def get_host(key=None):
 def sqldbg(qs):
 	if os.environ.get('BILLING_SQL_DESCRIBE', False):
 		LOG.debug("SQL: " + qs)
+
+
+def runover(arr):
+	stack = [ iter(arr) ]
+	while len(stack) > 0:
+		for x in stack[-1]:
+			if isinstance(x,(list,tuple)):
+				stack.append(iter(x))
+				break
+			if inspect.isgenerator(x):
+				stack.append(x)
+				break
+			yield x
+		else:
+			stack.pop()
 
 
 class DBPool(object):
@@ -483,21 +499,17 @@ class DBConnect(object):
 		           of the output list of find().
 		"""
 
-		fmt = [ " DELETE FROM ", table ]
+		fmt = [ "DELETE FROM", table ]
 
 		if isinstance(spec, dict) and len(spec) > 0:
-			fmt.extend([ " WHERE ", self.sql_where(spec) ])
+			fmt.extend([ "WHERE", self.sql_where(spec) ])
 
 		need_return = isinstance(returning, (dict, list))
 
 		if need_return:
-			fmt.append(" RETURNING ")
-			if len(returning) > 0:
-				fmt.extend(self._genlist(returning, '*'))
-			else:
-				fmt.append('*')
+			fmt.extend([ "RETURNING", len(returning) > 0 and self._genlist(returning, '*') or '*' ])
 
-		qs = "".join(fmt)
+		qs = " ".join(runover(fmt))
 		sqldbg(qs)
 
 		if need_return:
@@ -529,31 +541,21 @@ class DBConnect(object):
 		if isinstance(document, (dict)):
 			document = [ document ]
 
-		fmt = [ " INSERT INTO ", table ]
-
 		keys = sorted(document[0].keys())
-		fmt.extend([ "(", ",".join(keys), ")" ])
+		fmt = [ "INSERT INTO", table, "(", self._delim(keys), ")", "VALUES" ]
 
-		vals = []
 		for o in document:
 			# This is a simple protection against errors.
 			# We add value only by the keys from the first element.
-			vals.append("(")
-			vals.extend(self._delim(map(lambda x: self.literal(o[x]), keys)))
-			vals.extend([ ")", "," ])
-		vals.pop()
-		fmt.extend([ " VALUES ", "".join(vals) ] )
+			fmt.extend([ "(", self._delim(map(lambda x: self.literal(o[x]), keys)), ")", "," ])
+		fmt.pop()
 
 		need_return = isinstance(returning, (dict, list))
 
 		if need_return:
-			fmt.append(" RETURNING ")
-			if len(returning) > 0:
-				fmt.extend(self._genlist(returning, '*'))
-			else:
-				fmt.append('*')
+			fmt.extend([ "RETURNING", len(returning) > 0 and self._genlist(returning, '*') or '*' ])
 
-		qs = "".join(fmt)
+		qs = " ".join(runover(fmt))
 		sqldbg(qs)
 
 		if need_return:
@@ -587,23 +589,16 @@ class DBConnect(object):
 		if len(document) == 0:
 			raise ValueError("The 'document' should not be empty")
 
-		fmt = [ " UPDATE " ]
-		fmt.extend(self._genlist(tables, tables))
-		fmt.extend([ " SET ", self.sql_update(document) ])
-
+		fmt = [ "UPDATE", self._genlist(tables, tables), "SET", self.sql_update(document) ]
 		if len(spec) > 0:
-			fmt.extend([ " WHERE ", self.sql_where(spec) ])
+			fmt.extend([ "WHERE", self.sql_where(spec) ])
 
 		need_return = isinstance(returning, (dict, list))
 
 		if need_return:
-			fmt.append(" RETURNING ")
-			if len(returning) > 0:
-				fmt.extend(self._genlist(returning, '*'))
-			else:
-				fmt.append('*')
+			fmt.extend([ "RETURNING", len(returning) > 0 and self._genlist(returning, '*') or '*' ])
 
-		qs = "".join(fmt)
+		qs = " ".join(runover(fmt))
 		sqldbg(qs)
 
 		if need_return:
@@ -633,39 +628,29 @@ class DBConnect(object):
 		sort:   a list of (key, direction) pairs specifying the sort order
 		        for this query.
 		"""
-
-		fmt = []
-		fmt.append(" SELECT ")
-		fmt.extend(self._genlist(fields, '*'))
-
-		fmt.append(" FROM ")
-		fmt.extend(self._genlist(tables, tables))
-
+		fmt = [ "SELECT", self._genlist(fields, '*'), "FROM", self._genlist(tables, tables) ]
 		if isinstance(spec, dict):
-			fmt.extend([ " WHERE ", self.sql_where(spec) ])
-
+			fmt.extend([ "WHERE", self.sql_where(spec) ])
 		if sort != None and len(sort) > 0:
-			fmt.append(" ORDER BY")
-			fmt.append(', '.join(map(lambda x: ' '.join(x), sort)))
-
+			fmt.extend([ "ORDER BY", self._genlist(sort, None) ])
 		if limit > 0:
-			fmt.extend([ " LIMIT ", str(limit) ])
+			fmt.extend([ "LIMIT", str(limit) ])
 		if skip > 0:
-			fmt.extend([ " OFFSET ", str(skip) ])
+			fmt.extend([ "OFFSET", str(skip) ])
 
 		if lock != None:
 			if lock == 'update':
-				fmt.append(" FOR UPDATE")
+				fmt.append("FOR UPDATE")
 
 			elif lock == 'share':
 				# Another syntax in MySQL: LOCK IN SHARE MODE
-				fmt.append(" FOR SHARE")
+				fmt.append("FOR SHARE")
 
 			# Unsupported in MySQL
 			if nowait:
-				fmt.append(" NOWAIT")
+				fmt.append("NOWAIT")
 
-		qs = "".join(fmt)
+		qs = " ".join(runover(fmt))
 		sqldbg(qs)
 
 		return self.query(qs)
