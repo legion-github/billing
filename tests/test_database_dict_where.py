@@ -2,6 +2,7 @@ import unithelper
 
 import unittest2 as unittest
 from bc import database
+from bc.database import sqlcmd
 
 
 class Test(unithelper.DBTestCase):
@@ -16,12 +17,12 @@ class Test(unithelper.DBTestCase):
 					'b': 2,
 					'c': [1,2,3]
 				},
-				"a = '1' AND b = '2' AND c IN ('1','2','3')"
+				"a = '1' AND b = '2' AND c IN ( '1','2','3' )"
 			),
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_where(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_where(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -45,7 +46,7 @@ class Test(unithelper.DBTestCase):
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_where(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_where(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -79,7 +80,7 @@ class Test(unithelper.DBTestCase):
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_where(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_where(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -94,7 +95,7 @@ class Test(unithelper.DBTestCase):
 						{ 'a': { '$lt': 2 } },
 					]
 				},
-				"((a > '1') OR (a < '2'))"
+				"( ( a > '1' ) OR ( a < '2' ) )"
 			),
 			(
 				{
@@ -105,7 +106,7 @@ class Test(unithelper.DBTestCase):
 						{ 'c': { '$lt': 2 } },
 					]
 				},
-				"((c > '1') OR (c < '2')) AND a = '1' AND b = '2'"
+				"( ( c > '1' ) OR ( c < '2' ) ) AND a = '1' AND b = '2'"
 			),
 			(
 				{
@@ -114,7 +115,7 @@ class Test(unithelper.DBTestCase):
 						{ 'b': { '$eq': 3 } },
 					]
 				},
-				"((a < '2' AND a > '1') OR (b = '3'))"
+				"( ( a < '2' AND a > '1' ) OR ( b = '3' ) )"
 			),
 			(
 				{
@@ -129,12 +130,12 @@ class Test(unithelper.DBTestCase):
 						}
 					]
 				},
-				"((a < '2' AND a > '1') OR (b = '3') OR (((c != '4') OR (d <= '6' AND d >= '5'))))"
+				"( ( a < '2' AND a > '1' ) OR ( b = '3' ) OR ( ( ( c != '4' ) OR ( d <= '6' AND d >= '5' ) ) ) )"
 			),
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_where(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_where(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -149,12 +150,12 @@ class Test(unithelper.DBTestCase):
 						{ 'b': { '$eq': 3 } },
 					]
 				},
-				"((a < '2' AND a > '1') AND (b = '3'))"
+				"( ( a < '2' AND a > '1' ) AND ( b = '3' ) )"
 			)
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_where(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_where(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -169,12 +170,12 @@ class Test(unithelper.DBTestCase):
 						'b': { '$eq': 3 },
 					}
 				},
-				" NOT (a < '2' AND a > '1' AND b = '3')"
+				"NOT ( a < '2' AND a > '1' AND b = '3' )"
 			)
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_where(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_where(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -209,7 +210,7 @@ class Test(unithelper.DBTestCase):
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_where(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_where(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -221,25 +222,25 @@ class Test(unithelper.DBTestCase):
 				{
 					'a': [1,2,3]
 				},
-				"a IN ('1','2','3')"
+				"a IN ( '1','2','3' )"
 			),
 			(
 				{
 					'a': ['a1','a2','a3']
 				},
-				"a IN ('a1','a2','a3')"
+				"a IN ( 'a1','a2','a3' )"
 			),
 			(
 				{
 					'a': ['a\'a','b"b','c;c']
 				},
-				"a IN ('a\\'a','b\\\"b','c;c')"
+				"a IN ( 'a\\'a','b\\\"b','c;c' )"
 			),
 
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_where(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_where(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -262,7 +263,7 @@ class Test(unithelper.DBTestCase):
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_where(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_where(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -291,4 +292,4 @@ class Test(unithelper.DBTestCase):
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_where(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_where(m, True)))

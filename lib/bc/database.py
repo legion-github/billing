@@ -71,6 +71,10 @@ def runover(arr):
 			stack.pop()
 
 
+def sqlcmd(a):
+	return " ".join(runover(a))
+
+
 class DBPool(object):
 
 	def __init__(self):
@@ -365,6 +369,11 @@ class DBConnect(object):
 	def sql_where(self, query, sort=False):
 		"""Converts mongo-like dictionary to SQL WHERE statement
 		"""
+		def sql_list(x):
+			if sort:
+				return sorted(x)
+			return x
+
 		def sql_bool(x):
 			if x == None:
 				return 'NULL'
@@ -398,54 +407,45 @@ class DBConnect(object):
 			return self.literal(value)
 
 		concatenation = {
-			'$and':    lambda x: " AND ".join(x),
-			'$or':     lambda x:  " OR ".join(x),
+			'$and': "AND",
+			'$or':  "OR",
 		}
 		operation = {
-			'$gt':     lambda x,y: x + " > "          + y,
-			'$ge':     lambda x,y: x + " >= "         + y,
-			'$lt':     lambda x,y: x + " < "          + y,
-			'$le':     lambda x,y: x + " <= "         + y,
-			'$eq':     lambda x,y: x + " = "          + y,
-			'$ne':     lambda x,y: x + " != "         + y,
-			'$is':     lambda x,y: x + " IS "         + y,
-			'$notis':  lambda x,y: x + " IS NOT "     + y,
-			'$regex':  lambda x,y: x + " REGEXP "     + y,
-			'$nregex': lambda x,y: x + " NOT REGEXP " + y,
-			'$like':   lambda x,y: x + " LIKE "       + y,
-			'$nlike':  lambda x,y: x + " NOT LIKE "   + y,
-			'$in':     lambda x,y: x + " IN ("        + y + ")",
-			'$nin':    lambda x,y: x + " NOT IN ("    + y + ")",
+			'$gt':     lambda x,y: [ x, ">"          , y ],
+			'$ge':     lambda x,y: [ x, ">="         , y ],
+			'$lt':     lambda x,y: [ x, "<"          , y ],
+			'$le':     lambda x,y: [ x, "<="         , y ],
+			'$eq':     lambda x,y: [ x, "="          , y ],
+			'$ne':     lambda x,y: [ x, "!="         , y ],
+			'$is':     lambda x,y: [ x, "IS"         , y ],
+			'$notis':  lambda x,y: [ x, "IS NOT"     , y ],
+			'$regex':  lambda x,y: [ x, "REGEXP"     , y ],
+			'$nregex': lambda x,y: [ x, "NOT REGEXP" , y ],
+			'$like':   lambda x,y: [ x, "LIKE"       , y ],
+			'$nlike':  lambda x,y: [ x, "NOT LIKE"   , y ],
+			'$in':     lambda x,y: [ x, "IN ("       , y, ")" ],
+			'$nin':    lambda x,y: [ x, "NOT IN ("   , y, ")" ],
 		}
 		result = []
-		for name, conditions in query.iteritems():
+		for name in sql_list(query.keys()):
+			conditions = query[name]
+
 			if name == '$not':
-				s = " NOT (" + self.sql_where(conditions, sort) + ")"
+				result.append([ "NOT (", self.sql_where(conditions, sort), ")" ])
 			elif name in concatenation:
-				a = map(lambda x: "(" + self.sql_where(x, sort) + ")", conditions)
-				s = "(" + concatenation[name](a) + ")"
+				a = map(lambda x: [ "(", self.sql_where(x, sort), ")" ], conditions)
+				result.append([ "(", self._delim(a, concatenation[name]), ")" ])
 			elif isinstance(conditions, dict):
-				a = []
 				for o, value in conditions.iteritems():
 					o = sql_optimize_operation(o, value)
 					v = sql_quote(o,value)
-					r = operation[o](name,v)
-					a.append(r)
-				if sort:
-					a.sort()
-				s = concatenation['$and'](a)
+					result.append(operation[o](name,v))
 			else:
 				o = sql_optimize_operation('$eq', conditions)
 				v = sql_quote(o, conditions)
-				s = operation[o](name, v)
+				result.append(operation[o](name, v))
 
-			result.append(s)
-
-		if sort:
-			result.sort()
-
-		return concatenation['$and'](result)
-
+		return self._delim(sql_list(result), concatenation['$and'])
 
 
 	def escape(self, string):
