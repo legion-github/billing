@@ -89,7 +89,7 @@ class DBTestCase(TestCase):
 
 
 class mocker(object):
-	def __init__(self, modulename, methodname):
+	def __init__(self, modulename, methodname, modulewithlog):
 		self.__dict__.update(locals())
 
 	def __enter__(self):
@@ -97,6 +97,12 @@ class mocker(object):
 
 		def foo(*args, **kwargs):
 			raise Exception("Faked exception, for tests")
+
+		def pseudolog(*args, **kwargs):
+			pass
+
+		self.logger=sys.modules[self.modulewithlog].LOG.error
+		sys.modules[self.modulewithlog].LOG.error=pseudolog
 
 		self.backup=getattr(sys.modules[self.modulename], self.methodname)
 		setattr(sys.modules[self.modulename], self.methodname, foo)
@@ -106,6 +112,7 @@ class mocker(object):
 	def __exit__(self, type, vaue, traceback):
 		import sys
 		setattr(sys.modules[self.modulename], self.methodname, self.backup)
+		sys.modules[self.modulewithlog].LOG.error=self.logger
 
 
 def requestor(dictionary, state):

@@ -28,7 +28,7 @@ class Test(unithelper.DBTestCase):
 		self.assertEquals(wapi_metrics.metricGet({'id':''}),
 				unithelper.requestor({'message': 'Metric not found' }, 'error'))
 
-		with unithelper.mocker('bc.metrics', 'get'):
+		with unithelper.mocker('bc.metrics', 'get', 'bc.wapi.wapi_metrics'):
 			self.assertEquals(wapi_metrics.metricGet({'id':''}),
 				unithelper.requestor({'message': 'Unable to obtain metric' }, 'servererror'))
 
@@ -57,7 +57,7 @@ class Test(unithelper.DBTestCase):
 		self.assertEquals(set(map(lambda x: unithelper.hashable_dict(x), ans[1]['metrics'])),
 				set(map(lambda x: unithelper.hashable_dict(x), data)))
 
-		with unithelper.mocker('bc.metrics', 'get_all'):
+		with unithelper.mocker('bc.metrics', 'get_all', 'bc.wapi.wapi_metrics'):
 			self.assertEquals(wapi_metrics.metricList({'id':''}),
 				unithelper.requestor({'message': 'Unable to obtain metric list' }, 'servererror'))
 
@@ -80,7 +80,7 @@ class Test(unithelper.DBTestCase):
 		self.assertEquals(data['id'], t1['id'])
 		self.assertEquals(data['type'], t1['type'])
 
-		with unithelper.mocker('bc.metrics', 'add'):
+		with unithelper.mocker('bc.metrics', 'add', 'bc.wapi.wapi_metrics'):
 			self.assertEquals(wapi_metrics.metricAdd({'id':''}),
 				unithelper.requestor({'message': 'Unable to add new metric' }, 'servererror'))
 

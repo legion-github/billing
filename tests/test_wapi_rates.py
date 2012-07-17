@@ -56,7 +56,7 @@ class Test(unithelper.DBTestCase):
 		self.assertEquals(wapi_rates.rateGet({'id':''}),
 				unithelper.requestor({'message': 'Rate not found' }, 'error'))
 
-		with unithelper.mocker('bc.rates', 'get_by_id'):
+		with unithelper.mocker('bc.rates', 'get_by_id', 'bc.wapi.wapi_rates'):
 			self.assertEquals(wapi_rates.rateGet({'id':''}),
 				unithelper.requestor({'message': 'Unable to obtain rate list' }, 'servererror'))
 
@@ -121,7 +121,7 @@ class Test(unithelper.DBTestCase):
 				)
 			)
 
-		with unithelper.mocker('bc.rates', 'get_all'):
+		with unithelper.mocker('bc.rates', 'get_all', 'bc.wapi.wapi_rates'):
 			self.assertEquals(wapi_rates.rateList({'id':''}),
 				unithelper.requestor({'message': 'Unable to obtain rate list' }, 'servererror'))
 
@@ -151,7 +151,7 @@ class Test(unithelper.DBTestCase):
 			t1 = db.find('rates').one()
 		self.assertEquals(unithelper.hashable_dict(data), unithelper.hashable_dict(t1))
 
-		with unithelper.mocker('bc.rates', 'add'):
+		with unithelper.mocker('bc.rates', 'add', 'bc.wapi.wapi_rates'):
 			self.assertEquals(wapi_rates.rateAdd({'id':''}),
 				unithelper.requestor({'message': 'Unable to add new rate' }, 'servererror'))
 
@@ -184,7 +184,7 @@ class Test(unithelper.DBTestCase):
 
 		self.assertEquals(t1, data)
 
-		with unithelper.mocker('bc.rates', 'remove'):
+		with unithelper.mocker('bc.rates', 'remove', 'bc.wapi.wapi_rates'):
 			self.assertEquals(wapi_rates.rateRemove({'id':''}),
 				unithelper.requestor({'message': 'Unable to remove rate' }, 'servererror'))
 
@@ -210,7 +210,7 @@ class Test(unithelper.DBTestCase):
 		self.assertEqual(wapi_rates.rateModify({'id':data['id']}),
 				unithelper.requestor({}, 'ok'))
 
-		with unithelper.mocker('bc.rates', 'modify'):
+		with unithelper.mocker('bc.rates', 'modify', 'bc.wapi.wapi_rates'):
 			self.assertEquals(wapi_rates.rateModify({'id':data['id'], 'rate':10}),
 				unithelper.requestor({'message': 'Unable to modify rate' }, 'servererror'))
 
