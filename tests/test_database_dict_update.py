@@ -2,6 +2,7 @@ import unithelper
 
 import unittest2 as unittest
 from bc import database
+from bc.database import sqlcmd
 
 
 class Test(unithelper.DBTestCase):
@@ -12,12 +13,12 @@ class Test(unithelper.DBTestCase):
 		testList = [
 			(
 				{ 'a': 1, 'b': 2, 'c': 3 },
-				"a='1', b='2', c='3'"
+				"a='1' , b='2' , c='3'"
 			),
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_update(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_update(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -27,28 +28,28 @@ class Test(unithelper.DBTestCase):
 		testList = [
 			(
 				{ '$inc': { 'a': 1, 'b': -2 } },
-				"a=a+1, b=b+-2"
+				"a=a+1 , b=b+-2"
 			),
 			(
 				{ '$dec': { 'a': 1, 'b': -2 } },
-				"a=a-1, b=b--2"
+				"a=a-1 , b=b--2"
 			),
 			(
 				{ '$set': { 'a': 1, 'b': -2, 'c': 'C' } },
-				"a=1, b=-2, c='C'"
+				"a=1 , b=-2 , c='C'"
 			),
 			(
 				{ '$div': { 'a': 1, 'b': -2 } },
-				"a=a/1, b=b/-2"
+				"a=a/1 , b=b/-2"
 			),
 			(
 				{ '$mult': { 'a': 1, 'b': -2 } },
-				"a=a*1, b=b*-2"
+				"a=a*1 , b=b*-2"
 			),
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_update(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_update(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -58,12 +59,12 @@ class Test(unithelper.DBTestCase):
 		testList = [
 			(
 				{ '$concat': { 'a': 1, 'b': 'BBB' } },
-				"a=CONCAT(a,'1'), b=CONCAT(b,'BBB')"
+				"a=CONCAT(a,'1') , b=CONCAT(b,'BBB')"
 			),
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_update(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_update(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -94,7 +95,7 @@ class Test(unithelper.DBTestCase):
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_update(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_update(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -113,7 +114,7 @@ class Test(unithelper.DBTestCase):
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_update(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_update(m, True)))
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
@@ -136,4 +137,4 @@ class Test(unithelper.DBTestCase):
 		]
 		with database.DBConnect() as db:
 			for m,s in testList:
-				self.assertEqual(s, db.sql_update(m, True))
+				self.assertEqual(s, sqlcmd(db.sql_update(m, True)))

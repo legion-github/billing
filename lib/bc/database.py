@@ -71,8 +71,14 @@ def runover(arr):
 			stack.pop()
 
 
-def sqlcmd(a):
-	return " ".join(runover(a))
+def _sqllist(x, s):
+	if s:
+		return sorted(x)
+	return x
+
+
+def sqlcmd(a, delim=' '):
+	return delim.join(runover(a))
 
 
 class DBPool(object):
@@ -331,7 +337,6 @@ class DBConnect(object):
 			'$mult':   lambda x,y: x + "=" + x + "*" + arg(y),
 			'$concat': lambda x,y: x + "=CONCAT(" + x + "," +  self.literal(y) + ")",
 		}
-
 		def arg(x):
 			if isinstance(x, basestring):
 				return self.literal(x)
@@ -346,7 +351,8 @@ class DBConnect(object):
 			return func_ops[k](v)
 
 		res = []
-		for op,cond in query.iteritems():
+		for op in _sqllist(query.keys(), sort):
+			cond = query[op]
 			if op in [ '$set', '$inc', '$dec', '$div', '$mult' ]:
 				for n,v in cond.iteritems():
 					if isinstance(v, dict):
@@ -360,20 +366,12 @@ class DBConnect(object):
 			else:
 				res.append(op + "=" + self.literal(cond))
 
-		if sort:
-			res.sort()
-
-		return ", ".join(res)
+		return self._delim(_sqllist(res, sort),",")
 
 
 	def sql_where(self, query, sort=False):
 		"""Converts mongo-like dictionary to SQL WHERE statement
 		"""
-		def sql_list(x):
-			if sort:
-				return sorted(x)
-			return x
-
 		def sql_bool(x):
 			if x == None:
 				return 'NULL'
@@ -427,7 +425,7 @@ class DBConnect(object):
 			'$nin':    lambda x,y: [ x, "NOT IN ("   , y, ")" ],
 		}
 		result = []
-		for name in sql_list(query.keys()):
+		for name in _sqllist(query.keys(), sort):
 			conditions = query[name]
 
 			if name == '$not':
@@ -445,7 +443,7 @@ class DBConnect(object):
 				v = sql_quote(o, conditions)
 				result.append(operation[o](name, v))
 
-		return self._delim(sql_list(result), concatenation['$and'])
+		return self._delim(_sqllist(result, sort), concatenation['$and'])
 
 
 	def escape(self, string):
