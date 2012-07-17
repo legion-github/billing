@@ -31,9 +31,15 @@ def rateList(params):
 
 @jsonrpc.method(
 	validate = V({
-		'id':        V(basestring, required=False, min=36, max=36),
-		'tariff_id': V(basestring, required=False, min=36, max=36),
-		'metric_id': V(basestring, required=False, min=1,  max=128),
+		'id':           V(basestring, required=False, min=36, max=36),
+		'description':  V(basestring, required=False, min=3,  max=1024),
+		'metric_id':    V(basestring, required=False, min=1,  max=128),
+		'tariff_id':    V(basestring, required=False, min=36, max=36),
+		'rate':         V(int,        required=False),
+		'currency':     V(basestring, required=False,         max=7),
+		'state':        V(basestring, required=False,         max=7),
+		'time_create':  V(int,        required=False),
+		'time_destroy': V(int,        required=False),
 	}, drop_optional=True),
 	auth = True)
 def rateGet(params):
@@ -67,7 +73,13 @@ def rateGet(params):
 	return jsonrpc.result({ 'status':'ok', 'rate': ret.values })
 
 
-@jsonrpc.method(auth=0)
+@jsonrpc.method(
+	validate = V({
+		'id':        V(basestring, required=False, min=36, max=36),
+		'tariff_id': V(basestring, required=False, min=36, max=36),
+		'metric_id': V(basestring, required=False, min=1,  max=128),
+	}, drop_optional=True),
+	auth = True)
 def rateAdd(params):
 	""" Adds new rate """
 
