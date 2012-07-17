@@ -130,8 +130,10 @@ def get_all():
 
 
 def get_by_tariff(tid):
+	c = RateConstants()
+
 	with database.DBConnect() as db:
-		for o in db.find('rates', { 'tariff_id': tid }):
+		for o in db.find('rates', { 'tariff_id': tid, 'state': { '$lt': c.STATE_DELETED }}):
 			yield Rate(o)
 
 

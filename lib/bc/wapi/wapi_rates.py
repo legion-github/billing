@@ -50,7 +50,7 @@ def rateGet(params):
 				return jsonrpc.result_error('InvalidRequest',
 					{ 'status': 'error', 'message': 'Wrong parameters' })
 
-			ret = rates.get_by_tariff(params['tariff_id'], params['metric_id'])
+			ret = rates.get_by_metric(params['tariff_id'], params['metric_id'])
 		else:
 			return jsonrpc.result_error('InvalidRequest',
 				{ 'status': 'error', 'message': 'Wrong parameters' })
@@ -64,7 +64,7 @@ def rateGet(params):
 		return jsonrpc.result_error('ServerError',
 			{ 'status': 'error', 'message': 'Unable to obtain rate list' })
 
-	return jsonrpc.result({ 'status':'ok', 'rate': ret.value })
+	return jsonrpc.result({ 'status':'ok', 'rate': ret.values })
 
 
 @jsonrpc.method(auth=0)
@@ -101,13 +101,17 @@ def rateModify(params):
 		if 'state' in params:
 			v = rates.constants.import_state(params['state'])
 			if v == None or v == rates.constants.STATE_DELETED:
-				raise TypeError('Wrong state: ' + str(params['state']))
+				return jsonrpc.result_error('InvalidRequest',
+						{ 'status': 'error',
+							'message':'Wrong state: ' + str(params['state'])})
 			params['state'] = v
 
 		if 'currency' in params:
 			v = rates.constants.import_currency(params['currency'])
 			if v == None:
-				raise TypeError('Wrong currency: ' + str(params['currency']))
+				return jsonrpc.result_error('InvalidRequest',
+						{ 'status': 'error',
+							'message':'Wrong currency: ' + str(params['currency'])})
 			params['currency'] = v
 
 		rates.modify('id', params['id'], params)

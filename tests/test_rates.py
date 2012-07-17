@@ -10,7 +10,7 @@ from bc import metrics
 from bc import database
 
 class Test(unithelper.DBTestCase):
-	def test_new_metric(self):
+	def test_new_rate(self):
 		"""Check tariff's rate object"""
 
 		fields = [
@@ -91,7 +91,9 @@ class Test(unithelper.DBTestCase):
 				set(filter(lambda x: x.state<rates.constants.STATE_DELETED,list_all)))
 
 		for tar_id in rat.keys():
-			self.assertEquals(set(list(rates.get_by_tariff(tar_id))), set(rat[tar_id].values()))
+			self.assertEquals(set(list(rates.get_by_tariff(tar_id))),
+				set(filter(lambda x: x.state<rates.constants.STATE_DELETED,
+							rat[tar_id].values())))
 
 
 	def test_rates_creation(self):
