@@ -94,7 +94,9 @@ def tariffModify(params):
 		if 'state' in params:
 			v = tariffs.constants.import_state(params['state'])
 			if v == None or v == tariffs.constants.STATE_DELETED:
-				raise TypeError('Wrong state: ' + str(params['state']))
+				return jsonrpc.result_error('InvalidRequest',
+					{ 'status':'error',
+						'message':'Wrong state: ' + str(params['state'])})
 			params['state'] = v
 
 		tariffs.modify('id', params['id'], params)
