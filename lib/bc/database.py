@@ -113,16 +113,17 @@ class DBPool(object):
 					return self._CONNECTIONS[key][ids]
 
 			ids = str(uuid.uuid4())
+			soc = _connect(dbhost=dbhost, dbname=dbname, dbuser=dbuser, dbpass=dbpass)
 
 			self._CONNECTIONS[key][ids] = {
 				'key':    key,
 				'ids':    ids,
+				'socket': soc,
 				'status': 'free',
-				'socket': _connect(
-						dbhost = dbhost,
-						dbname = dbname,
-						dbuser = dbuser,
-						dbpass = dbpass)
+				'dbhost': dbhost,
+				'dbname': dbname,
+				'dbuser': dbuser,
+				'dbpass': dbpass,
 			}
 
 
@@ -202,9 +203,13 @@ DB = DBPool()
 class DBConnect(object):
 	def __init__(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, primarykey=None, autocommit=True):
 		self._conn = DB.get_item(dbhost, dbname, dbuser, dbpass, primarykey)
+		for n in [ 'dbhost', 'dbname', 'dbuser', 'dbpass' ]:
+			self.__dict__[n] = self._conn[n]
+
 		self._cursor = None
 		self._transaction = False
 		self.autocommit = autocommit
+
 
 	def __enter__(self):
 		return self
