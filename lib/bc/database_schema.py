@@ -209,14 +209,14 @@ SCHEMA = [
 ]
 
 def create_schema(dbname=None, dbuser=None, dbpass=None):
-	with database.DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass, commit=False) as db:
+	with database.DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass, autocommit=False) as db:
 		for table in SCHEMA:
 			table.create(db)
 		db.commit()
 
 
 def destroy_schema(dbname=None, dbuser=None, dbpass=None):
-	with database.DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass, commit=False) as db:
+	with database.DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass, autocommit=False) as db:
 		for table in SCHEMA:
 			table.drop(db)
 		db.commit()

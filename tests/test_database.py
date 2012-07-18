@@ -68,7 +68,7 @@ class Test(unithelper.DBTestCase):
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
 	def test_insert_autocommit_false(self):
 		"""transaction insert test"""
-		with database.DBConnect(commit=False) as db:
+		with database.DBConnect(autocommit=False) as db:
 			data = []
 			for i in range(random.randint(5,10)):
 				dictionary = {

@@ -200,16 +200,11 @@ class DBQuery(object):
 DB = DBPool()
 
 class DBConnect(object):
-	_autocommit  = True
-	_transaction = False
-	_conn        = None
-	_cursor      = None
-
-	def __init__(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, primarykey=None, commit=True):
+	def __init__(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, primarykey=None, autocommit=True):
 		self._conn = DB.get_item(dbhost, dbname, dbuser, dbpass, primarykey)
-		self._autocommit = commit
+		self._cursor = None
 		self._transaction = False
-
+		self.autocommit = autocommit
 
 	def __enter__(self):
 		return self
@@ -298,7 +293,7 @@ class DBConnect(object):
 		"""
 		self.begin()
 		self.cursor().execute(fmt, *args)
-		if self._autocommit:
+		if self.autocommit:
 			self.commit()
 
 
@@ -306,7 +301,7 @@ class DBConnect(object):
 		"""Queries the database and returns DBCursor with result
 		"""
 		cur = DBCursor(self.connect())
-		return DBQuery(cur, self._autocommit, fmt, *args)
+		return DBQuery(cur, self.autocommit, fmt, *args)
 
 
 	def sql_update(self, query, sort=False):
