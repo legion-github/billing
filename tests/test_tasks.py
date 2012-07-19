@@ -11,13 +11,13 @@ class Test(unithelper.DBTestCase):
 
 		now = int(time.time())
 		values = {
-			'id':             '123',
+			'base_id':        '123',
+			'record_id':      '0',
 			'customer':       '',
 			'rid':            '',
 			'state':          tasks.constants.STATE_ENABLED,
 			'rate':           0L,
 			'value':          0L,
-			'time_now':       now,
 			'time_check':     now,
 			'time_create':    now,
 			'time_destroy':   0,
@@ -27,7 +27,7 @@ class Test(unithelper.DBTestCase):
 		}
 
 		t = tasks.Task()
-		t.set({'id':'123'})
+		t.set({'base_id':'123'})
 
 		self.assertEqual(set(t.values.keys()), set(values.keys()))
 		self.assertEqual(set(t.values.values()), set(values.values()))
@@ -39,7 +39,7 @@ class Test(unithelper.DBTestCase):
 		t = tasks.Task()
 
 		with self.assertRaises(TypeError):
-			t.id = 123
+			t.base_id = 123
 
 		with self.assertRaises(KeyError):
 			t.zzz = 1
@@ -51,10 +51,10 @@ class Test(unithelper.DBTestCase):
 			t.values = {}
 
 		with self.assertNotRaises(TypeError):
-			t.id = '123'
+			t.base_id = '123'
 
 		with self.assertNotRaises(TypeError):
-			t.values['id'] = '123'
+			t.values['base_id'] = '123'
 
 
 	def test_task_creation(self):
@@ -69,7 +69,7 @@ class Test(unithelper.DBTestCase):
 		tasks.add(o)
 
 		with database.DBConnect() as db:
-			o1 = db.find_one('queue', {'id':o.id})
+			o1 = db.find_one('queue', {'base_id':o.base_id, 'record_id': '0' })
 
 		self.assertEquals(tasks.Task(o1), o)
 

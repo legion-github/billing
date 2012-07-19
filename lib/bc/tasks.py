@@ -41,7 +41,8 @@ class Task(bobject.BaseObject):
 
 		self.__values__ = {
 			# Уникальный идентификатор задания
-			'id':             str(uuid.uuid4()),
+			'base_id':        str(uuid.uuid4()),
+			'record_id':      '0',
 
 			# Владелец задания, тот чей счёт используется
 			'customer':       '',
@@ -74,7 +75,7 @@ class Task(bobject.BaseObject):
 
 
 def add(task):
-	with database.DBConnect(primarykey=task.id) as db:
+	with database.DBConnect(primarykey=task.base_id) as db:
 		db.insert('queue', task.values)
 
 
@@ -93,7 +94,7 @@ def modify(typ, val, params):
 		raise TypeError('Wrong state')
 
 	with database.DBConnect(primarykey=val) as db:
-		db.update("queue", { 'id': val }, params)
+		db.update("queue", { 'base_id': val, 'record_id': '0' }, params)
 
 
 def remove(typ, value, ts=0):
@@ -107,3 +108,17 @@ def remove(typ, value, ts=0):
 			'time_destroy': ts or int(time.time())
 		}
 	)
+
+
+def update(params):
+	"""Recreate task"""
+
+	# Final internal validation
+	o = Task(params)
+
+	with database.DBConnect(primarykey=o.id, autocommit=False) as db:
+		db.update('queue',
+			{ 'base_id': o.id, 'record_id': '0' },
+			{ 'base_id': o.id, 'record_id': str(uuid.uuid4()) })
+		db.insert('queue', o.values)
+		db.commit()

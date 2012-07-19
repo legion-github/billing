@@ -125,7 +125,10 @@ SCHEMA = [
 		),
 	DBTable("queue",
 			columns = [
-				("id",          "varchar(36)",  "NOT NULL PRIMARY KEY"),
+				# A composite id of the two fields.
+				("base_id",     "varchar(36)",  "NOT NULL PRIMARY KEY"),
+				("record_id",   "varchar(36)",  "NOT NULL DEFAULT '0'"),
+
 				("customer",    "varchar(36)",  "NOT NULL"),
 				("rid",         "varchar(36)",  "NOT NULL"),
 				("rate",        "bigint",       "NOT NULL DEFAULT '0'"),
@@ -139,7 +142,8 @@ SCHEMA = [
 				("target_descr","varchar(36)",  "DEFAULT ''"),
 			],
 			indexes = [
-				{ "cols": [ ("state", "ASC"), ("time_check", "DESC") ] }
+				{ "cols": [ ("state", "ASC"), ("time_check", "DESC") ] },
+				{ "cols": [ ("base_id", "ASC"), ("record_id", "ASC") ], 'unique': True },
 			]
 		),
 	DBTable("rates",
