@@ -59,7 +59,6 @@ class Task(bobject.BaseObject):
 			'value':          0L,
 
 			# Тайминги задания
-			'time_now':       now,
 			'time_check':     now,
 			'time_create':    now,
 			'time_destroy':   0,
@@ -76,10 +75,7 @@ class Task(bobject.BaseObject):
 
 def add(task):
 	with database.DBConnect(primarykey=task.id) as db:
-		v = {}
-		v.update(task.values)
-		del v['time_now']
-		db.insert('queue', v)
+		db.insert('queue', task.values)
 
 
 def modify(typ, val, params):
