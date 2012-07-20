@@ -39,7 +39,7 @@ def customerGet(params):
 		return jsonrpc.result_error('ServerError',
 			{ 'status': 'error', 'message': 'Unable to obtain customer' })
 
-	return jsonrpc.result({ 'status':'ok', 'customers': ret.values })
+	return jsonrpc.result({ 'status':'ok', 'customer': ret.values })
 
 
 @jsonrpc.method(
@@ -65,7 +65,8 @@ def customerAdd(params):
 		wallet_mode = customers.constants.import_wallet_mode(params['wallet_mode'])
 
 		if wallet_mode == None:
-			raise TypeError('Wrong wallet_mode: ' + str(params['wallet_mode']))
+			return jsonrpc.result_error('InvalidRequest', {'status':'error',
+				'message':'Wrong wallet_mode: ' + str(params['wallet_mode'])})
 
 		params['wallet_mode'] = wallet_mode
 
@@ -106,13 +107,15 @@ def customerModify(params):
 		if 'state' in params:
 			v = customers.constants.import_state(params['state'])
 			if v == None or v == customers.constants.STATE_DELETED:
-				raise TypeError('Wrong state: ' + str(params['state']))
+				return jsonrpc.result_error('InvalidRequest', {'status':'error',
+				'message':'Wrong state: ' + str(params['state'])})
 			params['state'] = v
 
 		if 'wallet_mode' in params:
 			v = customers.constants.import_wallet_mode(params['wallet_mode'])
 			if v == None:
-				raise TypeError('Wrong wallet_mode: ' + str(params['wallet_mode']))
+				return jsonrpc.result_error('InvalidRequest', {'status':'error',
+				'message':'Wrong wallet_mode: ' + str(params['wallet_mode'])})
 			params['wallet_mode'] = v
 
 		customers.modify('login', params['login'], params)
