@@ -77,10 +77,29 @@ def taskAdd(request):
 
 
 @jsonrpc.method(
-	validate = False,
-	auth = False)
+	validate = V({
+		'id':    V(basestring, min=36, max=36),
+		'value': V(int),
+		'user':  V(basestring, min=1,  max=64),
+		'uuid':  V(basestring, min=36, max=36),
+		'descr': V(basestring),
+	}),
+	auth = True)
 def taskModify(request):
-	LOG.info(request)
+	try:
+		t = tasks.Task({
+			'base_id':      request['id'],
+			'value':        request['value'],
+			'target_user':  request['user'],
+			'target_uuid':  request['uuid'],
+			'target_descr': request['descr'],
+		})
+		tasks.update(t)
+
+	except Exception, e:
+		LOG.error(e)
+		return jsonrpc.result_error('ServerError',
+			{ 'status': 'error', 'message': 'Unable to modify task' })
 	return jsonrpc.result({'status':'ok'})
 
 
