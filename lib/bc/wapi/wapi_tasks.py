@@ -52,7 +52,7 @@ def taskAdd(request):
 
 		t = tasks.Task(
 			{
-				'id':           request['uuid'],
+				'base_id':      request['uuid'],
 				'customer':     customer['id'],
 
 				'value':        request['value'],
@@ -106,7 +106,7 @@ def taskModify(request):
 @jsonrpc.method(
 	validate = V({
 		'id':           V(basestring, min=36, max=36),
-		'time-destroy':	V(int, default=0),
+		'time-destroy': V(int, default=0),
 	}),
 	auth = True)
 def taskRemove(request):
