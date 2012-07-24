@@ -2,7 +2,7 @@
 
 from bc import log
 from bc import jsonrpc
-
+from bc import wapi
 
 LOG = log.logger("wapi")
 
