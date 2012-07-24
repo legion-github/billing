@@ -63,6 +63,7 @@ def process_customers():
 			'name_short':     'Test',
 			'name_full':      'Test Inc.',
 			'comment':        'Simple client',
+			'wallet_mode':    'unlimit',
 		}
 	]
 	for o in customers:
