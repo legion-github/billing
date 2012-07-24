@@ -5,6 +5,7 @@ import sys
 import re
 import getopt
 import getpass
+import uuid
 
 sys.path.insert(0, '../lib')
 
@@ -75,6 +76,7 @@ def process_rule(method, role, secret, host):
 			if mode == 'insert' or mode == 'upsert':
 				db.insert('auth',
 					{
+						'id':     str(uuid.uuid4()),
 						'method': method,
 						'role':   role,
 						'secret': secret,
