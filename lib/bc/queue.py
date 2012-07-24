@@ -5,7 +5,7 @@ from bc import rates
 
 def resolve(mtype, tid):
 
-	with database.DBCOnnect() as db:
+	with database.DBConnect() as db:
 		r = db.find_one('rates',
 			{
 				'state':     rates.constants.STATE_ACTIVE,
