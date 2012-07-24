@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
-from bc import database
+from bc import database_schema
 
 dbname = 'billing'
 dbuser = 'bc'
 dbpass = 'qwerty'
 
-database.destroy_schema(dbname,dbuser,dbpass)
-database.create_schema(dbname,dbuser,dbpass)
+database_schema.destroy_schema(dbname,dbuser,dbpass)
+database_schema.create_schema(dbname,dbuser,dbpass)
