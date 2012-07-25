@@ -1,155 +1,142 @@
 #!/usr/bin/env python2.6
 
-import socket, threading, time, struct, errno, logging
+import socket as pysocket
+import threading, time, struct, errno, logging
 import msgpack
-#import traceback
-
-def recv_failure_retry(sock, rlen):
-	"""Recv socket and repeat as long as it returns with `errno'
-	   set to EINTR."""
-
-	res = ""
-	bytes = rlen
-	while bytes > 0:
-		try:
-			buf = sock.recv(bytes)
-			if not buf: break
-
-			bytes -= len(buf)
-			res   += buf
-
-		except socket.error, e:
-			if e.errno != errno.EINTR:
-				raise e
-	return res
-
-
-def send_data(sock, obj):
-	data_str = msgpack.packb(obj)
-	data_len = len(data_str)
-
-	msg = struct.pack('Q', data_len)
-	msg += data_str
-
-	sock.sendall(msg)
 
 
 class Socket(object):
-	def __init__(self, sock):
-		self.sock = sock
+	def __init__(self, socket=None, family=socket.AF_INET, typ=socket.SOCK_STREAM, proto=0):
+		self.sock = socket or pysocket.socket(family, typ, proto)
+
+		for n in [ 'setsockopt', 'accept', 'bind', 'connect' ]:
+			self.__dict__[n] = getattr(self.sock, n)
+
 		self.rd_lock = threading.Lock()
 		self.wr_lock = threading.Lock()
 
 
+	def __recv_failure_retry(self, rlen):
+		"""Recv socket and repeat as long as it returns with `errno' set to EINTR."""
+		res = []
+		bytes = int(rlen)
+		while bytes > 0:
+			try:
+				buf = self.sock.recv(bytes)
+				if not buf: break
+
+				bytes -= len(buf)
+				res.append(buf)
+
+			except pysocket.error, e:
+				if e.errno != errno.EINTR:
+					raise e
+		return ''.join(res)
+
+
 	def recv(self, bytes):
-		res = ""
 		try:
 			self.rd_lock.acquire()
-			res = recv_failure_retry(self.sock, bytes)
+			return self.__recv_failure_retry(bytes)
 		finally:
 			self.rd_lock.release()
-		return res
+		return ""
 
 
 	def send(self, data):
 		try:
 			self.wr_lock.acquire()
-			send_data(self.sock, data)
+			data_str = msgpack.packb(data)
+			self.sock.sendall(struct.pack('Q', len(data_str)) + data_str)
 		finally:
 			self.wr_lock.release()
 
+
 	def close(self):
 		try:
-			self.sock.shutdown(socket.SHUT_RDWR)
+			self.sock.shutdown(pysocket.SHUT_RDWR)
 			self.sock.close()
 		except:
 			pass # Ignore any errors
 
 
-class Server(object):
-	def __init__(self, host='localhost', port=9999):
-		    self.handlers = {
-			    'on_connect':    None,
-			    'on_disconnect': None,
-			    'on_recv':       None,
-			    'on_err':        self.default_err_handler
-		    }
-		    self.host  = host
-		    self.port  = port
-		    self.sock  = None
-
-
-	def default_err_handler(self, e):
-		#traceback.print_exc()
-		logging.error(e)
-
-
-	def recv(self, conn):
-		# Calculate pack size
-		n = struct.calcsize('Q')
-
+class ServerBase(object):
+	def recv(self, sock):
 		try:
+			# Calculate pack size
+			n = struct.calcsize('Q')
+
 			# Get message length
-			m = conn.recv(n)
+			m = sock.recv(n)
 			if not m:
 				return None
 
-			mlen = struct.unpack('Q', m)
-			mlen = int(mlen[0])
+			# Calculate payload size
+			mlen = int(struct.unpack('Q', m)[0])
 
 			# Read payload
-			data = conn.recv(mlen)
+			data = sock.recv(mlen)
 
 			# Return valid python object
 			return msgpack.unpackb(data)
 
 		except Exception, e:
-			self.handle('on_err', e)
-
+			self.on_error(e)
 		return None
+
+	def on_connect(self, addr, sock):
+		pass
+
+	def on_disconnect(self, addr, sock):
+		pass
+
+	def on_recv(self, addr, sock, data):
+		pass
+
+	def on_error(self, exp):
+		#traceback.print_exc()
+		logging.error(exp)
+
+
+class Server(ServerBase):
+	def __init__(self, host='localhost', port=9999):
+		self.addr = (host, port)
+		self.sock = Socket()
+		self.sock.setsockopt(pysocket.SOL_SOCKET,  pysocket.SO_REUSEADDR, 1)
+		self.sock.setsockopt(pysocket.SOL_SOCKET,  pysocket.SO_KEEPALIVE, 1)
+		self.sock.setsockopt(pysocket.IPPROTO_TCP, pysocket.TCP_NODELAY,  1)
 
 
 	def accept_connection(self, conn, addr):
-	    try:
-		    self.handle('on_connect', addr, conn)
+		try:
+			self.on_connect(addr, conn)
+			while True:
+				data = self.recv(conn)
+				if not data: break
+				self.on_recv(addr, conn, data)
 
-		    while True:
-			    data = self.recv(conn)
-			    if not data: break
-			    self.handle('on_recv', addr, conn, data)
-
-		    self.handle('on_disconnect', addr, conn)
-		    conn.close()
-
-	    except Exception, e:
-		    self.handle('on_err', e)
-
-
-	def bind(self):
-		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-		self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-
-		self.sock.bind((self.host, self.port))
+			self.on_disconnect(addr, conn)
+			conn.close()
+		except Exception, e:
+			self.on_error(e)
 
 
 	def run(self):
 		try:
 			# will fail when port as busy, or we don't have rights to bind
-			self.bind()
-			self.sock.listen(socket.SOMAXCONN)
+			self.sock.bind(self.addr)
+			self.sock.listen(pysocket.SOMAXCONN)
 
 			while True:
 				sock, addr = self.sock.accept()
 				conn = Socket(sock)
 
 				c = threading.Thread(target=self.accept_connection, args=[conn, addr, ])
-				c.setDaemon(True)
+				c.daemon = True
 				c.start()
 
-		except socket.error, e:
-			self.handle('on_err', e)
+		except pysocket.error, e:
+			self.on_error(e)
 
 
 	def start(self, timeout=0):
@@ -160,104 +147,34 @@ class Server(object):
 		return t
 
 
-	def set_handlers(self, handlers):
-		if not isinstance(handlers, dict):
-			return False
-
-		for name in self.handlers.keys():
-			if name in handlers:
-				self.handlers[name] = handlers[name]
-		return True
-
-
-	def handle(self, name, *args, **kwargs):
-		try:
-			if name in self.handlers and self.handlers[name] != None:
-				self.handlers[name](*args, **kwargs)
-
-		except Exception, e:
-			self.handle('on_err', e)
-
-
-class Client(object):
+class Client(ServerBase):
 	def __init__(self, host='localhost', port=9999):
-		    self.handlers = {
-			    'on_connect':    None,
-			    'on_disconnect': None,
-			    'on_recv':       None,
-			    'on_err':        self.default_err_handler
-		    }
-		    self.host = host
-		    self.port = port
-		    self.sock = None
-
-
-	def default_err_handler(self, e):
-		#traceback.print_exc()
-		logging.error(e)
-
-
-	def connect(self):
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.connect((self.host, self.port))
-		self.sock = Socket(sock)
-
-
-	def close(self):
-		#addr = (self.host, self.port)
-		#self.handle('on_disconnect', addr, self.sock)
-		self.sock.close()
-
-
-	def recv(self):
-		# Calculate pack size
-		n = struct.calcsize('Q')
-
-		try:
-			# Get message length
-			m = self.sock.recv(n)
-			if not m:
-				return None
-
-			mlen = struct.unpack('Q', m)
-			mlen = int(mlen[0])
-
-			# Read payload
-			data = self.sock.recv(mlen)
-
-			# Return valid paython object
-			return msgpack.unpackb(data)
-
-		except Exception, e:
-			self.handle('on_err', e)
-
-		return None
+		self.addr = (host, port)
+		self.sock = Socket()
 
 
 	def send(self, data):
 		try:
 			self.sock.send(data)
-
 		except Exception, e:
-			self.handle('on_err', e)
+			self.on_error(e)
 
 
 	def run(self):
-		addr = (self.host, self.port)
 		try:
-			self.connect()
-			self.handle('on_connect', addr, self.sock)
+			self.sock.connect(self.addr)
+			self.on_connect(self.addr, self.sock)
 
 			while True:
-				data = self.recv()
+				data = self.recv(self.sock)
 				if not data: break
-				self.handle('on_recv', addr, self.sock, data)
+				self.on_recv(self.addr, self.sock, data)
 
-			self.handle('on_disconnect', addr, self.sock)
-			self.close()
-
-		except socket.error, e:
-			self.handle('on_err', e)
+		except pysocket.error, e:
+			self.on_error(e)
+		finally:
+			self.on_disconnect(self.addr, self.sock)
+			self.sock.close()
 
 
 	def start(self, timeout=0):
@@ -266,23 +183,3 @@ class Client(object):
 		t.start()
 		time.sleep(timeout)
 		return t
-
-
-	def set_handlers(self, handlers):
-		if not isinstance(handlers, dict):
-			return False
-
-		for name in self.handlers.keys():
-			if name in handlers:
-				self.handlers[name] = handlers[name]
-		return True
-
-
-	def handle(self, name, *args, **kwargs):
-		try:
-			if name in self.handlers and self.handlers[name] != None:
-				self.handlers[name](*args, **kwargs)
-
-		except Exception, e:
-			self.handle('on_err', e)
-
