@@ -39,10 +39,4 @@ def jsonrpc_http_request(conn, method, params=None, auth_data=None, req_limit=No
 	if res['id'] != req['id']:
 		raise JsonRpcHttpError("Got wrong reply id: {0}.", repr(res))
 
-	if 'error' in res:
-		raise JsonRpcHttpError("Remote error: {0}.", repr(res['error']))
-
-	if 'status' not in res['result'] or res['result']['status'] != 'ok':
-		raise JsonRpcHttpError("Something bad: {0}.", repr(res))
-
 	return res
