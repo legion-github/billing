@@ -6,10 +6,10 @@ import msgpack
 
 
 class Socket(object):
-	def __init__(self, socket=None, family=socket.AF_INET, typ=socket.SOCK_STREAM, proto=0):
+	def __init__(self, socket=None, family=pysocket.AF_INET, typ=pysocket.SOCK_STREAM, proto=0):
 		self.sock = socket or pysocket.socket(family, typ, proto)
 
-		for n in [ 'setsockopt', 'accept', 'bind', 'connect' ]:
+		for n in [ 'setsockopt', 'accept', 'bind', 'connect', 'listen' ]:
 			self.__dict__[n] = getattr(self.sock, n)
 
 		self.rd_lock = threading.Lock()
