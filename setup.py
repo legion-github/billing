@@ -36,6 +36,7 @@ setup(
 		'bc',
 		'bc/jsonrpc',
 		'bc/wapi',
+		'bc_client',
 	],
 	data_files  = [
 		('libexec/billing',     ['bin/httpd-abc']),

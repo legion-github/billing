@@ -34,6 +34,7 @@ class BCClient(object):
 				return conn
 			except Exception as e:
 				LOG.exception("Failed to connect to %s: %s.", host, e)
+				raise e
 
 		def exceptionator(response):
 			if 'result' in response.keys():
@@ -48,6 +49,7 @@ class BCClient(object):
 				auth_data=auth)
 		except Exception as e:
 			LOG.exception("Failed to communicate with Billing: %s", e)
+			raise e
 		else:
 			return exceptionator(response)
 

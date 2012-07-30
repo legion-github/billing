@@ -35,6 +35,17 @@ CROC Cloud billing common files, directories and libraries.
 Billing private library.
 
 
+%package client-billing
+Summary:  CROC Cloud billing commons (billing side)
+Group:    Applications/System
+
+Requires: c2-common
+
+%description client-billing
+CROC Cloud billing common files, directories and libraries.
+Billing private library.
+
+
 %package common-cloud
 Summary:  CROC Cloud billing commons (cloud side)
 Group:    Applications/System
@@ -112,6 +123,9 @@ service crond reload
 %files common-billing
 %_sysconfdir/billing.conf
 %python_sitearch/bc
+
+%files client-billing
+%python_sitearch/bc_client
 
 %files common-cloud
 %python_sitearch/billing
