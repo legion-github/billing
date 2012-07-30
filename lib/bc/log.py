@@ -15,13 +15,17 @@ log_level_mapping = {
 default_log_format  = '%(asctime)s.%(msecs)03d: %(levelname)s: %(filename)s: %(lineno)d: %(message)s'
 default_date_format = '%Y.%m.%d %H:%M:%S'
 
-LOGGER = None
+LOGGER  = logging.getLogger()
+HANDLER = None
 
 def logger(subname, **kwargs):
-	global LOGGER
+	global LOGGER, HANDLER
 
-	if LOGGER:
+	if not kwargs.get('init', False):
 		return LOGGER
+
+	if HANDLER != None:
+		LOGGER.removeHandler(HANDLER)
 
 	conf      = config.read()
 	log_type  = kwargs.get('type', conf['logging']['type']) or 'syslog'
@@ -33,7 +37,7 @@ def logger(subname, **kwargs):
 		log_max_bytes = unitconvert.convert_from(conf['logging']['logsize'])
 		log_count     = conf['logging']['backcount']
 
-		handler = logging.handlers.RotatingFileHandler(
+		HANDLER = logging.handlers.RotatingFileHandler(
 			log_file,
 			maxBytes=log_max_bytes,
 			backupCount=log_count)
@@ -42,20 +46,20 @@ def logger(subname, **kwargs):
 		log_address   = kwargs.get('address', str(conf['logging']['address']))
 		log_facility  = kwargs.get('facility', conf['logging']['facility'])
 
-		handler = SysLogHandler(
+		HANDLER = SysLogHandler(
 			address=log_address,
 			facility=SysLogHandler.facility_names[log_facility])
 
 	elif log_type == 'stderr':
-		handler = logging.StreamHandler(sys.stderr)
+		HANDLER = logging.StreamHandler(sys.stderr)
 
-	LOGGER = logging.getLogger()
+	#LOGGER = logging.getLogger()
 	LOGGER.setLevel(log_level)
 
-	handler.setFormatter(logging.Formatter(
+	HANDLER.setFormatter(logging.Formatter(
 		kwargs.get('log_format',  default_log_format),
 		kwargs.get('date_format', default_date_format)))
 
-	LOGGER.addHandler(handler)
+	LOGGER.addHandler(HANDLER)
 
 	return LOGGER
