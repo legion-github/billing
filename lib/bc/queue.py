@@ -4,6 +4,7 @@ from bc import database
 from bc import rates
 
 def resolve(mtype, tid):
+	"""Rate information by tariff and metric"""
 
 	with database.DBConnect() as db:
 		r = db.find_one('rates',
