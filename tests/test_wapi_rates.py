@@ -1,8 +1,12 @@
-import unithelper
 import random
 import itertools
 import uuid
 import time
+
+from unithelper import DBTestCase
+from unithelper import mocker
+from unithelper import requestor
+from unithelper import hashable_dict
 
 from bc import database
 from bc import rates
@@ -12,7 +16,7 @@ from bc import tariffs
 from bc.wapi import wapi_rates
 
 
-class Test(unithelper.DBTestCase):
+class Test(DBTestCase):
 
 	def test_rate_get(self):
 		"""Check getting rate with rateGet"""
@@ -33,32 +37,33 @@ class Test(unithelper.DBTestCase):
 			db.insert('rates', data)
 
 		self.assertEquals(wapi_rates.rateGet({'id': data['id']}),
-				unithelper.requestor({'rate': data}, 'ok'))
+				requestor({'rate': data}, 'ok'))
 
 		self.assertEquals(wapi_rates.rateGet({'currency':''}),
-				unithelper.requestor({'message': 'Wrong parameters' }, 'error'))
+				requestor({'message': 'Wrong parameters' }, 'error'))
 
 		self.assertEquals(wapi_rates.rateGet({'currency':'', 'time_destroy':''}),
-				unithelper.requestor({'message': 'Wrong parameters' }, 'error'))
+				requestor({'message': 'Wrong parameters' }, 'error'))
 
 		self.assertEquals(wapi_rates.rateGet({
 			'currency':'',
 			'time_destroy':'',
 			'state':''}),
-				unithelper.requestor({'message': 'Wrong parameters' }, 'error'))
+				requestor({'message': 'Wrong parameters' }, 'error'))
 
 		self.assertEquals(wapi_rates.rateGet({
 			'metric_id': data['metric_id'],
 			'tariff_id': data['tariff_id'],
 			}),
-				unithelper.requestor({'rate': data}, 'ok'))
+				requestor({'rate': data}, 'ok'))
 
 		self.assertEquals(wapi_rates.rateGet({'id':''}),
-				unithelper.requestor({'message': 'Rate not found' }, 'error'))
+				requestor({'message': 'Rate not found' }, 'error'))
 
-		with unithelper.mocker('bc.rates', 'get_by_id', 'bc.wapi.wapi_rates'):
+		with mocker([('bc.rates.get_by_id', mocker.exception),
+					('bc.wapi.wapi_rates.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_rates.rateGet({'id':''}),
-				unithelper.requestor({'message': 'Unable to obtain rate list' }, 'servererror'))
+				requestor({'message': 'Unable to obtain rate list' }, 'servererror'))
 
 
 	def test_rate_get_list(self):
@@ -99,8 +104,8 @@ class Test(unithelper.DBTestCase):
 		self.assertEquals(ans[1]['status'], 'ok')
 
 		self.assertEquals(
-			set(map(lambda x: unithelper.hashable_dict(x), ans[1]['rates'])),
-			set(map(lambda x: unithelper.hashable_dict(x),
+			set(map(lambda x: hashable_dict(x), ans[1]['rates'])),
+			set(map(lambda x: hashable_dict(x),
 				filter(lambda x:x['state'] < rates.constants.STATE_DELETED,
 					list_all)
 				)
@@ -113,17 +118,18 @@ class Test(unithelper.DBTestCase):
 			self.assertEquals(ans[1]['status'], 'ok')
 
 			self.assertEquals(
-				set(map(lambda x: unithelper.hashable_dict(x), ans[1]['rates'])),
-				set(map(lambda x: unithelper.hashable_dict(x),
+				set(map(lambda x: hashable_dict(x), ans[1]['rates'])),
+				set(map(lambda x: hashable_dict(x),
 					filter(lambda x:x['state'] < rates.constants.STATE_DELETED,
 						rat[tar_id].values())
 					)
 				)
 			)
 
-		with unithelper.mocker('bc.rates', 'get_all', 'bc.wapi.wapi_rates'):
+		with mocker([('bc.rates.get_all', mocker.exception),
+					('bc.wapi.wapi_rates.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_rates.rateList({'id':''}),
-				unithelper.requestor({'message': 'Unable to obtain rate list' }, 'servererror'))
+				requestor({'message': 'Unable to obtain rate list' }, 'servererror'))
 
 
 	def test_rate_add(self):
@@ -145,15 +151,16 @@ class Test(unithelper.DBTestCase):
 
 		metrics.add(metrics.Metric({'id':data['metric_id']}))
 
-		self.assertEquals(wapi_rates.rateAdd(data), unithelper.requestor({}, 'ok'))
+		self.assertEquals(wapi_rates.rateAdd(data), requestor({}, 'ok'))
 
 		with database.DBConnect() as db:
 			t1 = db.find('rates').one()
-		self.assertEquals(unithelper.hashable_dict(data), unithelper.hashable_dict(t1))
+		self.assertEquals(hashable_dict(data), hashable_dict(t1))
 
-		with unithelper.mocker('bc.rates', 'add', 'bc.wapi.wapi_rates'):
+		with mocker([('bc.rates.add', mocker.exception),
+					('bc.wapi.wapi_rates.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_rates.rateAdd({'id':''}),
-				unithelper.requestor({'message': 'Unable to add new rate' }, 'servererror'))
+				requestor({'message': 'Unable to add new rate' }, 'servererror'))
 
 
 	def test_rate_remove(self):
@@ -184,9 +191,10 @@ class Test(unithelper.DBTestCase):
 
 		self.assertEquals(t1, data)
 
-		with unithelper.mocker('bc.rates', 'remove', 'bc.wapi.wapi_rates'):
+		with mocker([('bc.rates.remove', mocker.exception),
+					('bc.wapi.wapi_rates.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_rates.rateRemove({'id':''}),
-				unithelper.requestor({'message': 'Unable to remove rate' }, 'servererror'))
+				requestor({'message': 'Unable to remove rate' }, 'servererror'))
 
 
 	def test_rate_modification(self):
@@ -208,25 +216,26 @@ class Test(unithelper.DBTestCase):
 			db.insert('rates', data)
 
 		self.assertEqual(wapi_rates.rateModify({'id':data['id']}),
-				unithelper.requestor({}, 'ok'))
+				requestor({}, 'ok'))
 
-		with unithelper.mocker('bc.rates', 'modify', 'bc.wapi.wapi_rates'):
+		with mocker([('bc.rates.modify', mocker.exception),
+					('bc.wapi.wapi_rates.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_rates.rateModify({'id':data['id'], 'rate':10}),
-				unithelper.requestor({'message': 'Unable to modify rate' }, 'servererror'))
+				requestor({'message': 'Unable to modify rate' }, 'servererror'))
 
 		self.assertEqual(
 			wapi_rates.rateModify({'id':'w','state':str(rates.constants.STATE_DELETED)}),
-			unithelper.requestor({'message': 'Wrong state: ' + str(rates.constants.STATE_DELETED)}, 'error'))
+			requestor({'message': 'Wrong state: ' + str(rates.constants.STATE_DELETED)}, 'error'))
 
 		self.assertEqual(
 			wapi_rates.rateModify({'id':'','currency':str(rates.constants.CURRENCY_USD)}),
-			unithelper.requestor({'message': 'Wrong currency: ' + str(rates.constants.CURRENCY_USD)}, 'error'))
+			requestor({'message': 'Wrong currency: ' + str(rates.constants.CURRENCY_USD)}, 'error'))
 
 		data1={'id':data['id'], 'description':str(uuid.uuid4())}
 		data.update(data1)
 
 		self.assertEqual(wapi_rates.rateModify(data1),
-				unithelper.requestor({}, 'ok'))
+				requestor({}, 'ok'))
 
 		with database.DBConnect() as db:
 			t1 = db.find_one('rates', {'id': data['id']})

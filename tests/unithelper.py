@@ -89,30 +89,39 @@ class DBTestCase(TestCase):
 
 
 class mocker(object):
-	def __init__(self, modulename, methodname, modulewithlog):
-		self.__dict__.update(locals())
+	"""
+	Object for hacking preloaded objects inplace, in import tree
+	"""
+
+	def __init__(self, targets=[]):
+		self.__targets = targets
+
+	@staticmethod
+	def __mocker(q):
+
+		import sys
+		path = q[0].split('.')
+		preans = reduce( getattr, path[1:-1], sys.modules[path[0]])
+		ans = getattr(preans, path[-1])
+		setattr(preans, path[-1], q[1])
+		return (q[0], ans)
 
 	def __enter__(self):
-		import sys
 
-		def foo(*args, **kwargs):
-			raise Exception("Faked exception, for tests")
-
-		def pseudolog(*args, **kwargs):
-			pass
-
-		self.logger=sys.modules[self.modulewithlog].LOG.error
-		sys.modules[self.modulewithlog].LOG.error=pseudolog
-
-		self.backup=getattr(sys.modules[self.modulename], self.methodname)
-		setattr(sys.modules[self.modulename], self.methodname, foo)
-
-		return True
+		self.__backup = map(self.__mocker, self.__targets)
 
 	def __exit__(self, type, vaue, traceback):
-		import sys
-		setattr(sys.modules[self.modulename], self.methodname, self.backup)
-		sys.modules[self.modulewithlog].LOG.error=self.logger
+		for i in self.__backup:
+			self.__mocker(i)
+
+	@staticmethod
+	def exception(*args, **kwargs):
+		raise Exception("Faked exception")
+
+	@staticmethod
+	def passs(*args, **kwargs):
+		pass
+
 
 
 def requestor(dictionary, state):

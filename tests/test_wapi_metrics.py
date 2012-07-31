@@ -1,5 +1,9 @@
-import unithelper
 import uuid
+
+from unithelper import DBTestCase
+from unithelper import mocker
+from unithelper import requestor
+from unithelper import hashable_dict
 
 from bc import database
 from bc import metrics
@@ -7,7 +11,7 @@ from bc import metrics
 from bc.wapi import wapi_metrics
 
 
-class Test(unithelper.DBTestCase):
+class Test(DBTestCase):
 
 	def test_metric_get(self):
 		"""Check getting metric with metricGet"""
@@ -23,14 +27,15 @@ class Test(unithelper.DBTestCase):
 			db.insert('metrics', data)
 
 		self.assertEquals(wapi_metrics.metricGet({'id': data['id']}),
-				unithelper.requestor({'metric': data}, 'ok'))
+				requestor({'metric': data}, 'ok'))
 
 		self.assertEquals(wapi_metrics.metricGet({'id':''}),
-				unithelper.requestor({'message': 'Metric not found' }, 'error'))
+				requestor({'message': 'Metric not found' }, 'error'))
 
-		with unithelper.mocker('bc.metrics', 'get', 'bc.wapi.wapi_metrics'):
+		with mocker([('bc.metrics.get', mocker.exception),
+					('bc.wapi.wapi_metrics.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_metrics.metricGet({'id':''}),
-				unithelper.requestor({'message': 'Unable to obtain metric' }, 'servererror'))
+				requestor({'message': 'Unable to obtain metric' }, 'servererror'))
 
 
 	def test_metric_get_list(self):
@@ -54,12 +59,13 @@ class Test(unithelper.DBTestCase):
 		self.assertEquals(ans[0], (01 << 2))
 		self.assertEquals(ans[1]['status'], 'ok')
 
-		self.assertEquals(set(map(lambda x: unithelper.hashable_dict(x), ans[1]['metrics'])),
-				set(map(lambda x: unithelper.hashable_dict(x), data)))
+		self.assertEquals(set(map(lambda x: hashable_dict(x), ans[1]['metrics'])),
+				set(map(lambda x: hashable_dict(x), data)))
 
-		with unithelper.mocker('bc.metrics', 'get_all', 'bc.wapi.wapi_metrics'):
+		with mocker([('bc.metrics.get_all', mocker.exception),
+					('bc.wapi.wapi_metrics.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_metrics.metricList({'id':''}),
-				unithelper.requestor({'message': 'Unable to obtain metric list' }, 'servererror'))
+				requestor({'message': 'Unable to obtain metric list' }, 'servererror'))
 
 
 	def test_metric_add(self):
@@ -73,14 +79,15 @@ class Test(unithelper.DBTestCase):
 		}
 		ans = wapi_metrics.metricAdd(data)
 
-		self.assertEquals(ans, unithelper.requestor({}, 'ok'))
+		self.assertEquals(ans, requestor({}, 'ok'))
 
 		with database.DBConnect() as db:
 			t1 = db.find('metrics').one()
 		self.assertEquals(data['id'], t1['id'])
 		self.assertEquals(data['type'], t1['type'])
 
-		with unithelper.mocker('bc.metrics', 'add', 'bc.wapi.wapi_metrics'):
+		with mocker([('bc.metrics.add', mocker.exception),
+					('bc.wapi.wapi_metrics.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_metrics.metricAdd({'id':''}),
-				unithelper.requestor({'message': 'Unable to add new metric' }, 'servererror'))
+				requestor({'message': 'Unable to add new metric' }, 'servererror'))
 
