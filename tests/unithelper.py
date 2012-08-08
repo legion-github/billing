@@ -98,7 +98,6 @@ class mocker(object):
 
 	@staticmethod
 	def __mocker(q):
-
 		import sys
 		path = q[0].split('.')
 		preans = reduce( getattr, path[1:-1], sys.modules[path[0]])
@@ -107,12 +106,10 @@ class mocker(object):
 		return (q[0], ans)
 
 	def __enter__(self):
-
 		self.__backup = map(self.__mocker, self.__targets)
 
 	def __exit__(self, type, vaue, traceback):
-		for i in self.__backup:
-			self.__mocker(i)
+		map(self.__mocker, self.__backup)
 
 	@staticmethod
 	def exception(*args, **kwargs):
@@ -122,6 +119,14 @@ class mocker(object):
 	def passs(*args, **kwargs):
 		pass
 
+	@staticmethod
+	def mockclass(**kwargs):
+		class mockClass(object):
+			def __new__(cls, **kwargs):
+				for i in kwargs.keys():
+					setattr(cls, i, kwargs[i])
+				return object.__new__(cls)
+		return mockClass(**kwargs)
 
 
 def requestor(dictionary, state):

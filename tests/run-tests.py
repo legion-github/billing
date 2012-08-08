@@ -12,7 +12,7 @@ from bc import log
 
 suite = unittest.TestSuite()
 
-LOG = log.logger("unittests", type='stderr', level='debug')
+LOG = log.logger("unittests", type='stderr', level='debug', init=True)
 
 for testpath in sorted(glob.glob('./test_*.py')):
 	name = os.path.basename(testpath)[:-3]
