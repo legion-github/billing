@@ -9,8 +9,10 @@ from bc import log
 from bc import customers
 from bc import queue
 from bc import tasks
+from bc import polinomial
 
 LOG = log.logger("wapi.tasks")
+GROUPID = iter(polinomial.permutation())
 
 @jsonrpc.method(
 	validate = V({
@@ -52,6 +54,7 @@ def taskAdd(request):
 
 		t = tasks.Task(
 			{
+				'group_id':     GROUPID,
 				'base_id':      request['uuid'],
 				'customer':     customer['id'],
 

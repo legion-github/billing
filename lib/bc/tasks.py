@@ -44,6 +44,8 @@ class Task(bobject.BaseObject):
 			'base_id':        str(uuid.uuid4()),
 			'record_id':      '0',
 
+			'group_id':       0L,
+
 			# Владелец задания, тот чей счёт используется
 			'customer':       '',
 
