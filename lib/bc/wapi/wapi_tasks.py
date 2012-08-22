@@ -7,7 +7,7 @@ from bc.validator import Validate as V
 from bc import jsonrpc
 from bc import log
 from bc import customers
-from bc import queue
+from bc import rates
 from bc import tasks
 from bc import polinomial
 
@@ -46,7 +46,7 @@ def taskAdd(request):
 			return jsonrpc.result_error('InvalidParams',
 				{ 'status': 'error', 'message': 'Invalid customer' })
 
-		rid, rate  = queue.resolve(request['type'], customer['tariff'])
+		mid, rid, rate  = rates.resolve(request['type'], customer['tariff'])
 
 		if not rid:
 			return jsonrpc.result_error('InvalidParams',
@@ -57,6 +57,10 @@ def taskAdd(request):
 				'group_id':     GROUPID,
 				'base_id':      request['uuid'],
 				'customer':     customer['id'],
+
+				'metric_id':    mid,
+				'rate_id':      rid,
+				'rate':         rate,
 
 				'value':        request['value'],
 

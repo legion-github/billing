@@ -151,3 +151,25 @@ def get_by_metric(tid, mid):
 		if o:
 			return Rate(o)
 		return None
+
+
+def resolve(mid, tid):
+	"""Rate information by tariff and metric"""
+
+	c = RateConstants()
+
+	with database.DBConnect() as db:
+		r = db.find_one('rates',
+			{
+				'state':     c.STATE_ACTIVE,
+				'metric_id': mid,
+				'$or': [
+					{ 'tariff_id': tid },
+					{ 'tariff_id': '*' }
+				]
+			},
+			fields=[ 'id', 'rate' ]
+		)
+		if not r:
+			return (None, None, None)
+		return (mid, r['id'], r['rate'])

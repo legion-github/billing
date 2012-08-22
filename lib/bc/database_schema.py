@@ -132,7 +132,8 @@ SCHEMA = [
 				("group_id",    "bigint",       "NOT NULL DEFAULT '0'"),
 
 				("customer",    "varchar(36)",  "NOT NULL"),
-				("rid",         "varchar(36)",  "NOT NULL"),
+				("rate_id",     "varchar(36)",  "NOT NULL"),
+				("metric_id",   "varchar(36)",  "NOT NULL"),
 				("rate",        "bigint",       "NOT NULL DEFAULT '0'"),
 				("state",       "int",          "NOT NULL"),
 				("value",       "bigint",       "NOT NULL"),
