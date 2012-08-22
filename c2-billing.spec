@@ -36,14 +36,13 @@ Billing private library.
 
 
 %package client-billing
-Summary:  CROC Cloud billing commons (billing side)
+Summary:  CROC Cloud billing client library.
 Group:    Applications/System
 
 Requires: c2-common
 
 %description client-billing
-CROC Cloud billing common files, directories and libraries.
-Billing private library.
+CROC Cloud billing client library.
 
 
 %package common-cloud
