@@ -125,19 +125,24 @@ SCHEMA = [
 		),
 	DBTable("queue",
 			columns = [
+				("id",          "varchar(36)",  "NOT NULL PRIMARY KEY"),
+				("time_check",  "int",          "NOT NULL DEFAULT '0'"),
+			],
+		),
+	DBTable("tasks",
+			columns = [
 				# A composite id of the two fields.
 				("base_id",     "varchar(36)",  "NOT NULL PRIMARY KEY"),
 				("record_id",   "varchar(36)",  "NOT NULL DEFAULT '0'"),
 
+				("queue_id",    "varchar(36)",  "NOT NULL"),
 				("group_id",    "bigint",       "NOT NULL DEFAULT '0'"),
-
 				("customer",    "varchar(36)",  "NOT NULL"),
 				("rate_id",     "varchar(36)",  "NOT NULL"),
 				("metric_id",   "varchar(36)",  "NOT NULL"),
 				("rate",        "bigint",       "NOT NULL DEFAULT '0'"),
 				("state",       "int",          "NOT NULL"),
 				("value",       "bigint",       "NOT NULL"),
-				("time_check",  "int",          "NOT NULL"),
 				("time_create", "int",          "NOT NULL"),
 				("time_destroy","int",          "NOT NULL DEFAULT '0'"),
 				("target_user", "varchar(36)",  "DEFAULT ''"),

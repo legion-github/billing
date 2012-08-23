@@ -52,7 +52,7 @@ def taskAdd(request):
 			return jsonrpc.result_error('InvalidParams',
 				{ 'status': 'error', 'message': 'Unable to find rate' })
 
-		t = tasks.Task(
+		tasks.add(
 			{
 				'group_id':     GROUPID,
 				'base_id':      request['uuid'],
@@ -73,7 +73,6 @@ def taskAdd(request):
 				'target_descr': request['descr'],
 			}
 		)
-		tasks.add(t)
 
 	except Exception, e:
 		LOG.exception("Unable to add new task: %s", e)
@@ -90,19 +89,20 @@ def taskAdd(request):
 		'user':  V(basestring, min=1,  max=64),
 		'uuid':  V(basestring, min=36, max=36),
 		'descr': V(basestring),
+		'time':  V(int, default=0),
 	}),
 	auth = True)
 def taskModify(request):
 	try:
-		t = tasks.Task({
-			'base_id':      request['id'],
-			'value':        request['value'],
-			'target_user':  request['user'],
-			'target_uuid':  request['uuid'],
-			'target_descr': request['descr'],
-		})
-		tasks.update(t)
-
+		tasks.update(request['id'],
+			{
+				'value':        request['value'],
+				'target_user':  request['user'],
+				'target_uuid':  request['uuid'],
+				'target_descr': request['descr'],
+			},
+			request['time']
+		)
 	except Exception, e:
 		LOG.error(e)
 		return jsonrpc.result_error('ServerError',
@@ -117,10 +117,6 @@ def taskModify(request):
 	}),
 	auth = True)
 def taskRemove(request):
-
-	if request['time-destroy'] == 0:
-		request['time-destroy'] = int(time.time())
-
 	try:
 		tasks.remove('id', request['id'], request['time-destroy'])
 

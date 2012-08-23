@@ -44,6 +44,7 @@ class Task(bobject.BaseObject):
 			'base_id':        str(uuid.uuid4()),
 			'record_id':      '0',
 
+			'queue_id':       '',
 			'group_id':       0L,
 
 			# Владелец задания, тот чей счёт используется
@@ -65,7 +66,6 @@ class Task(bobject.BaseObject):
 			'value':          0L,
 
 			# Тайминги задания
-			'time_check':     now,
 			'time_create':    now,
 			'time_destroy':   0,
 
@@ -79,9 +79,24 @@ class Task(bobject.BaseObject):
 			self.set(data)
 
 
-def add(task):
-	with database.DBConnect(primarykey=task.base_id) as db:
-		db.insert('queue', task.values)
+def add(params):
+
+	# Final internal validation
+	o = Task(params)
+
+	with database.DBConnect(primarykey=o.base_id, autocommit=False) as db:
+		# Create queue id
+		if not o.queue_id:
+			o.queue_id = str(uuid.uuid4())
+
+		db.insert('tasks', o.values)
+		db.insert('queue',
+			{
+				'id':         o.queue_id,
+				'time_check': int(time.time())
+			}
+		)
+		db.commit()
 
 
 def modify(typ, val, params):
@@ -99,7 +114,7 @@ def modify(typ, val, params):
 		raise TypeError('Wrong state')
 
 	with database.DBConnect(primarykey=val) as db:
-		db.update("queue", { 'base_id': val, 'record_id': '0' }, params)
+		db.update("tasks", { 'base_id': val, 'record_id': '0' }, params)
 
 
 def remove(typ, value, ts=0):
@@ -115,15 +130,31 @@ def remove(typ, value, ts=0):
 	)
 
 
-def update(params):
+def update(id, params, ts=0):
 	"""Recreate task"""
 
-	# Final internal validation
-	o = Task(params)
+	with database.DBConnect(primarykey=id, autocommit=False) as db:
 
-	with database.DBConnect(primarykey=o.id, autocommit=False) as db:
-		db.update('queue',
-			{ 'base_id': o.id, 'record_id': '0' },
-			{ 'base_id': o.id, 'record_id': str(uuid.uuid4()) })
-		db.insert('queue', o.values)
+		ot = db.find_one('tasks',
+			{ 'base_id': id, 'record_id': '0' })
+		if not ot:
+			return
+
+		nt = Task(ot.values)
+		nt.set(params)
+		nt.queue_id = str(uuid.uuid4())
+
+		db.update('tasks',
+			{ 'base_id': id, 'record_id': '0' },
+			{ 'base_id': id, 'record_id': str(uuid.uuid4()),
+			  'time_destroy': ts or int(time.time()) })
+
+		db.insert('tasks', nt.values)
+		db.insert('queue',
+			{
+				'id':         nt.queue_id,
+				'time_check': int(time.time())
+			}
+		)
+
 		db.commit()

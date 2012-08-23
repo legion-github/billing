@@ -13,12 +13,14 @@ class Test(unithelper.DBTestCase):
 		values = {
 			'base_id':        '123',
 			'record_id':      '0',
+			'queue_id':       '',
+			'group_id':       0,
 			'customer':       '',
-			'rid':            '',
+			'rate_id':        '',
+			'metric_id':      '',
 			'state':          tasks.constants.STATE_ENABLED,
 			'rate':           0L,
 			'value':          0L,
-			'time_check':     now,
 			'time_create':    now,
 			'time_destroy':   0,
 			'target_user':    '',
@@ -63,13 +65,15 @@ class Test(unithelper.DBTestCase):
 		o = tasks.Task({
 			"name":     str(uuid.uuid4()),
 			"customer": str(uuid.uuid4()),
-			"rid":      str(uuid.uuid4()),
+			"rate_id":  str(uuid.uuid4()),
+			"queue_id": str(uuid.uuid4()),
 		})
 
-		tasks.add(o)
+		tasks.add(o.values)
 
 		with database.DBConnect() as db:
-			o1 = db.find_one('queue', {'base_id':o.base_id, 'record_id': '0' })
+			n = db.find_one('tasks', {'base_id':o.base_id, 'record_id': '0' })
+			o1 = tasks.Task(n)
 
-		self.assertEquals(tasks.Task(o1), o)
+		self.assertEquals(o1.values, o.values)
 
