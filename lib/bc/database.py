@@ -37,20 +37,22 @@ class DBError(Exception):
 		Exception.__init__(self, unicode(error).format(*args) if len(args) else unicode(str(error)))
 
 
-def get_host(key=None):
+def get_host(dbtype, key=None):
 	"""Returns database server"""
 
 	conf = config.read()
 
-	if len(conf['database']['shards']) > 0 and isinstance(key, basestring):
+	if key != None:
 		ring = hashing.HashRing()
 		for shard in conf['database']['shards']:
 			ring.add_node(shard["server"], shard["replica"])
-		host = ring.get_node(key)
-	else:
-		host = conf['database']['server']
-
-	return host
+		return ring.get_node(key)
+	elif dbtype == 'local':
+		for shard in conf['database']['shards']:
+			if shard['local'] == True:
+				return shard['server']
+	elif dbtype == 'global':
+		return conf['database']['server']
 
 
 def sqldbg(qs):
@@ -89,7 +91,7 @@ class DBPool(object):
 		self._CONNECTIONS = {}
 
 
-	def get_item(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, primarykey=None):
+	def get_item(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, dbtype='global', primarykey=None):
 		"""Returns free connection"""
 
 		conf = config.read()
@@ -97,7 +99,7 @@ class DBPool(object):
 		dbuser = dbuser or conf['database']['user']
 		dbpass = dbpass or conf['database']['pass']
 		dbname = dbname or conf['database']['name']
-		dbhost = dbhost or get_host(primarykey)
+		dbhost = dbhost or get_host(dbtype, primarykey)
 
 		if not dbhost:
 			raise DBError("Database host name is not specified")
@@ -203,8 +205,8 @@ class DBQuery(object):
 DB = DBPool()
 
 class DBConnect(object):
-	def __init__(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, primarykey=None, autocommit=True):
-		self._conn = DB.get_item(dbhost, dbname, dbuser, dbpass, primarykey)
+	def __init__(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, dbtype='global', primarykey=None, autocommit=True):
+		self._conn = DB.get_item(dbhost, dbname, dbuser, dbpass, dbtype, primarykey)
 		for n in [ 'dbhost', 'dbname', 'dbuser', 'dbpass' ]:
 			self.__dict__[n] = self._conn[n]
 
