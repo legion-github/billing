@@ -665,3 +665,10 @@ class DBConnect(object):
 		"""
 		return self.find(*args, **kwargs).one()
 
+
+	def find_all(self, *args, **kwargs):
+		"""Gets a all documents as list from the database
+
+		All arguments to find() are also valid arguments for find_all().
+		"""
+		return self.find(*args, **kwargs).all()
