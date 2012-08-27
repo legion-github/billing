@@ -20,9 +20,8 @@ class Test(unithelper.DBTestCase):
 			time int NOT NULL
 			);
 			"""
-			db.connect().cursor().execute(test_base_dropper)
-			db.connect().cursor().execute(test_base_creator)
-			db.connect().commit()
+			db.execute(test_base_dropper)
+			db.execute(test_base_creator)
 
 
 	@unittest.skipUnless(unithelper.haveDatabase(), True)
