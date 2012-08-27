@@ -157,6 +157,7 @@ class DBPool(object):
 
 
 	def free_connection(self, conn):
+		conn['socket'].commit()
 		conn['status'] = 'free'
 		self.collect()
 
