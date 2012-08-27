@@ -18,8 +18,9 @@ class TaskConstants(object):
 		'STATE_ENABLED':   1,
 		'STATE_DISABLED':  2,
 		'STATE_DELETED':   3,
-		'STATE_AGGREGATE': 4,
-		'STATE_MAXVALUE':  5,
+		'STATE_PROCESSED': 4,
+		'STATE_AGGREGATE': 5,
+		'STATE_MAXVALUE':  6,
 	}
 
 	def import_state(self, val):
@@ -27,6 +28,7 @@ class TaskConstants(object):
 			'enable':    self.__readonly__['STATE_ENABLED'],
 			'disable':   self.__readonly__['STATE_DISABLED'],
 			'delete':    self.__readonly__['STATE_DELETED'],
+			'processed': self.__readonly__['STATE_PROCESSED'],
 			'aggregate': self.__readonly__['STATE_AGGREGATE']
 		}
 		return x.get(val, None)
