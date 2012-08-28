@@ -131,6 +131,7 @@ class DBPool(object):
 
 
 	def free_connection(self, conn):
+		conn['socket'].rollback()
 		self._CONNECTIONS[conn['key']].putconn(conn['socket'])
 
 
