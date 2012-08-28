@@ -11,23 +11,16 @@ from bc import hashing
 import psycopg2
 from psycopg2 import extras
 from psycopg2 import errorcodes
+from psycopg2 import pool
 
 MIN_OPEN_CONNECTIONS = 1
+MAX_OPEN_CONNECTIONS = 20
 
 # Backend exceptions:
 OperationalError = psycopg2.OperationalError
 
 # Backend methods
 DBCursor  = extras.RealDictCursor
-
-def _connect(*args, **kwargs):
-	return psycopg2.connect(
-		host         = kwargs['dbhost'],
-		database     = kwargs['dbname'],
-		user         = kwargs['dbuser'],
-		password     = kwargs['dbpass'],
-	)
-
 
 LOG = logging.getLogger("database")
 
@@ -103,84 +96,42 @@ class DBPool(object):
 		self._CONNECTIONS = {}
 
 
-	def get_item(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, dbtype='global', primarykey=None):
+	def get_connection(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, dbtype='global', primarykey=None):
 		"""Returns free connection"""
 
 		conf = config.read()
 
-		dbuser = dbuser or conf['database']['user']
-		dbpass = dbpass or conf['database']['pass']
-		dbname = dbname or conf['database']['name']
-		dbhost = dbhost or get_host(dbtype, primarykey)
+		conn = {}
+		conn['dbuser'] = dbuser or conf['database']['user']
+		conn['dbpass'] = dbpass or conf['database']['pass']
+		conn['dbname'] = dbname or conf['database']['name']
+		conn['dbhost'] = dbhost or get_host(dbtype, primarykey)
 
-		if not dbhost:
+		if not conn['dbhost']:
 			raise DBError("Database host name is not specified")
 
-		key = "{0}@{1}/{2}".format(dbuser,dbhost, dbname)
+		conn['key'] = "{0}@{1}/{2}".format(conn['dbuser'], conn['dbhost'], conn['dbname'])
 
-		if key not in self._CONNECTIONS:
-			self._CONNECTIONS[key] = {}
+		if conn['key'] not in self._CONNECTIONS:
+			self._CONNECTIONS[conn['key']] = pool.ThreadedConnectionPool(
 
-		while True:
-			for ids,sock in self._CONNECTIONS[key].iteritems():
-				if sock['status'] == 'free':
-					sock['status'] = 'busy'
-					self.collect(key)
-					return self._CONNECTIONS[key][ids]
+				# Pool params
+				MIN_OPEN_CONNECTIONS,
+				MAX_OPEN_CONNECTIONS,
 
-			ids = str(uuid.uuid4())
-			soc = _connect(dbhost=dbhost, dbname=dbname, dbuser=dbuser, dbpass=dbpass)
+				# Connection params
+				host     = conn['dbhost'],
+				database = conn['dbname'],
+				user     = conn['dbuser'],
+				password = conn['dbpass']
+			)
+		conn['socket'] = self._CONNECTIONS[conn['key']].getconn()
 
-			self._CONNECTIONS[key][ids] = {
-				'key':    key,
-				'ids':    ids,
-				'socket': soc,
-				'status': 'free',
-				'dbhost': dbhost,
-				'dbname': dbname,
-				'dbuser': dbuser,
-				'dbpass': dbpass,
-			}
-
-
-	def collect(self, k=None):
-		keys = [ k ]
-		if k == None:
-			keys = self._CONNECTIONS.keys()
-
-		for key in keys:
-			garbage = []
-
-			for ids,sock in self._CONNECTIONS[key].iteritems():
-				if sock['status'] == 'free':
-					garbage.append(sock)
-
-			if len(garbage) <= MIN_OPEN_CONNECTIONS:
-				continue
-
-			for sock in garbage:
-				self.close_connection(sock)
-
-
-	def close_connection(self, conn):
-		if conn['status'] != 'free':
-			return
-		del self._CONNECTIONS[conn['key']][conn['ids']]
+		return conn
 
 
 	def free_connection(self, conn):
-		conn['socket'].commit()
-		conn['status'] = 'free'
-		self.collect()
-
-
-	def get_connection(self, dbname=None, primarykey=None):
-		pitem = self.get_item(dbname, primarykey)
-		return pitem['socket']
-
-
-	def debug(self):
-		return self._CONNECTIONS
+		self._CONNECTIONS[conn['key']].putconn(conn['socket'])
 
 
 class DBQuery(object):
@@ -219,7 +170,7 @@ DB = DBPool()
 
 class DBConnect(object):
 	def __init__(self, dbhost=None, dbname=None, dbuser=None, dbpass=None, dbtype='global', primarykey=None, autocommit=True):
-		self._conn = DB.get_item(dbhost, dbname, dbuser, dbpass, dbtype, primarykey)
+		self._conn = DB.get_connection(dbhost, dbname, dbuser, dbpass, dbtype, primarykey)
 		for n in [ 'dbhost', 'dbname', 'dbuser', 'dbpass' ]:
 			self.__dict__[n] = self._conn[n]
 
