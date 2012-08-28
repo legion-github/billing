@@ -20,6 +20,9 @@ def dict_merge(*args):
 				if isinstance(v, dict):
 					_merge(r[k], v)
 					continue
-			r[k] = v
+			if not isinstance(v, (int,long,basestring,unicode)):
+				r[k] = v.__class__(v)
+			else:
+				r[k] = v
 		return r
 	return reduce(_merge, args)
