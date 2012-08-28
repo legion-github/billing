@@ -1,0 +1,116 @@
+#!/usr/bin/python
+
+import os
+import sys
+import time
+
+from bc import log
+from bc import database
+from bc import polinomial
+
+from bc import tasks
+from bc import metrics
+from bc import calculate
+from bc import customers
+
+LOG = log.logger("client", init=True, type='syslog', level='debug')
+
+try:
+	num = str(sys.argv[1])
+except IndexError:
+	num = '?'
+
+GROUPID = iter(polinomial.permutation())
+METRIC_CACHE = {}
+
+def get_metric(metric_id):
+	if metric_id not in METRIC_CACHE:
+		METRIC_CACHE[metric_id] = metrics.get(metric_id)
+	return METRIC_CACHE[metric_id]
+
+
+LOG.info("Client ready " + str(num))
+
+while True:
+	try:
+		with database.DBConnect(dbtype='local', autocommit=False) as db:
+			# Get tasks
+			tasks_dict = {}
+
+			cur = db.find('tasks',
+				{
+					'state':    { '$eq': tasks.constants.STATE_ENABLED },
+					'group_id': { '$eq': GROUPID },
+				}
+			)
+			for t in cur:
+				tasks_dict[t['queue_id']] = t
+
+			try:
+				# Lock all selected items.
+				cur = db.find('queue',
+					{ 'id': tasks_dict.keys() },
+					lock='update', nowait=True
+				)
+			except database.OperationalError:
+				# Someone has locked our task group.
+				# We have to go to another.
+				continue
+
+			# Join results: tasks_dict = tasks + queue
+			now = int(time.time())
+			for q in cur:
+				tasks_dict[q['id']]['time_now']   = now
+				tasks_dict[q['id']]['time_check'] = q['time_check']
+
+			summ = {
+				# "customer": "payment for group", ...
+			}
+
+			# Calculate payment.
+			for t in tasks_dict.values():
+
+				if t['state'] == tasks.constants.STATE_DELETED:
+					# Deleted tasks must be processed only once.
+					db.update('tasks',
+						{
+							'base_id':   t['base_id'],
+							'record_id': t['record_id']
+						},
+						{
+							'state': tasks.constants.STATE_PROCESSED
+						}
+					)
+
+				# Update item's last check.
+				db.update('queue',
+					{ 'id':         t['queue_id'] },
+					{ 'time_check': t['time_now'] }
+				)
+
+				# Get task's payment
+				cost = calculate.calculate(t, get_metric(t['metric_id']))
+				if cost == 0:
+					continue
+
+				if t['customer'] not in summ:
+					summ[t['customer']] = 0
+				summ[t['customer']] += cost
+
+			# Withdraw payment from the customer.
+			for customer, cost in summ.iteritems():
+				db.update('customers',
+					{ 'id': t['customer'] },
+					{ '$dec': { 'wallet': cost } }
+				)
+
+			# Commit all changes at once.
+			db.commit()
+
+	except Exception, e:
+		# See http://www.postgresql.org/docs/9.0/static/errcodes-appendix.html#ERRCODES-TABLE
+		if e.pgcode in [ None, '57000', '57014', '57P01', '57P02', '57P03' ]:
+			LOG.error(database.get_strerror(e))
+			time.sleep(15)
+			continue
+		raise

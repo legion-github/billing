@@ -1,0 +1,185 @@
+#!/usr/bin/python
+
+import os
+import sys
+import time
+import signal
+import errno
+
+from bc import log
+from bc import daemon
+from bc import config
+
+conf = config.read()
+
+LOG = log.logger("server", init=True, type='stderr')
+CWD = os.path.dirname(sys.argv[0])
+CWD = os.path.abspath(CWD)
+
+
+def fork_prog(name, *args):
+	global pgrp
+
+	try:
+		path = CWD + '/' + name
+		argv = list(args)
+		argv.insert(0, name)
+
+		if not os.access(path, os.X_OK):
+			raise OSError('No such file or directory')
+
+		pid = os.fork()
+
+		if not pid:
+			os.setpgid(0, pgrp)
+			daemon.close_all_fds()
+			os.execv(CWD + '/' + name, argv)
+
+		if pgrp == 0:
+			pgrp = pid
+
+		return pid
+
+	except Exception, e:
+		LOG.exception(e)
+		os._exit(1)
+
+
+def kill_group(signum):
+	if pgrp == 0:
+		return
+	try:
+		for i in xrange(3):
+			os.killpg(pgrp, signum)
+			time.sleep(0.5)
+		os.killpg(pgrp, signal.SIGKILL)
+	except OSError:
+		pass
+	LOG.info("Children process group killed")
+
+
+# Acquire pid and daemonize
+pid_fd = daemon.acquire_pid(conf['server']['pidfile'])
+daemon.daemonize(skipfd=[pid_fd])
+daemon.write_pid(pid_fd)
+
+# Reopen logger to syslog
+LOG = log.logger("server", init=True, type='syslog')
+
+# Set own process group
+os.setpgrp()
+
+# Set clients process group
+pgrp = 0
+
+# List of incoming singals
+signals = []
+
+# Set signal handlers
+for sig in [ signal.SIGUSR1, signal.SIGUSR2, signal.SIGTERM ]:
+	signal.signal(sig, lambda sig,frame: signals.append(int(sig)))
+
+# Initialize client list
+WORKERS = []
+
+try:
+	LOG.info("Server start")
+
+	while True:
+		pid = signum = 0
+
+		while len(signals) > 0:
+			s = signals.pop(0)
+
+			if s == signum:
+				continue
+			signum = s
+
+			if signum in [ signal.SIGUSR1, signal.SIGUSR2 ]:
+				LOG.info("Reconfiguring server")
+
+				# Reread config file
+				conf = config.read(force=True)
+
+				# Reopen logger to syslog
+				LOG = log.logger("server", init=True, type='syslog')
+
+			if   signum == signal.SIGUSR2:
+				LOG.info("Restarting childrens")
+
+				# Finish old childrens
+				kill_group(signal.SIGTERM)
+
+				# Recreate children list
+				WORKERS = []
+
+			elif signum == signal.SIGTERM:
+				LOG.info("Going down by SIGTERM")
+
+				# Finish all childrens
+				kill_group(signal.SIGTERM)
+
+				# Goodby!
+				os._exit(0)
+
+		num = len(WORKERS)
+
+		if num > conf['server']['workers']:
+			max = conf['server']['workers']
+
+			for child in WORKERS[max:]:
+				try: os.kill(child['pid'], signal.SIGTERM)
+				except OSError: pass
+
+			time.sleep(2)
+
+			for child in WORKERS[max:]:
+				try: os.kill(child['pid'], signal.SIGKILL)
+				except OSError: pass
+
+			del WORKERS[max:]
+
+		if num < conf['server']['workers']:
+			for i in xrange(num, conf['server']['workers']):
+					WORKERS.append(
+						{
+							'prog':   'bc-client',
+							'args':   [str(i)],
+							'pid':    0,
+							'delay':  0
+						}
+					)
+		while True:
+			try:
+				pcount = 0
+
+				for child in WORKERS:
+					if child['pid'] != pid:
+						continue
+
+					child['pid'] = fork_prog(child['prog'], *child['args'])
+
+					if child['delay'] > 0:
+						time.sleep(child['delay'])
+					pcount += 1
+
+				if pcount > 0:
+					LOG.info("Spawned {0} process".format(pcount))
+
+				pid,status = os.waitpid(-1, 0) #os.WNOHANG
+
+				if (pid,status) == (0,0):
+					break
+
+			except OSError, e:
+				if e.errno != errno.EINTR:
+					LOG.error(e)
+				break
+
+		time.sleep(1)
+
+except Exception, e:
+	LOG.exception(e)
+
+	kill_group(signal.SIGTERM)
+	os._exit(1)
