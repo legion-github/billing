@@ -51,6 +51,24 @@ class Test(unithelper.DBTestCase):
 			self.assertEqual(l, c.all())
 
 
+	def test_select_nowait(self):
+		"""test nowait scipping lock"""
+
+		o = {
+			'uuid': str(uuid.uuid4()),
+			'big': 2**32,
+			'time': int(time.time())
+		}
+		with database.DBConnect() as db:
+			db.insert('new_table', o)
+
+		with database.DBConnect(autocommit=False) as db1:
+			db1.find('new_table', {'uuid':o['uuid']}, lock='update')
+			with database.DBConnect() as db2:
+				with self.assertRaises(database.OperationalError):
+					db2.find('new_table', {'uuid':o['uuid']}, lock='update', nowait=True)
+
+
 	def test_insert_return(self):
 		"""insert with return test"""
 		with database.DBConnect() as db:
