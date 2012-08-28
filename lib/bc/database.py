@@ -10,6 +10,7 @@ from bc import hashing
 
 import psycopg2
 from psycopg2 import extras
+from psycopg2 import errorcodes
 
 MIN_OPEN_CONNECTIONS = 1
 
@@ -35,6 +36,17 @@ class DBError(Exception):
 
 	def __init__(self, error, *args):
 		Exception.__init__(self, unicode(error).format(*args) if len(args) else unicode(str(error)))
+
+
+def get_strerror(exc):
+	if exc.pgcode == None:
+		return "Code=None: Database error"
+
+	return "Code={0}: {1}: {2}".format(
+		exc.pgcode,
+		errorcodes.lookup(exc.pgcode[:2]),
+		errorcodes.lookup(exc.pgcode)
+	)
 
 
 def get_host(dbtype, key=None):
