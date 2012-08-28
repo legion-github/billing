@@ -1,0 +1,27 @@
+#Intalling pgsql
+$yum install  postgresql91-server postgresql91
+
+#Installing python driver
+$yum install  python-psycopg2
+
+#Initilizing postgresBase
+$/etc/init.d/postgresql-9.1 initdb
+
+#Starting postgres
+$/etc/init.d/postgresql-9.1 start
+
+#From user postgres creating new roles root and bc
+$su -l postgres
+	$createuser -sPE root
+	$createuser -dRSPE bc
+	$exit
+
+#Creating database
+$createdb -U root testing
+
+#Fixing pg_hba.conf
+$grep -v ^# /var/lib/pgsql/9.1/data/pg_hba.conf
+
+local   all             all                                     md5
+host    all             all             127.0.0.1/32            md5
+host    all             all             ::1/128                 md5
