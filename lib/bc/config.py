@@ -65,5 +65,5 @@ def read(filename = CONFIG_FILE, inline = None, force = False):
 
 	s = re.sub(r'([^,:\{\[])\s+("[^"\\]+":)', r'\1, \2', " ".join(arrconf))
 
-	CONFIG = utils.dict_merge(_TEMPLATE_CONFIG, json.loads(s))
-	return CONFIG
+	CONFIG = {}
+	return utils.dict_merge(CONFIG, _TEMPLATE_CONFIG, json.loads(s))
