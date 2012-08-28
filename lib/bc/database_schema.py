@@ -1,4 +1,5 @@
 from bc import database
+from bc import config
 
 class DBTable(object):
 	def __init__(self, name, conn=None, options=[], columns=[], indexes=[]):
@@ -113,23 +114,26 @@ class DBTable(object):
 		for s in self.sql_drop():
 			connect.execute(s)
 
+conf = config.read()
+GLOBAL = [conf['database']['server']]
+LOCAL  = [i['server'] for i in conf['database']['shards']]
 
 SCHEMA = [
-	DBTable("metrics",
+	(GLOBAL, DBTable("metrics",
 			columns = [
 				("id",        "varchar(128)", "NOT NULL PRIMARY KEY"),
 				("type",      "varchar(32)",  "NOT NULL"),
 				("formula",   "varchar(32)",  "NOT NULL"),
 				("aggregate", "int",          "NOT NULL"),
 			]
-		),
-	DBTable("queue",
+		)),
+	(LOCAL, DBTable("queue",
 			columns = [
 				("id",          "varchar(36)",  "NOT NULL PRIMARY KEY"),
 				("time_check",  "int",          "NOT NULL DEFAULT '0'"),
 			],
-		),
-	DBTable("tasks",
+		)),
+	(LOCAL, DBTable("tasks",
 			columns = [
 				# A composite id of the two fields.
 				("base_id",     "varchar(36)",  "NOT NULL PRIMARY KEY"),
@@ -154,8 +158,8 @@ SCHEMA = [
 				{ "cols": [ ("group_id", "ASC") ] },
 				{ "cols": [ ("state", "ASC") ] },
 			]
-		),
-	DBTable("rates",
+		)),
+	(GLOBAL, DBTable("rates",
 			columns = [
 				("id",           "varchar(36)",   "NOT NULL PRIMARY KEY"),
 				("description",  "varchar(1024)", "NOT NULL"),
@@ -170,8 +174,8 @@ SCHEMA = [
 			indexes = [
 				{ "cols": [ ("state", "ASC"), ("metric_id", "ASC"), ("tariff_id","ASC") ] }
 			]
-		),
-	DBTable("tariffs",
+		)),
+	(GLOBAL, DBTable("tariffs",
 			columns = [
 				("id",          "varchar(36)",   "NOT NULL PRIMARY KEY"),
 				("name",        "varchar(64)",   "NOT NULL"),
@@ -183,8 +187,8 @@ SCHEMA = [
 			indexes = [
 				{ "cols": [ ("state", "ASC") ] }
 			]
-		),
-	DBTable("customers",
+		)),
+	(GLOBAL, DBTable("customers",
 			columns = [
 				("id",              "varchar(36)",   "NOT NULL PRIMARY KEY"),
 				("login",           "varchar(64)",   "NOT NULL"),
@@ -206,8 +210,8 @@ SCHEMA = [
 			indexes = [
 				{ "cols": [ ("state", "ASC") ] }
 			]
-		),
-	DBTable("auth",
+		)),
+	(GLOBAL, DBTable("auth",
 			columns = [
 				("id",    "varchar(36)",   "NOT NULL PRIMARY KEY"),
 				("role",  "varchar(64)",   "NOT NULL"),
@@ -218,19 +222,21 @@ SCHEMA = [
 			indexes = [
 				{ "cols": [ ("role", "ASC"), ("method", "ASC") ] }
 			]
-		),
+		)),
 ]
 
 def create_schema(dbname=None, dbuser=None, dbpass=None):
-	with database.DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass, autocommit=False) as db:
-		for table in SCHEMA:
-			table.create(db)
-		db.commit()
+	for dbhosts, table in SCHEMA:
+		for dbhost in dbhosts:
+			with database.DBConnect(dbhost=dbhost, dbname=dbname, dbuser=dbuser, dbpass=dbpass, autocommit=False) as db:
+				table.create(db)
+				db.commit()
 
 
 def destroy_schema(dbname=None, dbuser=None, dbpass=None):
-	with database.DBConnect(dbname=dbname, dbuser=dbuser, dbpass=dbpass, autocommit=False) as db:
-		for table in SCHEMA:
-			table.drop(db)
-		db.commit()
+	for dbhosts, table in SCHEMA:
+		for dbhost in dbhosts:
+			with database.DBConnect(dbhost=dbhost, dbname=dbname, dbuser=dbuser, dbpass=dbpass, autocommit=False) as db:
+				table.drop(db)
+				db.commit()
 
