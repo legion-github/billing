@@ -99,14 +99,15 @@ def process_rates():
 	cl_rates = Rates(host, auth, 30)
 
 	for tariff in tariffIds:
-		for metric in metricIds:
-			cl_rates.rateAdd({
-				'description':  str(uuid.uuid4()),
-				'metric_id':    metric,
-				'tariff_id':    tariff,
-				'rate':         long(random.randint(10**3, 10**10)),
-				'currency':     'USD',
-				})
+		if tariff != '*':
+			for metric in metricIds:
+				cl_rates.rateAdd({
+					'description':  str(uuid.uuid4()),
+					'metric_id':    metric,
+					'tariff_id':    tariff,
+					'rate':         long(random.randint(10**3, 10**10)),
+					'currency':     'usd',
+					})
 
 try:
 	process_metrics()
