@@ -5,7 +5,7 @@ import bc_wapi    as wapi
 
 from bc import log
 
-LOG = log.logger("wapi")
+LOG = log.logger("wapi", init=True, type='syslog')
 
 def application(environ, start_response):
 	"""Main entry point of the WSGI application."""
