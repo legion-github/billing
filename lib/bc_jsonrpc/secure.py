@@ -2,10 +2,14 @@
 
 __version__ = '1.0'
 
-import base64, hmac, hashlib, logging, string, time, fnmatch
-from bc import database
+import base64, hmac, hashlib, string, time, fnmatch
 
-LOG = logging.getLogger("jsonrpc.auth")
+try:
+	from bc import database
+	_HAVE_DATABASE = True
+except ImportError:
+	_HAVE_DATABASE = False
+
 
 def serialize(data, prefix = 'params'):
 	if not data:
@@ -31,6 +35,9 @@ def serialize(data, prefix = 'params'):
 
 
 def get_secret(role, method):
+	if not _HAVE_DATABASE:
+		return {}
+
 	with database.DBConnect() as db:
 		return db.find_one('auth',
 			{

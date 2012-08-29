@@ -3,8 +3,8 @@
 import httplib
 
 from bc import log
-from bc.jsonrpc import http
-from bc.jsonrpc import message
+from bc_jsonrpc import http
+from bc_jsonrpc import message
 
 LOG = log.logger("client", syslog=False)
 

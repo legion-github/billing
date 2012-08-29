@@ -20,23 +20,22 @@ setup(
 	author_email= 'gladkov.alexey@gmail.com',
 	requires    = [
 		'msgpack',
+		'psycopg2',
 		'unittest2',
 	],
 	scripts     = [
-		'bin/c2-bc-client',
-		'bin/c2-bc-server',
-		'bin/c2-bc-send'
+		'bin/bc-client',
+		'bin/bc-server',
 	],
 	package_dir = { '': 'lib' },
 	packages    = [
 		# Public interface
-		'billing',
+		'bc_client',
 
 		# Billing library
 		'bc',
-		'bc/jsonrpc',
-		'bc/wapi',
-		'bc_client',
+		'bc_jsonrpc',
+		'bc_wapi',
 	],
 	data_files  = [
 		('libexec/billing',     ['bin/httpd-abc']),

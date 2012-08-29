@@ -1,6 +1,6 @@
 __version__ = '1.0'
 
-from bc import jsonrpc
+import bc_jsonrpc as jsonrpc
 from bc import log
 
 LOG = log.logger("wapi.testy")

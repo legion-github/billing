@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+import bc_jsonrpc as jsonrpc
+import bc_wapi    as wapi
+
 from bc import log
-from bc import jsonrpc
-from bc import wapi
 
 LOG = log.logger("wapi")
 
 def application(environ, start_response):
 	"""Main entry point of the WSGI application."""
-	return jsonrpc.wsgi.jsonrpc_handle(environ, start_response)
+	return jsonrpc.handle(environ, start_response)
 

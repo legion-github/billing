@@ -3,8 +3,9 @@
 __version__ = '1.0'
 
 import time
+import bc_jsonrpc as jsonrpc
+
 from bc.validator import Validate as V
-from bc import jsonrpc
 from bc import log
 from bc import customers
 from bc import rates

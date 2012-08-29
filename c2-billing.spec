@@ -10,8 +10,10 @@ Group:    Applications/System
 
 BuildRequires:  python, python-setuptools
 
-Requires:       python
-Requires:       c2-bc-common-cloud
+Requires: python
+Requires: python-psycopg2
+Requires: python-msgpack
+Requires: c2-bc-common
 
 Vendor:     CROC
 URL:        http://cloud.croc.ru
@@ -24,15 +26,21 @@ Source0: c2-billing.tar.gz
 CROC Cloud Platform billing controller
 
 
-%package common-billing
+%package common
 Summary:  CROC Cloud billing commons (billing side)
 Group:    Applications/System
 
-Requires: c2-common
-
-%description common-billing
+%description common
 CROC Cloud billing common files, directories and libraries.
 Billing private library.
+
+
+%package jsonrpc
+Summary:  JSONRPC implementation for python.
+Group:    Applications/System
+
+%description jsonrpc
+JSONRPC implementation.
 
 
 %package client-billing
@@ -40,30 +48,19 @@ Summary:  CROC Cloud billing client library.
 Group:    Applications/System
 
 Requires: c2-common
+Requires: c2-bc-jsonrpc
 
 %description client-billing
 CROC Cloud billing client library.
-
-
-%package common-cloud
-Summary:  CROC Cloud billing commons (cloud side)
-Group:    Applications/System
-
-Requires: python-mongo
-Requires: python-msgpack
-Requires: MySQL-python
-
-%description common-cloud
-CROC Cloud billing common files, directories and libraries.
-Billing public interface.
 
 
 %package -n c2-abc
 Summary:  CROC Cloud Platform - API Controller
 Group:    Applications/System
 
-Requires:       python, httpd, mod_wsgi
-Requires(pre):  c2-bc-common-cloud
+Requires:  python, httpd, mod_wsgi
+Requires:  c2-bc-common
+Requires:  c2-bc-jsonrpc
 
 %description -n c2-abc
 CROC Cloud Platform API Controller
@@ -74,7 +71,7 @@ Summary:  CROC Cloud Platform Garbage collection service (BC)
 Group:    Applications/System
 
 Requires: c2-gs
-Requires: c2-bc-common-cloud
+Requires: c2-bc-common
 
 %description -n c2-gs-bc
 Garbage collection service (BC)
@@ -119,18 +116,19 @@ service crond reload
 %_bindir/*
 %_sysconfdir/rc.d/init.d/*
 
-%files common-billing
-%_sysconfdir/billing.conf
+%files common
+%config(noreplace) %_sysconfdir/billing.conf
 %python_sitearch/bc
+
+%files jsonrpc
+%python_sitearch/bc_jsonrpc
 
 %files client-billing
 %python_sitearch/bc_client
 
-%files common-cloud
-%python_sitearch/billing
-
 %files -n c2-abc
 %_libexecdir/billing
+%python_sitearch/bc_wapi
 %config(noreplace) %_sysconfdir/httpd/conf.d/*.conf
 
 %files -n c2-gs-bc

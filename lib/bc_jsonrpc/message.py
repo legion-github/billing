@@ -5,9 +5,7 @@
 
 __version__ = '1.0'
 
-import uuid, logging
-
-LOG = logging.getLogger("jsonrpc.message")
+import uuid
 
 jsonrpc_version = '2.0'
 
