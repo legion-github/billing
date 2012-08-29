@@ -26,6 +26,14 @@ Source0: c2-billing.tar.gz
 CROC Cloud Platform billing controller
 
 
+%package admin
+Summary:  CROC Cloud billing admin utilities
+Group:    Applications/System
+
+%description admin
+CROC Cloud billing admin utilities
+
+
 %package common
 Summary:  CROC Cloud billing commons (billing side)
 Group:    Applications/System
@@ -113,8 +121,11 @@ service crond reload
 [ "$1" != "0" ] || service crond reload ||:
 
 %files
-%_bindir/*
+%_bindir/bc-*
 %_sysconfdir/rc.d/init.d/*
+
+%files admin
+%_bindir/billing-*
 
 %files common
 %config(noreplace) %_sysconfdir/billing.conf

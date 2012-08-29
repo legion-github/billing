@@ -26,6 +26,9 @@ setup(
 	scripts     = [
 		'bin/bc-client',
 		'bin/bc-server',
+		'bin/billing-acl',
+		'bin/billing-bootstrap',
+		'bin/billing-init',
 	],
 	package_dir = { '': 'lib' },
 	packages    = [
