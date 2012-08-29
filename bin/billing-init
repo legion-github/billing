@@ -4,8 +4,15 @@
 from bc_client import Metrics
 from bc_client import Customers
 from bc_client import Tariffs
+from bc_client import Rates
+
+from bc import log
+import uuid
+import random
 
 
+
+LOG = log.logger("unittests", type='stderr', level='debug', init=True)
 host = 'localhost:10004'
 auth = {'role':'admin','secret':'qwerty'}
 
@@ -85,10 +92,27 @@ def process_tariffs():
 		cl_tariffs.tariffAdd(o)
 
 
+def process_rates():
+	tariffIds = [i['id'] for i in Tariffs(host, auth, 30).tariffList()['tariffs']]
+	metricIds = [i['id'] for i in Metrics(host, auth, 30).metricList()['metrics']]
+
+	cl_rates = Rates(host, auth, 30)
+
+	for tariff in tariffIds:
+		for metric in metricIds:
+			cl_rates.rateAdd({
+				'description':  str(uuid.uuid4()),
+				'metric_id':    metric,
+				'tariff_id':    tariff,
+				'rate':         long(random.randint(10**3, 10**10)),
+				'currency':     'USD',
+				})
+
 try:
 	process_metrics()
 	process_customers()
 	process_tariffs()
+	process_rates()
 
 except Exception, e:
 	print 'Error:', e
