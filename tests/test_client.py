@@ -30,7 +30,7 @@ class Test(unithelper.TestCase):
 
 
 		with mocker([
-			('bc.jsonrpc.http.jsonrpc_http_request',
+			('bc_jsonrpc.http.jsonrpc_http_request',
 				lambda *args, **kwargs: {'error':{'code':-32001}}),
 			('httplib.HTTPConnection',
 				lambda *a, **k: mocker.mockclass(connect=mocker.passs) ),

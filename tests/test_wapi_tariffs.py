@@ -9,7 +9,7 @@ from unithelper import hashable_dict
 from bc import database
 from bc import tariffs
 
-from bc.wapi import wapi_tariffs
+from bc_wapi import wapi_tariffs
 
 
 class Test(DBTestCase):
@@ -36,7 +36,7 @@ class Test(DBTestCase):
 				requestor({'message': 'Tariff not found' }, 'error'))
 
 		with mocker([('bc.tariffs.get', mocker.exception),
-					('bc.wapi.wapi_tariffs.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_tariffs.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_tariffs.tariffGet({'id':''}),
 				requestor({'message': 'Unable to obtain tariff' }, 'servererror'))
 
@@ -68,7 +68,7 @@ class Test(DBTestCase):
 				set(map(lambda x: hashable_dict(x), data)))
 
 		with mocker([('bc.tariffs.get_all', mocker.exception),
-					('bc.wapi.wapi_tariffs.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_tariffs.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_tariffs.tariffList({'id':''}),
 				requestor({'message': 'Unable to obtain tariff list' }, 'servererror'))
 
@@ -90,7 +90,7 @@ class Test(DBTestCase):
 		self.assertEquals(data['description'], t1['description'])
 
 		with mocker([('bc.tariffs.add', mocker.exception),
-					('bc.wapi.wapi_tariffs.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_tariffs.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_tariffs.tariffAdd({'id':''}),
 				requestor({'message': 'Unable to add new tariff' }, 'servererror'))
 
@@ -113,7 +113,7 @@ class Test(DBTestCase):
 		self.assertEquals(data['description'], t1['description'])
 
 		with mocker([('bc.tariffs.add', mocker.exception),
-					('bc.wapi.wapi_tariffs.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_tariffs.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_tariffs.tariffAdd({'id':''}),
 				requestor({'message': 'Unable to add new tariff' }, 'servererror'))
 
@@ -144,7 +144,7 @@ class Test(DBTestCase):
 		self.assertEquals(t1, data)
 
 		with mocker([('bc.tariffs.remove', mocker.exception),
-					('bc.wapi.wapi_tariffs.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_tariffs.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_tariffs.tariffIdRemove({'id':''}),
 				requestor({'message': 'Unable to remove tariff' }, 'servererror'))
 
@@ -175,7 +175,7 @@ class Test(DBTestCase):
 		self.assertEquals(t1, data)
 
 		with mocker([('bc.tariffs.remove', mocker.exception),
-					('bc.wapi.wapi_tariffs.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_tariffs.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_tariffs.tariffRemove({'id':''}),
 				requestor({'message': 'Unable to remove tariff' }, 'servererror'))
 
@@ -212,7 +212,7 @@ class Test(DBTestCase):
 
 
 		with mocker([('bc.tariffs.modify', mocker.exception),
-					('bc.wapi.wapi_tariffs.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_tariffs.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_tariffs.tariffModify(data1),
 				requestor({'message': 'Unable to modify tariff' }, 'servererror'))
 

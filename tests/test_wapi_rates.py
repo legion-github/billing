@@ -13,7 +13,7 @@ from bc import rates
 from bc import metrics
 from bc import tariffs
 
-from bc.wapi import wapi_rates
+from bc_wapi import wapi_rates
 
 
 class Test(DBTestCase):
@@ -61,7 +61,7 @@ class Test(DBTestCase):
 				requestor({'message': 'Rate not found' }, 'error'))
 
 		with mocker([('bc.rates.get_by_id', mocker.exception),
-					('bc.wapi.wapi_rates.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_rates.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_rates.rateGet({'id':''}),
 				requestor({'message': 'Unable to obtain rate list' }, 'servererror'))
 
@@ -127,7 +127,7 @@ class Test(DBTestCase):
 			)
 
 		with mocker([('bc.rates.get_all', mocker.exception),
-					('bc.wapi.wapi_rates.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_rates.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_rates.rateList({'id':''}),
 				requestor({'message': 'Unable to obtain rate list' }, 'servererror'))
 
@@ -158,7 +158,7 @@ class Test(DBTestCase):
 		self.assertEquals(hashable_dict(data), hashable_dict(t1))
 
 		with mocker([('bc.rates.add', mocker.exception),
-					('bc.wapi.wapi_rates.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_rates.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_rates.rateAdd({'id':''}),
 				requestor({'message': 'Unable to add new rate' }, 'servererror'))
 
@@ -192,7 +192,7 @@ class Test(DBTestCase):
 		self.assertEquals(t1, data)
 
 		with mocker([('bc.rates.remove', mocker.exception),
-					('bc.wapi.wapi_rates.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_rates.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_rates.rateRemove({'id':''}),
 				requestor({'message': 'Unable to remove rate' }, 'servererror'))
 
@@ -219,7 +219,7 @@ class Test(DBTestCase):
 				requestor({}, 'ok'))
 
 		with mocker([('bc.rates.modify', mocker.exception),
-					('bc.wapi.wapi_rates.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_rates.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_rates.rateModify({'id':data['id'], 'rate':10}),
 				requestor({'message': 'Unable to modify rate' }, 'servererror'))
 

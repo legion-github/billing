@@ -8,7 +8,7 @@ from unithelper import hashable_dict
 from bc import database
 from bc import metrics
 
-from bc.wapi import wapi_metrics
+from bc_wapi import wapi_metrics
 
 
 class Test(DBTestCase):
@@ -33,7 +33,7 @@ class Test(DBTestCase):
 				requestor({'message': 'Metric not found' }, 'error'))
 
 		with mocker([('bc.metrics.get', mocker.exception),
-					('bc.wapi.wapi_metrics.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_metrics.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_metrics.metricGet({'id':''}),
 				requestor({'message': 'Unable to obtain metric' }, 'servererror'))
 
@@ -63,7 +63,7 @@ class Test(DBTestCase):
 				set(map(lambda x: hashable_dict(x), data)))
 
 		with mocker([('bc.metrics.get_all', mocker.exception),
-					('bc.wapi.wapi_metrics.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_metrics.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_metrics.metricList({'id':''}),
 				requestor({'message': 'Unable to obtain metric list' }, 'servererror'))
 
@@ -87,7 +87,7 @@ class Test(DBTestCase):
 		self.assertEquals(data['type'], t1['type'])
 
 		with mocker([('bc.metrics.add', mocker.exception),
-					('bc.wapi.wapi_metrics.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_metrics.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_metrics.metricAdd({'id':''}),
 				requestor({'message': 'Unable to add new metric' }, 'servererror'))
 

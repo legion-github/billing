@@ -1,5 +1,5 @@
 import unithelper
-from bc.jsonrpc import message
+from bc_jsonrpc import message
 
 class Test(unithelper.TestCase):
 

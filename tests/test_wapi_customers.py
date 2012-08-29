@@ -10,7 +10,7 @@ from unithelper import hashable_dict
 from bc import database
 from bc import customers
 
-from bc.wapi import wapi_customers
+from bc_wapi import wapi_customers
 
 
 class Test(DBTestCase):
@@ -47,7 +47,7 @@ class Test(DBTestCase):
 				requestor({'message': 'Customer not found' }, 'error'))
 
 		with mocker([('bc.customers.get', mocker.exception),
-					('bc.wapi.wapi_customers.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_customers.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_customers.customerGet({'id':''}),
 				requestor({'message': 'Unable to obtain customer' }, 'servererror'))
 
@@ -92,7 +92,7 @@ class Test(DBTestCase):
 					filter(lambda x: x['state'] == customers.constants.STATE_ENABLED, cus))))
 
 		with mocker([('bc.customers.get_all', mocker.exception),
-					('bc.wapi.wapi_customers.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_customers.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_customers.customerList({'id':''}),
 				requestor({'message': 'Unable to obtain customer list' }, 'servererror'))
 
@@ -131,7 +131,7 @@ class Test(DBTestCase):
 			'name_short':''}), requestor({'message': 'Wrong wallet_mode: ' }, 'error'))
 
 		with mocker([('bc.customers.add', mocker.exception),
-					('bc.wapi.wapi_customers.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_customers.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_customers.customerAdd({'id':''}),
 				requestor({'message': 'Unable to add new customer' }, 'servererror'))
 
@@ -173,7 +173,7 @@ class Test(DBTestCase):
 		self.assertEquals(t1, data)
 
 		with mocker([('bc.customers.remove', mocker.exception),
-					('bc.wapi.wapi_customers.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_customers.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_customers.customerIdRemove({'id':''}),
 				requestor({'message': 'Unable to remove customer' }, 'servererror'))
 
@@ -215,7 +215,7 @@ class Test(DBTestCase):
 		self.assertEquals(t1, data)
 
 		with mocker([('bc.customers.remove', mocker.exception),
-					('bc.wapi.wapi_customers.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_customers.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_customers.customerRemove({'login':''}),
 				requestor({'message': 'Unable to remove customer' }, 'servererror'))
 
@@ -262,7 +262,7 @@ class Test(DBTestCase):
 
 
 		with mocker([('bc.customers.modify', mocker.exception),
-					('bc.wapi.wapi_customers.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_customers.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_customers.customerModify(data1),
 				requestor({'message': 'Unable to modify customer' }, 'servererror'))
 
@@ -323,6 +323,6 @@ class Test(DBTestCase):
 		self.assertEquals(t1, data)
 
 		with mocker([('bc.customers.deposit', mocker.exception),
-					('bc.wapi.wapi_customers.LOG.error', mocker.passs)]):
+					('bc_wapi.wapi_customers.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_customers.customerDeposit({'id':''}),
 				requestor({'message': 'Unable to make a deposit' }, 'servererror'))
