@@ -141,8 +141,8 @@ class Test(DBTestCase):
 				'metric_id':    str(uuid.uuid4()),
 				'tariff_id':    str(uuid.uuid4()),
 				'rate':         long(random.randint(10**3, 10**10)),
-				'currency':     rates.constants.CURRENCY_RUB,
-				'state':        rates.constants.STATE_ACTIVE,
+				'currency':     'RUB',
+				'state':        'ACTIVE',
 				'time_create':  int(time.time()),
 				'time_destroy': 0
 		}

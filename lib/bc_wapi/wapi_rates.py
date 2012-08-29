@@ -33,14 +33,8 @@ def rateList(params):
 @jsonrpc.method(
 	validate = V({
 		'id':           V(basestring, required=False, min=36, max=36),
-		'description':  V(basestring, required=False, min=3,  max=1024),
 		'metric_id':    V(basestring, required=False, min=1,  max=128),
 		'tariff_id':    V(basestring, required=False, min=36, max=36),
-		'rate':         V(int,        required=False),
-		'currency':     V(basestring, required=False,         max=7),
-		'state':        V(basestring, required=False,         max=7),
-		'time_create':  V(int,        required=False),
-		'time_destroy': V(int,        required=False),
 	}, drop_optional=True),
 	auth = True)
 def rateGet(params):
@@ -76,15 +70,36 @@ def rateGet(params):
 
 @jsonrpc.method(
 	validate = V({
-		'id':        V(basestring, required=False, min=36, max=36),
-		'tariff_id': V(basestring, required=False, min=36, max=36),
-		'metric_id': V(basestring, required=False, min=1,  max=128),
+		'tariff_id':    V(basestring, required=False, min=36, max=36),
+		'description':  V(basestring, required=False, min=3,  max=1024),
+		'metric_id':    V(basestring, required=False, min=1,  max=128),
+		'rate':         V(int,        required=False),
+		'currency':     V(basestring, required=False,         max=7),
+		'state':        V(basestring, required=False,         max=7),
+		'time_create':  V(int,        required=False),
+		'time_destroy': V(int,        required=False),
 	}, drop_optional=True),
 	auth = True)
 def rateAdd(params):
 	""" Adds new rate """
 
 	try:
+		if 'state' in params:
+			v = rates.constants.import_state(params['state'])
+			if v == None or v == rates.constants.STATE_DELETED:
+				return jsonrpc.result_error('InvalidRequest',
+						{ 'status': 'error',
+							'message':'Wrong state: ' + str(params['state'])})
+			params['state'] = v
+
+		if 'currency' in params:
+			v = rates.constants.import_currency(params['currency'])
+			if v == None:
+				return jsonrpc.result_error('InvalidRequest',
+						{ 'status': 'error',
+							'message':'Wrong currency: ' + str(params['currency'])})
+			params['currency'] = v
+
 		o = rates.Rate(params)
 		rates.add(o)
 
