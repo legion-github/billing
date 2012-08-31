@@ -47,7 +47,7 @@ def taskAdd(request):
 			return jsonrpc.result_error('InvalidParams',
 				{ 'status': 'error', 'message': 'Invalid customer' })
 
-		mid, rid, rate  = rates.resolve(request['type'], customer['tariff'])
+		mid, rid, rate  = rates.resolve(request['type'], customer.tariff_id)
 
 		if not rid:
 			return jsonrpc.result_error('InvalidParams',
@@ -57,7 +57,7 @@ def taskAdd(request):
 			{
 				'group_id':     GROUPID,
 				'base_id':      request['uuid'],
-				'customer':     customer['id'],
+				'customer':     customer.id,
 
 				'metric_id':    mid,
 				'rate_id':      rid,
