@@ -14,8 +14,8 @@ class BillingError(Exception):
 		Exception.__init__(self, fmt.format(*args))
 
 
-ERRORS = dict((str(message.error_codes[i]['code']), BillingError(i)) for i in message.error_codes.keys())
-ERRORS['0'] = BillingError('Invalid return message')
+ERRORS = dict((str(message.error_codes[i]['code']), lambda x: BillingError(i+': {0}', x)) for i in message.error_codes.keys())
+ERRORS['0'] = lambda x: BillingError('Invalid return message')
 
 class BCClient(object):
 	def __init__(self, host, auth, timeout, methods_list):
@@ -40,7 +40,7 @@ class BCClient(object):
 			if 'result' in response.keys():
 				return response['result']
 			elif 'error'in response.keys():
-				raise ERRORS[str(response['error'].get('code', 0))]
+				raise ERRORS[str(response['error'].get('code', 0))](response['error']['data'].get('message', 0))
 
 		try:
 			response = http.jsonrpc_http_request(connect(host, timeout),
