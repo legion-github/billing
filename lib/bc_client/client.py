@@ -40,7 +40,7 @@ class BCClient(object):
 			if 'result' in response.keys():
 				return response['result']
 			elif 'error'in response.keys():
-				raise ERRORS[str(response['error'].get('code', 0))](response['error']['data'].get('message', 0))
+				raise ERRORS[str(response['error'].get('code', 0))](response['error'].get('data',{}).get('message', 0))
 
 		try:
 			response = http.jsonrpc_http_request(connect(host, timeout),
