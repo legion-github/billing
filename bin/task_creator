@@ -1,0 +1,50 @@
+#!/usr/bin/python
+
+import sys
+import random
+import uuid
+
+sys.path.insert(0, '../lib')
+
+from bc import log
+from bc_client import Tasks
+from bc_client import Customers
+from bc_client import Tariffs
+from bc_client import Metrics
+
+LOG = log.logger("unittests", type='stderr', level='debug', init=True)
+
+host = 'localhost:10004'
+auth = {'role':'admin','secret':'qwerty'}
+
+
+tariffIds = [i['id'] for i in Tariffs(host, auth, 30).tariffList()['tariffs'] if i['id'] != '*']
+customers = [
+	{
+		'login':          'testy{0}.org'.format(i),
+		'name_short':     'Test{0}'.format(i),
+		'name_full':      'Test{0} Inc.'.format(i),
+		'comment':        'Simple test client',
+		'wallet_mode':    'unlimit',
+		'tariff_id':      random.choice(tariffIds)
+	} for i in xrange(int(sys.argv[1]))
+]
+cl_customers = Customers(host, auth, 30)
+for o in customers:
+	cl_customers.customerAdd(o)
+print "Created {0} test customers".format(len(customers))
+customersIDs = [i['id'] for i in cl_customers.customerList()['customers']]
+metricIds = [i['id'] for i in Metrics(host, auth, 30).metricList()['metrics']]
+
+cl_tasks = Tasks(host, auth, 30)
+for i in xrange(int(sys.argv[2])):
+	cl_tasks.taskAdd({
+		'type':		random.choice(metricIds),
+		'customer':	random.choice(customersIDs),
+		'value':	random.randint(1, 100),
+		'user':		str(uuid.uuid4()),
+		'uuid':		str(uuid.uuid4()),
+		'descr':	"task number {0}".format(i),
+	})
+
+
