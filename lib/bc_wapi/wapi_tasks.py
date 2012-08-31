@@ -55,7 +55,7 @@ def taskAdd(request):
 
 		tasks.add(
 			{
-				'group_id':     GROUPID,
+				'group_id':     GROUPID.next(),
 				'base_id':      request['uuid'],
 				'customer':     customer.id,
 

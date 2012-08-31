@@ -43,20 +43,20 @@ class Task(bobject.BaseObject):
 
 		self.__values__ = {
 			# Уникальный идентификатор задания
-			'base_id':        str(uuid.uuid4()),
-			'record_id':      '0',
+			'base_id':        unicode(uuid.uuid4()),
+			'record_id':      u'0',
 
-			'queue_id':       '',
+			'queue_id':       u'',
 			'group_id':       0L,
 
 			# Владелец задания, тот чей счёт используется
-			'customer':       '',
+			'customer':       u'',
 
 			# Уникальный идентификатор правила тарифа
-			'rate_id':        '',
+			'rate_id':        u'',
 
 			# Уникальный идентификатор метрики
-			'metric_id':      '',
+			'metric_id':      u'',
 
 			# (Дупликация) стоймость метрики в тарифе
 			'rate':           0L,
@@ -72,9 +72,9 @@ class Task(bobject.BaseObject):
 			'time_destroy':   0,
 
 			# (Опциональные) биллинговые данные, описывающие характер VALUE
-			'target_user':    '',
-			'target_uuid':    '',
-			'target_descr':   '',
+			'target_user':    u'',
+			'target_uuid':    u'',
+			'target_descr':   u'',
 		}
 
 		if data:
