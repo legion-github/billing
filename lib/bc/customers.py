@@ -121,11 +121,13 @@ def add(obj):
 		r = db.find_one('customers',
 			{
 				'login': obj.login,
-				'state': c.STATE_ENABLED
+				'state': {'$lt': c.STATE_DELETED}
 			}
 		)
 		if not r:
 			db.insert('customers', obj.values)
+		else:
+			raise TypeError('Wrong login, customer already exists')
 
 
 def modify(typ, val, params):

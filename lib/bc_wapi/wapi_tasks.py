@@ -79,7 +79,7 @@ def taskAdd(request):
 		return jsonrpc.result_error('ServerError',
 			{ 'status': 'error', 'message': 'Unable to add new task' })
 
-		return jsonrpc.result({'status':'ok', 'id':t.id})
+	return jsonrpc.result({'status':'ok', 'id':t.base_id})
 
 
 @jsonrpc.method(
