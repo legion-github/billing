@@ -79,7 +79,7 @@ class Test(DBTestCase):
 		}
 		ans = wapi_metrics.metricAdd(data)
 
-		self.assertEquals(ans, requestor({}, 'ok'))
+		self.assertEquals(ans, requestor({'id':data['id']}, 'ok'))
 
 		with database.DBConnect() as db:
 			t1 = db.find('metrics').one()

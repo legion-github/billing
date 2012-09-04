@@ -69,7 +69,7 @@ class Test(unithelper.DBTestCase):
 			"queue_id": str(uuid.uuid4()),
 		})
 
-		tasks.add(o.values)
+		tasks.add(o)
 
 		with database.DBConnect() as db:
 			n = db.find_one('tasks', {'base_id':o.base_id, 'record_id': '0' })

@@ -74,7 +74,7 @@ class Test(DBTestCase):
 
 
 	def test_tariff_add(self):
-		"""Check the creating tariff with taeriffAdd"""
+		"""Check the creating tariff with tariffAdd"""
 
 		data={
 			'name': str(uuid.uuid4()),
@@ -82,12 +82,12 @@ class Test(DBTestCase):
 		}
 		ans = wapi_tariffs.tariffAdd(data)
 
-		self.assertEquals(ans, requestor({}, 'ok'))
-
 		with database.DBConnect() as db:
 			t1 = db.find('tariffs').one()
 		self.assertEquals(data['name'], t1['name'])
 		self.assertEquals(data['description'], t1['description'])
+
+		self.assertEquals(ans, requestor({'id':t1['id']}, 'ok'))
 
 		with mocker([('bc.tariffs.add', mocker.exception),
 					('bc_wapi.wapi_tariffs.LOG.error', mocker.passs)]):
@@ -96,7 +96,7 @@ class Test(DBTestCase):
 
 
 	def test_tariff_add_internal(self):
-		"""Check the creating tariff with taeriffAddInternal"""
+		"""Check the creating tariff with tariffAddInternal"""
 
 		data={
 			'id': str(uuid.uuid4()),
@@ -105,7 +105,7 @@ class Test(DBTestCase):
 		}
 		ans = wapi_tariffs.tariffAdd(data)
 
-		self.assertEquals(ans, requestor({}, 'ok'))
+		self.assertEquals(ans, requestor({'id':data['id']}, 'ok'))
 
 		with database.DBConnect() as db:
 			t1 = db.find_one('tariffs', {'id': data['id']})

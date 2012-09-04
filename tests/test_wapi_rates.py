@@ -151,7 +151,7 @@ class Test(DBTestCase):
 
 		metrics.add(metrics.Metric({'id':data['metric_id']}))
 
-		self.assertEquals(wapi_rates.rateAdd(data), requestor({}, 'ok'))
+		self.assertEquals(wapi_rates.rateAdd(data), requestor({'id':data['id']}, 'ok'))
 
 		with database.DBConnect() as db:
 			t1 = db.find('rates').one()
