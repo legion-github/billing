@@ -18,7 +18,7 @@ try:
 	auth = {'role':'admin','secret':'qwerty'}
 
 
-	tariffIds = [i['id'] for i in Tariffs(host, auth, 30).tariffList()['tariffs'] if i['id'] != '*']
+	tariffIds = [i['id'] for i in Tariffs(host, auth, 30).tariffList() if i['id'] != '*']
 	customers = [
 		{
 			'login':          'testy{0}.org'.format(i),
@@ -30,22 +30,22 @@ try:
 		} for i in xrange(int(sys.argv[1]))
 	]
 	cl_customers = Customers(host, auth, 30)
-	for o in customers:
-		cl_customers.customerAdd(o)
+	customersIDs = [cl_customers.customerAdd(o) for o in customers]
 	print "Created {0} test customers".format(len(customers))
-	customersIDs = [i['id'] for i in cl_customers.customerList()['customers']]
-	metricIds = [i['id'] for i in Metrics(host, auth, 30).metricList()['metrics']]
+	metricIds = [i['id'] for i in Metrics(host, auth, 30).metricList()]
 
 	cl_tasks = Tasks(host, auth, 30)
 	for i in xrange(int(sys.argv[2])):
-		cl_tasks.taskAdd({
+		a = {
 			'type':		random.choice(metricIds),
 			'customer':	random.choice(customersIDs),
 			'value':	random.randint(1, 100),
 			'user':		str(uuid.uuid4()),
 			'uuid':		str(uuid.uuid4()),
 			'descr':	"task number {0}".format(i),
-		})
+		}
+		print a
+		cl_tasks.taskAdd(a)
 
 except Exception, e:
 	print 'Error:', e

@@ -93,8 +93,8 @@ def process_tariffs():
 
 
 def process_rates():
-	tariffIds = [i['id'] for i in Tariffs(host, auth, 30).tariffList()['tariffs']]
-	metricIds = [i['id'] for i in Metrics(host, auth, 30).metricList()['metrics']]
+	tariffIds = [i['id'] for i in Tariffs(host, auth, 30).tariffList()]
+	metricIds = [i['id'] for i in Metrics(host, auth, 30).metricList()]
 
 	cl_rates = Rates(host, auth, 30)
 
