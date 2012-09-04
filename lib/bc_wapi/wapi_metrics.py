@@ -44,7 +44,7 @@ def metricAdd(request):
 		return jsonrpc.result_error('ServerError',
 			{ 'status': 'error', 'message': 'Unable to add new metric' })
 
-	return jsonrpc.result({ 'status':'ok' })
+	return jsonrpc.result({ 'status':'ok', 'id':m.id })
 
 
 @jsonrpc.method(

@@ -56,7 +56,7 @@ def tariffAdd(params):
 		return jsonrpc.result_error('ServerError',
 			{ 'status': 'error', 'message': 'Unable to add new tariff' })
 
-	return jsonrpc.result({ 'status': 'ok' })
+	return jsonrpc.result({ 'status': 'ok', 'id':c.id })
 
 
 @jsonrpc.method(
@@ -76,7 +76,7 @@ def tariffAddInternal(params):
 		return jsonrpc.result_error('ServerError',
 			{ 'status': 'error', 'message': 'Unable to add new tariff' })
 
-	return jsonrpc.result({ 'status': 'ok' })
+	return jsonrpc.result({ 'status': 'ok', 'id':c.id })
 
 
 @jsonrpc.method(

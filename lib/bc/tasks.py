@@ -81,20 +81,17 @@ class Task(bobject.BaseObject):
 			self.set(data)
 
 
-def add(params):
+def add(obj):
 
-	# Final internal validation
-	o = Task(params)
-
-	with database.DBConnect(primarykey=o.base_id, autocommit=False) as db:
+	with database.DBConnect(primarykey=obj.base_id, autocommit=False) as db:
 		# Create queue id
-		if not o.queue_id:
-			o.queue_id = str(uuid.uuid4())
+		if not obj.queue_id:
+			obj.queue_id = str(uuid.uuid4())
 
-		db.insert('tasks', o.values)
+		db.insert('tasks', obj.values)
 		db.insert('queue',
 			{
-				'id':         o.queue_id,
+				'id':         obj.queue_id,
 				'time_check': int(time.time())
 			}
 		)

@@ -108,7 +108,7 @@ def rateAdd(params):
 		return jsonrpc.result_error('ServerError',
 			{ 'status': 'error', 'message': 'Unable to add new rate' })
 
-	return jsonrpc.result({ 'status':'ok' })
+	return jsonrpc.result({ 'status':'ok', 'id':o.id })
 
 
 @jsonrpc.method(

@@ -53,8 +53,7 @@ def taskAdd(request):
 			return jsonrpc.result_error('InvalidParams',
 				{ 'status': 'error', 'message': 'Unable to find rate' })
 
-		tasks.add(
-			{
+		t = tasks.Task({
 				'group_id':     GROUPID.next(),
 				'base_id':      request['uuid'],
 				'customer':     customer.id,
@@ -72,15 +71,15 @@ def taskAdd(request):
 				'target_user':  request['user'],
 				'target_uuid':  request['uuid'],
 				'target_descr': request['descr'],
-			}
-		)
+			})
+		tasks.add(t)
 
 	except Exception, e:
 		LOG.exception("Unable to add new task: %s", e)
 		return jsonrpc.result_error('ServerError',
 			{ 'status': 'error', 'message': 'Unable to add new task' })
 
-	return jsonrpc.result({'status':'ok'})
+		return jsonrpc.result({'status':'ok', 'id':t.id})
 
 
 @jsonrpc.method(
