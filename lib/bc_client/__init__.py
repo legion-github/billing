@@ -3,50 +3,50 @@ import client
 
 def Customers(host, auth, timeout):
 	return client.BCClient(host, auth, timeout, [
-		'customerList',
-		'customerGet',
-		'customerAdd',
-		'customerModify',
-		'customerRemove',
-		'customerIdRemove',
-		'customerDeposit',
+		('customerList',    'customers'),
+		('customerGet',     'customer'),
+		('customerAdd',     'id'),
+		('customerModify',  'status'),
+		('customerRemove',  'status'),
+		('customerIdRemove','status'),
+		('customerDeposit', 'status'),
 		])
 
 
 def Metrics(host, auth, timeout):
 	return client.BCClient(host, auth, timeout, [
-		'metricList',
-		'metricAdd',
-		'metricGet',
+		('metricList','metrics'),
+		('metricAdd', 'id'),
+		('metricGet', 'metric'),
 		])
 
 
 def Rates(host, auth, timeout):
 	return client.BCClient(host, auth, timeout, [
-		'rateList',
-		'rateGet',
-		'rateAdd',
-		'rateModify',
-		'rateRemove',
+		('rateList',  'rates'),
+		('rateGet',   'rate'),
+		('rateAdd',   'id'),
+		('rateModify','status'),
+		('rateRemove','status'),
 		])
 
 
 def Tariffs(host, auth, timeout):
 	return client.BCClient(host, auth, timeout, [
-		'tariffList',
-		'tariffGet',
-		'tariffAdd',
-		'tariffAddInternal',
-		'tariffModify',
-		'tariffRemove',
-		'tariffIdRemove',
+		('tariffList',       'tariffs'),
+		('tariffGet',        'tariff'),
+		('tariffAdd',        'id'),
+		('tariffAddInternal','id'),
+		('tariffModify',     'status'),
+		('tariffRemove',     'status'),
+		('tariffIdRemove',   'status'),
 		])
 
 
 def Tasks(host, auth, timeout):
 	return client.BCClient(host, auth, timeout, [
-		'taskAdd',
-		'taskModify',
-		'taskRemove',
+		('taskAdd',   'id'),
+		('taskModify','status'),
+		('taskRemove','status'),
 		])
 

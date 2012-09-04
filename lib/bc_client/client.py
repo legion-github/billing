@@ -21,12 +21,12 @@ class BCClient(object):
 	def __init__(self, host, auth, timeout, methods_list):
 
 		map(lambda x: setattr(self, x,
-				lambda y={}: self.__request(x, y, host, auth, timeout)),
-			methods_list)
+				lambda y={}: self.__request(x, y, host, auth, timeout, methods_list[1])),
+			methods_list[0])
 
 
 	@staticmethod
-	def __request(method, json_data, host, auth, timeout):
+	def __request(method, json_data, host, auth, timeout, returning):
 		def connect(host, timeout):
 			try:
 				conn = httplib.HTTPConnection(host, timeout = timeout)
@@ -47,7 +47,7 @@ class BCClient(object):
 				method,
 				json_data,
 				auth_data=auth)
-			return exceptionator(response)
+			return exceptionator(response).get(returning)
 		except BillingError as e:
 			LOG.exception("Failed to communicate with Billing: %s", e)
 			raise e
