@@ -48,9 +48,10 @@ def get_host(dbtype, key=None):
 	conf = config.read()
 
 	if key != None:
-		ring = hashing.HashRing()
-		for shard in conf['database']['shards']:
-			ring.add_node(shard["server"], shard["replica"])
+		ring = hashing.HashRing(
+			map(lambda x: x['server'], conf['database']['shards']),
+			dict(map(lambda x: (x['server'], x['replica']), conf['database']['shards']))
+		)
 		return ring.get_node(key)
 	elif dbtype == 'local':
 		for shard in conf['database']['shards']:
