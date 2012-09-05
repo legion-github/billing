@@ -3,6 +3,8 @@
 import sys
 import random
 import uuid
+import threading
+import Queue
 
 sys.path.insert(0, '../lib')
 
@@ -13,17 +15,91 @@ from bc_client import Tariffs
 from bc_client import Metrics
 
 LOG = log.logger("unittests", type='stderr', level='debug', init=True)
+
+
+def join_thread(thread):
+	"""Joins the thread.
+	Python is bugous: if we simply join a thread in the main thread without a
+	timeout, we will never get any UNIX signals.
+	"""
+
+	while thread and thread.isAlive():
+		thread.join(float(24*3600))
+
+
+def parallelize(func, data, threads = 5, log_errors = False):
+	"""Calls func() in a separated thread for each element in data.
+
+	Returns a list of objects. Each object is a return value of func() or
+	Exception object in case func() raise an exception.
+
+	>>> parallelize(lambda x: x * x, range(0, 50)) == [ x * x for x in xrange(0, 50) ]
+	True
+	"""
+
+	if threads < 1:
+		raise Exception("Invalid number of threads: {0}.", threads)
+
+	if len(data) == 0:
+		return []
+	elif len(data) == 1:
+		for element in data:
+			try:
+				return [ func(element) ]
+			except Exception as e:
+				if log_errors:
+					LOG.exception("Parallelize of %s for %s failed.", func, element)
+				return [ e ]
+	else:
+		results = []
+		thread_pool = []
+
+		queue = Queue.Queue()
+		for task in enumerate(data):
+			queue.put(task)
+
+		def worker(queue):
+			while True:
+				try:
+
+					task_id, element = queue.get(False)
+				except Queue.Empty:
+					break
+
+				try:
+					result = func(element)
+				except Exception as e:
+					if log_errors:
+						LOG.exception("Parallelize of %s for %s failed.", func, element)
+					result = e
+
+				results.append(( task_id, result ))
+
+		try:
+			for i in xrange(0, min(queue.qsize(), threads)):
+				thread = threading.Thread(target = worker, args = (queue,))
+				thread_pool.append(thread)
+				thread.start()
+		finally:
+			for thread in thread_pool:
+				join_thread(thread)
+
+		results.sort(key = lambda result: result[0])
+		return [ result[1] for result in results ]
+
+
 try:
-	host = 'localhost:10004'
+	host = 'bc02blade14:10004'
 	auth = {'role':'admin','secret':'qwerty'}
 
 
 	tariffIds = [i['id'] for i in Tariffs(host, auth, 30).tariffList() if i['id'] != '*']
+	creator_uuid = str(uuid.uuid4())[:6]
 	customers = [
 		{
-			'login':          'testy{0}.org'.format(i),
-			'name_short':     'Test{0}'.format(i),
-			'name_full':      'Test{0} Inc.'.format(i),
+			'login':          'testy{0}-{1}.org'.format(i, creator_uuid),
+			'name_short':     'Test{0}-{1}'.format(i, creator_uuid),
+			'name_full':      'Test{0}-{1} Inc.'.format(i, creator_uuid),
 			'comment':        'Simple test client',
 			'wallet_mode':    'unlimit',
 			'tariff_id':      random.choice(tariffIds)
@@ -35,17 +111,24 @@ try:
 	metricIds = [i['id'] for i in Metrics(host, auth, 30).metricList()]
 
 	cl_tasks = Tasks(host, auth, 30)
-	for i in xrange(int(sys.argv[2])):
-		a = {
-			'type':		random.choice(metricIds),
-			'customer':	random.choice(customersIDs),
-			'value':	random.randint(1, 100),
-			'user':		str(uuid.uuid4()),
-			'uuid':		str(uuid.uuid4()),
-			'descr':	"task number {0}".format(i),
-		}
-		print a
-		cl_tasks.taskAdd(a)
+
+	def create_tasks(customer, count):
+		for i in xrange(int(count)):
+			cl_tasks.taskAdd({
+				'type':		random.choice(metricIds),
+				'customer':	customer,
+				'value':	random.randint(1, 100),
+				'user':		str(uuid.uuid4()),
+				'uuid':		str(uuid.uuid4()),
+				'descr':	"task number {0}".format(i),
+			})
+			if not i%100:
+				print "Created {0} for customer {2} tasks from {1}".format(i, sys.argv[2], customer)
+		return True
+
+	print parallelize(lambda x: create_tasks(x, sys.argv[2]), customersIDs, int(sys.argv[1] if int(sys.argv[1])<=5 else 5))
 
 except Exception, e:
 	print 'Error:', e
+
+
