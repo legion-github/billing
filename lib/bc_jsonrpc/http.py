@@ -17,7 +17,13 @@ def jsonrpc_http_request(conn, method, params=None, auth_data=None, req_limit=No
 	if auth_data:
 		req = secure.jsonrpc_sign(auth_data['role'], auth_data['secret'], req)
 
-	conn.request("POST", "/", json.dumps(req))
+	try:
+		conn.request("POST", "/", json.dumps(req))
+	except httplib.CannotSendRequest:
+		conn.close()
+		conn.connect()
+		conn.request("POST", "/", json.dumps(req))
+
 	response = conn.getresponse()
 
 	if response.status != httplib.OK:

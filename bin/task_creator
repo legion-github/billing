@@ -110,9 +110,9 @@ try:
 	print "Created {0} test customers".format(len(customers))
 	metricIds = [i['id'] for i in Metrics(host, auth, 30).metricList()]
 
-	cl_tasks = Tasks(host, auth, 30)
 
 	def create_tasks(customer, count):
+		cl_tasks = Tasks(host, auth, 30)
 		for i in xrange(int(count)):
 			cl_tasks.taskAdd({
 				'type':		random.choice(metricIds),
