@@ -12,17 +12,15 @@
 prog=/usr/bin/bc-server
 name=billing
 lockfile=/var/lock/subsys/bc-server
-pidfile=/var/run/bc-server.pid
-user=_c2
+pidfile=/var/run/billing/bc-server.pid
+user=_bc
 
 RETVAL=0
 
 start() {
 	if [ ! -f "$lockfile" ]; then
 		echo -n $"Starting $name: "
-
-		install -o "$user" -d "/var/run" &&
-			daemon --user "$user" --pidfile "$pidfile" $prog &&
+		daemon --user "$user" --pidfile "$pidfile" $prog &&
 			success || failure
 		RETVAL=$?
 		echo

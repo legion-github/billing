@@ -1,5 +1,8 @@
 %define python_sitearch %(%{__python} -c 'from distutils import sysconfig; print sysconfig.get_python_lib(1)')
 
+%define bc_user  _bc
+%define bc_group _bc
+
 Summary:  CROC Cloud Platform - Billing controller
 Name:     c2-bc
 Version:  0.0.0
@@ -96,10 +99,17 @@ Garbage collection service (BC)
 	--prefix="%_prefix" \
 	--install-lib="%python_sitearch"
 
+mkdir -p -- %buildroot/%_localstatedir/run/billing
+
 find %buildroot/ -name '*.egg-info' -exec rm -rf -- '{}' '+'
 
 %clean
 [ %buildroot = "/" ] || rm -rf %buildroot
+
+%pre
+groupadd -r -f %bc_group
+getent passwd %bc_user >/dev/null ||
+	useradd  -r -M -g %bc_group -d /dev/null -s /dev/null -n %bc_user
 
 %post
 chkconfig --add %name
@@ -107,6 +117,9 @@ chkconfig --add %name
 %preun
 service %name stop ||:
 [ "$1" != "0" ] || chkconfig --del %name ||:
+
+%pre common
+groupadd -r -f %bc_group
 
 %post -n c2-abc
 service httpd condrestart ||:
@@ -123,12 +136,13 @@ service crond reload
 %files
 %_bindir/bc-*
 %_sysconfdir/rc.d/init.d/*
+%attr(770,root,%bc_group) %_localstatedir/run/billing
 
 %files admin
 %_bindir/billing-*
 
 %files common
-%config(noreplace) %_sysconfdir/billing.conf
+%attr(644,root,%bc_group) %config(noreplace) %_sysconfdir/billing.conf
 %python_sitearch/bc
 
 %files jsonrpc
