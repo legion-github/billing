@@ -21,6 +21,11 @@ _TEMPLATE_CONFIG = {
 		'facility': 'daemon'
 	},
 
+	"server": {
+		"pidfile": "/tmp/bc-server.pid",
+		"workers": 3
+	},
+
 	# Database section
 	"database": {
 		# Database name
