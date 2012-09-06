@@ -9,10 +9,10 @@
 # Source function library.
 . /etc/init.d/functions
 
-prog=/usr/bin/c2-bc-server
-name=c2-bc
-lockfile=/var/lock/subsys/c2-bc
-pidfile=/var/run/bc.pid
+prog=/usr/bin/bc-server
+name=billing
+lockfile=/var/lock/subsys/bc-server
+pidfile=/var/run/bc-server.pid
 user=_c2
 
 RETVAL=0
@@ -34,12 +34,6 @@ start() {
 stop() {
 	echo -n $"Stopping $name: "
 	RETVAL=0
-	for p in /var/run/bc-*.pid; do
-		[ -f "$p" ] ||
-			continue
-		killproc -p "$p" $prog ||
-			RETVAL=$?
-	done
 	killproc -p "$pidfile" $prog ||
 		RETVAL=$?
 	echo
@@ -48,27 +42,40 @@ stop() {
 }
 
 restart() {
-	stop
-	start
+	echo -n $"Restarting $name: "
+	RETVAL=0
+	killproc -p "$pidfile" $prog -USR2 ||
+		RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+reload() {
+	echo -n $"Reloading $name: "
+	RETVAL=0
+	killproc -p "$pidfile" $prog -USR1 ||
+		RETVAL=$?
+	echo
+	return $RETVAL
 }
 
 case $1 in
 	start)
 		start
-	;;
+		;;
 	stop)
 		stop
-	;;
+		;;
 	restart|reload)
 		restart
-	;;
+		;;
 	condrestart|condreload)
 		[ -f "$lockfile" ] && restart || :
-	;;
+		;;
 	status)
 		status -p "$pidfile" $prog
 		RETVAL=$?
-	;;
+		;;
 	*)
 
 	echo $"Usage: $name {start|stop|restart|reload|condrestart|condreload|status}"
