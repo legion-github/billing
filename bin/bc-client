@@ -44,6 +44,24 @@ while True:
 				}
 			)
 			for t in cur:
+				if t['rate_id'] == '':
+					c = customers.get(t['customer'], typ='id')
+
+					if c:
+						rid, rate  = rates.resolve(t['metric_id'], c.tariff_id)
+
+						if not rid:
+							LOG.error("task(%s): Unable to find rate for metric",
+								t['base_id'])
+							continue
+
+						db.update('tasks',
+							{ 'rate_id': rid, 'rate': rate })
+					else:
+						LOG.error("task(%s): Unknown customer (%s)",
+							t['base_id'], t['customer'])
+					continue
+
 				tasks_dict[t['queue_id']] = t
 
 			try:

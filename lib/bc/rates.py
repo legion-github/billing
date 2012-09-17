@@ -171,5 +171,5 @@ def resolve(mid, tid):
 			fields=[ 'id', 'rate' ]
 		)
 		if not r:
-			return (None, None, None)
-		return (mid, r['id'], r['rate'])
+			return (None, None)
+		return (r['id'], r['rate'])

@@ -41,24 +41,25 @@ def taskAdd(request):
 		request['time-create'] = int(time.time())
 
 	try:
-		customer = customers.get(request['customer'])
+		rid, rate = ('', 0)
+		customer = customers.get(request['customer'], typ='id')
 
-		if not customer:
-			return jsonrpc.result_error('InvalidParams',
-				{ 'status': 'error', 'message': 'Invalid customer' })
+		if customer:
+			rid, rate  = rates.resolve(request['type'], customer.tariff_id)
 
-		mid, rid, rate  = rates.resolve(request['type'], customer.tariff_id)
-
-		if not rid:
-			return jsonrpc.result_error('InvalidParams',
-				{ 'status': 'error', 'message': 'Unable to find rate' })
+			if not rid:
+				LOG.error("task(%s): Unable to find rate for metric",
+					request['uuid'])
+		else:
+			LOG.error("task(%s): Unknown customer (%s)",
+				request['uuid'], request['customer'])
 
 		t = tasks.Task({
 				'group_id':     GROUPID.next(),
 				'base_id':      request['uuid'],
-				'customer':     customer.id,
+				'customer':     request['customer'],
 
-				'metric_id':    mid,
+				'metric_id':    request['type'],
 				'rate_id':      rid,
 				'rate':         rate,
 
