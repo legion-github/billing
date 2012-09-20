@@ -43,6 +43,7 @@ class Task(bobject.BaseObject):
 
 		self.__values__ = {
 			# Уникальный идентификатор задания
+			'task_id':        unicode(uuid.uuid4()),
 			'base_id':        unicode(uuid.uuid4()),
 			'record_id':      u'0',
 
@@ -139,9 +140,11 @@ def update(id, params, ts=0):
 		if not ot:
 			return
 
-		nt = Task(ot.values)
+		nt = Task(ot)
 		nt.set(params)
 		nt.queue_id = str(uuid.uuid4())
+		nt.task_id  = str(uuid.uuid4())
+		nt.time_create = ts or int(time.time())
 
 		db.update('tasks',
 			{ 'base_id': id, 'record_id': '0' },
@@ -152,7 +155,7 @@ def update(id, params, ts=0):
 		db.insert('queue',
 			{
 				'id':         nt.queue_id,
-				'time_check': int(time.time())
+				'time_check': ts or int(time.time())
 			}
 		)
 

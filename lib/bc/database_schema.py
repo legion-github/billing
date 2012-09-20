@@ -136,7 +136,8 @@ SCHEMA = [
 	(LOCAL, DBTable("tasks",
 			columns = [
 				# A composite id of the two fields.
-				("base_id",     "varchar(36)",  "NOT NULL PRIMARY KEY"),
+				("task_id",     "varchar(36)",  "NOT NULL PRIMARY KEY"),
+				("base_id",     "varchar(36)",  "NOT NULL DEFAULT '0'"),
 				("record_id",   "varchar(36)",  "NOT NULL DEFAULT '0'"),
 
 				("queue_id",    "varchar(36)",  "NOT NULL"),
