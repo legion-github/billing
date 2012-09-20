@@ -29,12 +29,12 @@ def jsonrpc_handle(environ, start_response):
 		start_response(http_code, http_headers)
 		return http_body
 
-	if not environ.get("CONTENT_LENGTH"):
+	if "CONTENT_LENGTH" not in environ:
 		return answer("411 Length Required")
 
 	request_length = int(environ["CONTENT_LENGTH"])
 
-	if request_length > MAX_REQUEST_SIZE:
+	if request_length <= 0 or request_length > MAX_REQUEST_SIZE:
 		return answer('400 Bad Request')
 
 	headers = {}
