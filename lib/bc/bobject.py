@@ -104,5 +104,7 @@ class BaseObject(object):
 
 		if isinstance(value, int):
 			o[name] = long(value)
+		elif isinstance(value, str):
+			o[name] = unicode(value)
 		else:
 			o[name] = value

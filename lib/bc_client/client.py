@@ -18,9 +18,8 @@ ERRORS = dict((str(message.error_codes[i]['code']), lambda x: BillingError(i+': 
 ERRORS['0'] = lambda x: BillingError('Invalid return message')
 
 class BCClient(object):
-	def __init__(self, host, auth, timeout, methods_list):
+	def __init__(self, host, auth, timeout, methods_dict):
 
-		methods_dict = dict(methods_list)
 		map(lambda x: setattr(self, x,
 				lambda y={}: self.__request(x, y, auth, timeout, methods_dict[x])),
 			methods_dict.keys())
