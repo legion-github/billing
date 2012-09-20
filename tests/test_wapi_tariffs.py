@@ -118,37 +118,6 @@ class Test(DBTestCase):
 				requestor({'message': 'Unable to add new tariff' }, 'servererror'))
 
 
-	def test_tariff_id_remove(self):
-		"""Check state changing with tariffIdRemove"""
-
-		data = {
-			'id':           unicode(uuid.uuid4()),
-			'name':         str(uuid.uuid4()),
-			'description':  str(uuid.uuid4()),
-			'state':        tariffs.constants.STATE_ENABLED,
-			'time_create':  int(time.time()),
-			'time_destroy': 0,
-		}
-
-		with database.DBConnect() as db:
-			db.insert('tariffs', data)
-
-		wapi_tariffs.tariffIdRemove({'id':data['id']})
-
-		data['state'] = tariffs.constants.STATE_DELETED
-		data['time_destroy'] = int(time.time())
-
-		with database.DBConnect() as db:
-			t1 = db.find_one('tariffs', {'id': data['id']})
-
-		self.assertEquals(t1, data)
-
-		with mocker([('bc.tariffs.remove', mocker.exception),
-					('bc_wapi.wapi_tariffs.LOG.error', mocker.passs)]):
-			self.assertEquals(wapi_tariffs.tariffIdRemove({'id':''}),
-				requestor({'message': 'Unable to remove tariff' }, 'servererror'))
-
-
 	def test_tariff_remove(self):
 		"""Check state changing with tariffRemove"""
 
@@ -164,7 +133,7 @@ class Test(DBTestCase):
 		with database.DBConnect() as db:
 			db.insert('tariffs', data)
 
-		wapi_tariffs.tariffRemove({'name':data['name']})
+		wapi_tariffs.tariffRemove({'id':data['id']})
 
 		data['state'] = tariffs.constants.STATE_DELETED
 		data['time_destroy'] = int(time.time())
