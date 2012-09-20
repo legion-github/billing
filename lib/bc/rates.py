@@ -85,17 +85,32 @@ def add(obj):
 			db.insert('rates', obj.values)
 
 
-def remove(typ, value):
+def remove(tid, mid):
 	"""Disables rate"""
 
-	if typ not in [ 'id' ]:
-		raise ValueError("Unknown type: " + str(typ))
-
-	query = { 'id': value }
+	c = RateConstants()
 
 	with database.DBConnect() as db:
-		c = RateConstants()
-		db.update("rates", query,
+		r = db.find_one('rates', 
+			{
+				'tariff_id': tid,
+				'metric_id': mid
+			},
+			fields=['state']
+		)
+
+		if not r:
+			raise ValueError("Wrong rate")
+
+		if r['state'] != c.STATE_ACTIVE:
+			raise ValueError("Rate busy")
+
+		db.update("rates",
+			{
+				'tariff_id': tid,
+				'metric_id': mid,
+				'state':     c.STATE_ACTIVE
+			},
 			{
 				'state': c.STATE_DELETED,
 				'time_destroy': int(time.time())
@@ -103,22 +118,19 @@ def remove(typ, value):
 		)
 
 
-def modify(typ, val, params):
+def modify(tid, mid, params):
 	"""Modify rate"""
 
 	c = RateConstants()
 
-	if typ not in [ 'id' ]:
-		raise ValueError("Unknown type: " + str(typ))
-
-	# Final internal validation
-	o = Rate(params)
-
-	if o.state < 0 or o.state >= c.STATE_MAXVALUE:
-		raise TypeError('Wrong state')
-
 	with database.DBConnect() as db:
-		db.update("rates", { 'id': val }, params)
+		db.update("rates",
+			{
+				'tariff_id': tid,
+				'metric_id': mid
+			},
+			params
+		)
 
 
 def get_all():
@@ -135,14 +147,6 @@ def get_by_tariff(tid):
 	with database.DBConnect() as db:
 		for o in db.find('rates', { 'tariff_id': tid, 'state': { '$lt': c.STATE_DELETED }}):
 			yield Rate(o)
-
-
-def get_by_id(rid):
-	with database.DBConnect() as db:
-		o = db.find_one('rates', { 'id': rid })
-		if o:
-			return Rate(o)
-		return None
 
 
 def get_by_metric(tid, mid):

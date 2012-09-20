@@ -8,7 +8,6 @@ def Customers(host, auth, timeout):
 		'customerAdd':     'id',
 		'customerModify':  'status',
 		'customerRemove':  'status',
-		'customerIdRemove':'status',
 		'customerDeposit': 'status',
 		})
 
@@ -36,10 +35,8 @@ def Tariffs(host, auth, timeout):
 		'tariffList':       'tariffs',
 		'tariffGet':        'tariff',
 		'tariffAdd':        'id',
-		'tariffAddInternal':'id',
 		'tariffModify':     'status',
 		'tariffRemove':     'status',
-		'tariffIdRemove':   'status',
 		})
 
 

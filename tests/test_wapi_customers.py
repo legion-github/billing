@@ -136,48 +136,6 @@ class Test(DBTestCase):
 				requestor({'message': 'Unable to add new customer' }, 'servererror'))
 
 
-	def test_customer_id_remove(self):
-		"""Check state changing with customerIdRemove"""
-
-		data = {
-			'id': str(uuid.uuid4()),
-			'login': str(uuid.uuid4()),
-			'name_short': str(uuid.uuid4()),
-			'name_full': str(uuid.uuid4()),
-			'comment': str(uuid.uuid4()),
-			'contract_client': str(uuid.uuid4()),
-			'contract_service': str(uuid.uuid4()),
-			'tariff_id': str(uuid.uuid4()),
-			'contact_person': str(uuid.uuid4()),
-			'contact_email': str(uuid.uuid4()),
-			'contact_phone': str(uuid.uuid4())[:10],
-			'state': customers.constants.STATE_ENABLED,
-			'time_create': int(time.time()),
-			'time_destroy': 0,
-			'wallet': 10,
-			'wallet_mode': customers.constants.WALLET_MODE_LIMITED
-		}
-
-		with database.DBConnect() as db:
-			db.insert('customers', data)
-
-		self.assertEquals(wapi_customers.customerIdRemove({'id':data['id']}),
-				requestor({}, 'ok'))
-
-		data['state'] = customers.constants.STATE_DELETED
-		data['time_destroy'] = int(time.time())
-
-		with database.DBConnect() as db:
-			t1 = db.find_one('customers', {'id': data['id']})
-
-		self.assertEquals(t1, data)
-
-		with mocker([('bc.customers.remove', mocker.exception),
-					('bc_wapi.wapi_customers.LOG.error', mocker.passs)]):
-			self.assertEquals(wapi_customers.customerIdRemove({'id':''}),
-				requestor({'message': 'Unable to remove customer' }, 'servererror'))
-
-
 	def test_customer_remove(self):
 		"""Check state changing with customerRemove"""
 
@@ -203,7 +161,7 @@ class Test(DBTestCase):
 		with database.DBConnect() as db:
 			db.insert('customers', data)
 
-		self.assertEquals(wapi_customers.customerRemove({'login':data['login']}),
+		self.assertEquals(wapi_customers.customerRemove({'id':data['id']}),
 				requestor({}, 'ok'))
 
 		data['state'] = customers.constants.STATE_DELETED
@@ -216,7 +174,7 @@ class Test(DBTestCase):
 
 		with mocker([('bc.customers.remove', mocker.exception),
 					('bc_wapi.wapi_customers.LOG.error', mocker.passs)]):
-			self.assertEquals(wapi_customers.customerRemove({'login':''}),
+			self.assertEquals(wapi_customers.customerRemove({'id':''}),
 				requestor({'message': 'Unable to remove customer' }, 'servererror'))
 
 

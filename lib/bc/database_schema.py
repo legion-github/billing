@@ -116,7 +116,7 @@ class DBTable(object):
 
 conf = config.read()
 GLOBAL = [conf['database']['server']]
-LOCAL  = [i['server'] for i in conf['database']['shards']]
+LOCAL  = [i['server'] for i in conf['database']['shards'].itervalues()]
 
 SCHEMA = [
 	(GLOBAL, DBTable("metrics",
@@ -209,7 +209,7 @@ SCHEMA = [
 				("wallet",          "bigint",        "NOT NULL DEFAULT '0'"),
 			],
 			indexes = [
-				{ "cols": [ ("state", "ASC") ] }
+				{ "cols": [ ("login", "ASC"), ("state", "ASC") ], 'unique': True }
 			]
 		)),
 	(GLOBAL, DBTable("auth",

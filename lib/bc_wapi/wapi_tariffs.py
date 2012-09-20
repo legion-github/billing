@@ -5,6 +5,7 @@ import bc_jsonrpc as jsonrpc
 from bc.validator import Validate as V
 from bc import tariffs
 from bc import log
+from bc import zones
 
 LOG = log.logger("wapi.tariffs")
 
@@ -30,6 +31,10 @@ def tariffGet(params):
 		ret = tariffs.get(params['id'])
 
 		if not ret:
+			srv = zones.write_zone(params['id'])
+			if not srv['local']:
+				return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
+
 			return jsonrpc.result_error('InvalidRequest',
 				{ 'status': 'error', 'message': 'Tariff not found' })
 	except Exception, e:
@@ -42,32 +47,17 @@ def tariffGet(params):
 
 @jsonrpc.method(
 	validate = V({
+		'id':          V(basestring, min=36, max=36),
 		'name':        V(basestring, min=3, max=64),
 		'description': V(basestring, min=3, max=1024),
 	}),
 	auth = True)
 def tariffAdd(params):
 	try:
-		c = tariffs.Tariff(params)
-		tariffs.add(c)
+		srv = zones.write_zone(params['id'])
+		if not srv['local']:
+			return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
 
-	except Exception, e:
-		LOG.error(e)
-		return jsonrpc.result_error('ServerError',
-			{ 'status': 'error', 'message': 'Unable to add new tariff' })
-
-	return jsonrpc.result({ 'status': 'ok', 'id':c.id })
-
-
-@jsonrpc.method(
-	validate = V({
-		'id':          V(basestring),
-		'name':        V(basestring, min=3, max=64),
-		'description': V(basestring, min=3, max=1024),
-	}),
-	auth = True)
-def tariffAddInternal(params):
-	try:
 		c = tariffs.Tariff(params)
 		tariffs.add(c)
 
@@ -89,6 +79,10 @@ def tariffAddInternal(params):
 	auth = True)
 def tariffModify(params):
 	try:
+		srv = zones.write_zone(params['id'])
+		if not srv['local']:
+			return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
+
 		if len(params) == 1:
 			return jsonrpc.result({ 'status':'ok' })
 
@@ -111,25 +105,14 @@ def tariffModify(params):
 
 
 @jsonrpc.method(
-	validate = V({ 'name': V(basestring, min=3, max=64) }),
+	validate = V({ 'id': V(basestring, min=36, max=36) }),
 	auth = True)
 def tariffRemove(params):
 	try:
-		tariffs.remove('name', params['name'])
+		srv = zones.write_zone(params['id'])
+		if not srv['local']:
+			return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
 
-	except Exception, e:
-		LOG.error(e)
-		return jsonrpc.result_error('ServerError',
-			{ 'status': 'error', 'message': 'Unable to remove tariff' })
-
-	return jsonrpc.result({ 'status':'ok' })
-
-
-@jsonrpc.method(
-	validate = V({ 'id': V(basestring, min=36, max=36) }),
-	auth = True)
-def tariffIdRemove(params):
-	try:
 		tariffs.remove('id', params['id'])
 
 	except Exception, e:

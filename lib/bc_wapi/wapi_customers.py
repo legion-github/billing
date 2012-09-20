@@ -5,6 +5,8 @@ import bc_jsonrpc as jsonrpc
 from bc.validator import Validate as V
 from bc import customers
 from bc import log
+from bc import zones
+
 
 LOG = log.logger("wapi.customers")
 
@@ -32,6 +34,10 @@ def customerGet(params):
 		ret = customers.get(params['id'], 'id')
 
 		if not ret:
+			srv = zones.write_zone(params['id'])
+			if not srv['local']:
+				return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
+
 			return jsonrpc.result_error('InvalidRequest',
 				{ 'status': 'error', 'message': 'Customer not found' })
 
@@ -45,6 +51,7 @@ def customerGet(params):
 
 @jsonrpc.method(
 	validate = V({
+		'id':               V(basestring, min=36, max=36),
 		'login':            V(basestring, max=64),
 		'wallet_mode':      V(basestring, max=7),
 		'name_short':       V(basestring, max=255),
@@ -63,6 +70,10 @@ def customerAdd(params):
 	""" Adds new customer account """
 
 	try:
+		srv = zones.write_zone(params['id'])
+		if not srv['local']:
+			return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
+
 		wallet_mode = customers.constants.import_wallet_mode(params['wallet_mode'])
 
 		if wallet_mode == None:
@@ -84,7 +95,7 @@ def customerAdd(params):
 
 @jsonrpc.method(
 	validate = V({
-		'login':            V(basestring, max=64),
+		'id':               V(basestring, min=36, max=36),
 		'state':            V(basestring, required=False, max=7),
 		'wallet_mode':      V(basestring, required=False, max=7),
 		'name_short':       V(basestring, required=False, max=255),
@@ -102,6 +113,10 @@ def customerModify(params):
 	""" Modify customer's record """
 
 	try:
+		srv = zones.write_zone(params['id'])
+		if not srv['local']:
+			return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
+
 		if len(params) == 1:
 			return jsonrpc.result({ 'status':'ok' })
 
@@ -130,29 +145,16 @@ def customerModify(params):
 
 
 @jsonrpc.method(
-	validate = V({ 'login': V(basestring, min=1, max=64) }),
+	validate = V({ 'id': V(basestring, min=36, max=36) }),
 	auth = True)
 def customerRemove(params):
 	""" Remove customer by name """
 
 	try:
-		c = customers.remove('login', params['login'])
+		srv = zones.write_zone(params['id'])
+		if not srv['local']:
+			return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
 
-	except Exception, e:
-		LOG.error(e)
-		return jsonrpc.result_error('ServerError',
-			{ 'status': 'error', 'message': 'Unable to remove customer' })
-
-	return jsonrpc.result({ 'status':'ok' })
-
-
-@jsonrpc.method(
-	validate = V({ 'id': V(basestring, min=36, max=36) }),
-	auth = True)
-def customerIdRemove(params):
-	""" Remove customer by id """
-
-	try:
 		c = customers.remove('id', params['id'])
 
 	except Exception, e:
@@ -173,6 +175,10 @@ def customerDeposit(params):
 	""" Make deposit to customer """
 
 	try:
+		srv = zones.write_zone(params['id'])
+		if not srv['local']:
+			return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
+
 		if params['value'] != 0:
 			customers.deposit(params['id'], params['value'])
 

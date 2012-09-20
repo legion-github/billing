@@ -26,6 +26,10 @@ _TEMPLATE_CONFIG = {
 		"workers": 3
 	},
 
+	"zone": {
+		"local-DC": { "server": "localhost", "weight": 3, "local": True }
+	},
+
 	# Database section
 	"database": {
 		# Database name
@@ -38,7 +42,7 @@ _TEMPLATE_CONFIG = {
 		"server": "127.0.0.1",
 
 		# Database servers for sharding
-		"shards": []
+		"shards": {}
 	}
 }
 
@@ -72,3 +76,11 @@ def read(filename = CONFIG_FILE, inline = None, force = False):
 
 	CONFIG = {}
 	return utils.dict_merge(CONFIG, _TEMPLATE_CONFIG, json.loads(s))
+
+
+def subdict(confdict, field='weight'):
+	res = {}
+	for k,v in confdict.iteritems():
+		res[k] = v[field]
+	return res
+

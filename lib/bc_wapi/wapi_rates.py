@@ -5,6 +5,7 @@ import bc_jsonrpc as jsonrpc
 from bc.validator import Validate as V
 from bc import rates
 from bc import log
+from bc import zones
 
 LOG = log.logger("wapi.rates")
 
@@ -32,31 +33,18 @@ def rateList(params):
 
 @jsonrpc.method(
 	validate = V({
-		'id':           V(basestring, required=False, min=36, max=36),
-		'metric_id':    V(basestring, required=False, min=1,  max=128),
-		'tariff_id':    V(basestring, required=False, min=36, max=36),
-	}, drop_optional=True),
+		'metric_id':    V(basestring, min=1,  max=128),
+		'tariff_id':    V(basestring, min=36, max=36),
+	}),
 	auth = True)
 def rateGet(params):
 	try:
-		if len(params) == 1:
-			if 'id' not in params:
-				return jsonrpc.result_error('InvalidRequest',
-					{ 'status': 'error', 'message': 'Wrong parameters' })
-
-			ret = rates.get_by_id(params['id'])
-
-		elif len(params) == 2:
-			if 'tariff_id' not in params or 'metric_id' not in params:
-				return jsonrpc.result_error('InvalidRequest',
-					{ 'status': 'error', 'message': 'Wrong parameters' })
-
-			ret = rates.get_by_metric(params['tariff_id'], params['metric_id'])
-		else:
-			return jsonrpc.result_error('InvalidRequest',
-				{ 'status': 'error', 'message': 'Wrong parameters' })
-
+		ret = rates.get_by_metric(params['tariff_id'], params['metric_id'])
 		if not ret:
+			srv = zones.write_zone(params['tariff_id'])
+			if not srv['local']:
+				return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
+
 			return jsonrpc.result_error('InvalidRequest',
 				{ 'status': 'error', 'message': 'Rate not found' })
 
@@ -70,27 +58,20 @@ def rateGet(params):
 
 @jsonrpc.method(
 	validate = V({
+		'metric_id':    V(basestring, required=False, min=1,  max=128),
 		'tariff_id':    V(basestring, required=False, min=36, max=36),
 		'description':  V(basestring, required=False, min=3,  max=1024),
-		'metric_id':    V(basestring, required=False, min=1,  max=128),
 		'rate':         V(int,        required=False),
 		'currency':     V(basestring, required=False,         max=7),
-		'state':        V(basestring, required=False,         max=7),
-		'time_create':  V(int,        required=False),
-		'time_destroy': V(int,        required=False),
 	}, drop_optional=True),
 	auth = True)
 def rateAdd(params):
 	""" Adds new rate """
 
 	try:
-		if 'state' in params:
-			v = rates.constants.import_state(params['state'])
-			if v == None or v == rates.constants.STATE_DELETED:
-				return jsonrpc.result_error('InvalidRequest',
-						{ 'status': 'error',
-							'message':'Wrong state: ' + str(params['state'])})
-			params['state'] = v
+		srv = zones.write_zone(params['tariff_id'])
+		if not srv['local']:
+			return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
 
 		if 'currency' in params:
 			v = rates.constants.import_currency(params['currency'])
@@ -113,8 +94,8 @@ def rateAdd(params):
 
 @jsonrpc.method(
 	validate = V({
-		'id':          V(basestring, min=36, max=36),
-		'state':       V(basestring, required=False, max=7),
+		'metric_id':   V(basestring, min=1,  max=128),
+		'tariff_id':   V(basestring, min=36, max=36),
 		'currency':    V(basestring, required=False, min=3, max=3),
 		'description': V(basestring, required=False, min=3, max=1024),
 	}, drop_optional=True),
@@ -123,26 +104,27 @@ def rateModify(params):
 	""" Modify rate """
 
 	try:
-		if len(params) == 1:
-			return jsonrpc.result({ 'status':'ok' })
+		srv = zones.write_zone(params['tariff_id'])
+		if not srv['local']:
+			return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
 
-		if 'state' in params:
-			v = rates.constants.import_state(params['state'])
-			if v == None or v == rates.constants.STATE_DELETED:
-				return jsonrpc.result_error('InvalidRequest',
-						{ 'status': 'error',
-							'message':'Wrong state: ' + str(params['state'])})
-			params['state'] = v
+		if len(params) <= 2:
+			return jsonrpc.result_error('InvalidRequest',
+					{ 'status': 'error',
+					  'message':'More arguments required' })
 
 		if 'currency' in params:
 			v = rates.constants.import_currency(params['currency'])
 			if v == None:
 				return jsonrpc.result_error('InvalidRequest',
 						{ 'status': 'error',
-							'message':'Wrong currency: ' + str(params['currency'])})
+						  'message':'Wrong currency: ' + str(params['currency'])})
 			params['currency'] = v
 
-		rates.modify('id', params['id'], params)
+		tid, mid = params['tariff_id'], params['metric_id']
+		del params['tariff_id'], params['metric_id']
+
+		rates.modify(tid, mid, params)
 
 	except Exception, e:
 		LOG.error(e)
@@ -153,11 +135,18 @@ def rateModify(params):
 
 
 @jsonrpc.method(
-	validate = V({ 'id': V(basestring, min=36, max=36) }),
+	validate = V({ 
+		'metric_id':   V(basestring, min=1,  max=128),
+		'tariff_id':   V(basestring, min=36, max=36),
+	}),
 	auth = True)
 def rateRemove(params):
 	try:
-		rates.remove('id', params['id'])
+		srv = zones.write_zone(params['tariff_id'])
+		if not srv['local']:
+			return jsonrpc.result({ 'status':'redirect', 'server': srv['server'] })
+
+		rates.remove(params['tariff_id'], params['metric_id'])
 
 	except Exception, e:
 		LOG.error(e)
