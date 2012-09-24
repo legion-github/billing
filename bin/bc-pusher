@@ -1,0 +1,93 @@
+#!/usr/bin/python
+
+import os
+import sys
+import time
+
+from bc import log
+from bc import database
+
+from bc_client import Zones
+
+conf = config.read()
+
+LOG = log.logger("pusher", init=True, type='stderr', level='debug')
+CWD = os.path.dirname(sys.argv[0])
+CWD = os.path.abspath(CWD)
+
+SYNC_TABLES = [ 'customers', 'metrics', 'rates', 'tariffs' ]
+SYNC_PERIOD = conf['pusher']['period']
+
+# Acquire pid and daemonize
+pid_fd = daemon.acquire_pid(conf['pusher']['pidfile'])
+daemon.daemonize(skipfd=[pid_fd])
+daemon.write_pid(pid_fd)
+
+# Reopen logger to syslog
+LOG = log.logger("pusher", init=True, type='syslog')
+
+# List of incoming singals
+may_work = True
+
+# Set signal handlers
+for sig in [ signal.SIGTERM ]:
+	signal.signal(sig, lambda sig,frame: may_work = False)
+
+
+CONNECTS = {}
+def send_data(table, data):
+	rc = 0
+
+	for name,zone in conf['zones'].iteritems():
+		try:
+			if name not in CONNECTS:
+				CONNECTS[name] = Zones(zone['server'], zone['auth'], 30)
+
+			CONNECTS[name].zoneSyncList({ 'table': table, 'list': data })
+			rc += 1
+
+		except Exception, e:
+			LOG.exception(e)
+			break
+
+	return len(conf['zones']) == rc
+
+
+def sync_table(table):
+	with database.DBConnect() as db:
+		while may_work:
+			res = db.find_all(table, { 'sync': 0 }, limit=10)
+
+			if not res:
+				break
+
+			if not sync_data(table, res):
+				continue
+
+			db.update(table,
+				{ 'id': map(lambda x: x['id'], res) },
+				{ 'sync': 1 }
+			)
+
+
+try:
+	LOG.info("Pusher start")
+
+	while may_work:
+		try:
+			for table in SYNC_TABLES:
+				if not may_work:
+					break
+				sync_table(table)
+
+		except database.DatabaseError, e:
+			# See http://www.postgresql.org/docs/9.0/static/errcodes-appendix.html#ERRCODES-TABLE
+			if e.pgcode not in [ None, '57000', '57014', '57P01', '57P02', '57P03' ]:
+				raise
+			LOG.error(database.get_strerror(e))
+
+		time.sleep(SYNC_PERIOD)
+
+except Exception, e:
+	LOG.exception(e)
+	os._exit(1)

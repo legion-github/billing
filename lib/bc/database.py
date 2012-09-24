@@ -18,6 +18,7 @@ MAX_OPEN_CONNECTIONS = 20
 
 # Backend exceptions:
 OperationalError = psycopg2.OperationalError
+DatabaseError    = psycopg2.DatabaseError
 
 # Backend methods
 DBCursor  = extras.RealDictCursor

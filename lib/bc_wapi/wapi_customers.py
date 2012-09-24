@@ -134,7 +134,7 @@ def customerModify(params):
 				'message':'Wrong wallet_mode: ' + str(params['wallet_mode'])})
 			params['wallet_mode'] = v
 
-		customers.modify('login', params['login'], params)
+		customers.modify('id', params['id'], params)
 
 	except Exception, e:
 		LOG.error(e)

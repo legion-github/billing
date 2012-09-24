@@ -26,8 +26,14 @@ _TEMPLATE_CONFIG = {
 		"workers": 3
 	},
 
+	"pusher": {
+		"pidfile": "/tmp/bc-pusher.pid",
+		"period": 15
+	},
+
 	"zone": {
-		"local-DC": { "server": "localhost", "weight": 3, "local": True }
+		"local-DC": { "server": "localhost", "weight": 3, "local": True,
+		              "auth": { "role": "admin", "secret": "qwerty" } }
 	},
 
 	# Database section

@@ -47,3 +47,9 @@ def Tasks(host, auth, timeout):
 		'taskRemove':'status',
 		})
 
+def Zones(host, auth, timeout):
+	return client.BCClient(host, auth, timeout, {
+		'zoneSync':    'status',
+		'zoneSyncList':'status',
+		})
+

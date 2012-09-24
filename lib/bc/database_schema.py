@@ -125,6 +125,7 @@ SCHEMA = [
 				("type",      "varchar(32)",  "NOT NULL"),
 				("formula",   "varchar(32)",  "NOT NULL"),
 				("aggregate", "int",          "NOT NULL"),
+				("sync",      "int",          "NOT NULL DEFAULT '0'"),
 			]
 		)),
 	(LOCAL, DBTable("queue",
@@ -171,6 +172,7 @@ SCHEMA = [
 				("state",        "int",           "NOT NULL"),
 				("time_create",  "int",           "NOT NULL"),
 				("time_destroy", "int",           "NOT NULL"),
+				("sync",         "int",           "NOT NULL DEFAULT '0'"),
 			],
 			indexes = [
 				{ "cols": [ ("state", "ASC"), ("metric_id", "ASC"), ("tariff_id","ASC") ] }
@@ -184,6 +186,7 @@ SCHEMA = [
 				("time_create", "int",           "NOT NULL"),
 				("time_destroy","int",           "NOT NULL"),
 				("state",       "int",           "NOT NULL"),
+				("sync",        "int",           "NOT NULL DEFAULT '0'"),
 			],
 			indexes = [
 				{ "cols": [ ("state", "ASC") ] }
@@ -207,6 +210,7 @@ SCHEMA = [
 				("time_destroy",    "int",           "NOT NULL DEFAULT '0'"),
 				("wallet_mode",     "int",           "NOT NULL DEFAULT '0'"),
 				("wallet",          "bigint",        "NOT NULL DEFAULT '0'"),
+				("sync",            "int",           "NOT NULL DEFAULT '0'"),
 			],
 			indexes = [
 				{ "cols": [ ("login", "ASC"), ("state", "ASC") ], 'unique': True }

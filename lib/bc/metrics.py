@@ -24,6 +24,8 @@ class Metric(bobject.BaseObject):
 		}
 
 		if data:
+			if 'sync' in data:
+				del data['sync']
 			self.set(data)
 
 

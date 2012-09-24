@@ -74,6 +74,8 @@ class Customer(bobject.BaseObject):
 		}
 
 		if data:
+			if 'sync' in data:
+				del data['sync']
 			self.set(data)
 
 
@@ -176,7 +178,8 @@ def remove(typ, value):
 		db.update("customers", query,
 			{
 				'state': c.STATE_DELETED,
-				'time_destroy': int(time.time())
+				'time_destroy': int(time.time()),
+				'sync': 0
 			}
 		)
 
