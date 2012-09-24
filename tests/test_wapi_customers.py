@@ -126,7 +126,7 @@ class Test(DBTestCase):
 			t1 = db.find('customers').one()
 		self.assertEquals(data, t1)
 
-		self.assertEquals(wapi_customers.customerAdd({'login':'',
+		self.assertEquals(wapi_customers.customerAdd({'id':'',
 			'wallet_mode':'',
 			'name_short':''}), requestor({'message': 'Wrong wallet_mode: ' }, 'error'))
 
@@ -207,17 +207,15 @@ class Test(DBTestCase):
 				requestor({}, 'ok'))
 
 		data1 = {
-			'login':        data['login'],
-			'contact_email':         str(uuid.uuid4()),
-			'tariff_id':  str(uuid.uuid4()),
+			'id':           data['id'],
+			'contact_email':str(uuid.uuid4()),
+			'tariff_id':    str(uuid.uuid4()),
 		}
 
 		data.update(data1)
 
-
 		self.assertEqual(wapi_customers.customerModify(data1),
 				requestor({}, 'ok'))
-
 
 		with mocker([('bc.customers.modify', mocker.exception),
 					('bc_wapi.wapi_customers.LOG.error', mocker.passs)]):
@@ -225,11 +223,11 @@ class Test(DBTestCase):
 				requestor({'message': 'Unable to modify customer' }, 'servererror'))
 
 		self.assertEqual(
-			wapi_customers.customerModify({'login':'','state':customers.constants.STATE_DELETED}),
+			wapi_customers.customerModify({'id':'','state':customers.constants.STATE_DELETED}),
 			requestor({'message': 'Wrong state: ' + str(customers.constants.STATE_DELETED)}, 'error'))
 
 		self.assertEqual(
-			wapi_customers.customerModify({'login':'','wallet_mode':''}),
+			wapi_customers.customerModify({'id':'','wallet_mode':''}),
 			requestor({'message': 'Wrong wallet_mode: ' }, 'error'))
 
 
