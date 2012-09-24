@@ -49,8 +49,6 @@ class Test(unithelper.DBTestCase):
 		with database.DBConnect() as db:
 			db.insert('rates', data)
 
-		self.assertEquals(rates.get_by_id(rat.id), rat)
-
 		self.assertEquals(rates.get_by_metric(rat.tariff_id, rat.metric_id), rat)
 
 
@@ -155,9 +153,9 @@ class Test(unithelper.DBTestCase):
 			'time_destroy': int(time.time())})
 
 		with self.assertRaises(ValueError):
-			rates.remove('state', rat.id)
+			rates.remove('','')
 
-		rates.remove('id', rat.id)
+		rates.remove(rat.tariff_id, rat.metric_id)
 
 		with database.DBConnect() as db:
 			r1 = db.find_one('rates', {'id': rat.id})
@@ -186,14 +184,11 @@ class Test(unithelper.DBTestCase):
 		rates.add(rat)
 
 		data = {'description':  str(uuid.uuid4())}
-		rates.modify('id', rat.id, data)
+		rates.modify(rat.tariff_id, rat.metric_id, data)
 		rat.set(data)
 
-		with self.assertRaises(TypeError):
-			rates.modify('id', rat.id, {'state':rates.constants.STATE_MAXVALUE+1})
-
 		with self.assertRaises(ValueError):
-			rates.modify('name', rat.id, {})
+			rates.modify(rat.tariff_id, rat.metric_id, {})
 
 		with database.DBConnect() as db:
 			r1 = db.find_one('rates', {'id': rat.id})

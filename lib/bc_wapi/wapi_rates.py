@@ -33,8 +33,8 @@ def rateList(params):
 
 @jsonrpc.method(
 	validate = V({
-		'metric_id':    V(basestring, min=1,  max=128),
-		'tariff_id':    V(basestring, min=36, max=36),
+		'metric_id':    V(basestring, required=True, min=1,  max=128),
+		'tariff_id':    V(basestring, required=True, min=36, max=36),
 	}),
 	auth = True)
 def rateGet(params):
@@ -75,11 +75,17 @@ def rateAdd(params):
 
 		if 'currency' in params:
 			v = rates.constants.import_currency(params['currency'])
+			w = rates.constants.import_state(params['state'])
 			if v == None:
 				return jsonrpc.result_error('InvalidRequest',
 						{ 'status': 'error',
 							'message':'Wrong currency: ' + str(params['currency'])})
+			if w == None:
+				return jsonrpc.result_error('InvalidRequest',
+						{ 'status': 'error',
+							'message':'Wrong state: ' + str(params['state'])})
 			params['currency'] = v
+			params['state'] = w
 
 		o = rates.Rate(params)
 		rates.add(o)

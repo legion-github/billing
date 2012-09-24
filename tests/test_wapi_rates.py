@@ -36,31 +36,13 @@ class Test(DBTestCase):
 		with database.DBConnect() as db:
 			db.insert('rates', data)
 
-		self.assertEquals(wapi_rates.rateGet({'id': data['id']}),
-				requestor({'rate': data}, 'ok'))
-
-		self.assertEquals(wapi_rates.rateGet({'currency':''}),
-				requestor({'message': 'Wrong parameters' }, 'error'))
-
-		self.assertEquals(wapi_rates.rateGet({'currency':'', 'time_destroy':''}),
-				requestor({'message': 'Wrong parameters' }, 'error'))
-
-		self.assertEquals(wapi_rates.rateGet({
-			'currency':'',
-			'time_destroy':'',
-			'state':''}),
-				requestor({'message': 'Wrong parameters' }, 'error'))
-
 		self.assertEquals(wapi_rates.rateGet({
 			'metric_id': data['metric_id'],
 			'tariff_id': data['tariff_id'],
 			}),
 				requestor({'rate': data}, 'ok'))
 
-		self.assertEquals(wapi_rates.rateGet({'id':''}),
-				requestor({'message': 'Rate not found' }, 'error'))
-
-		with mocker([('bc.rates.get_by_id', mocker.exception),
+		with mocker([('bc.rates.get_by_metric', mocker.exception),
 					('bc_wapi.wapi_rates.LOG.error', mocker.passs)]):
 			self.assertEquals(wapi_rates.rateGet({'id':''}),
 				requestor({'message': 'Unable to obtain rate list' }, 'servererror'))
@@ -181,7 +163,8 @@ class Test(DBTestCase):
 		with database.DBConnect() as db:
 			db.insert('rates', data)
 
-		wapi_rates.rateRemove({'id':data['id']})
+		wapi_rates.rateRemove({'metric_id':data['metric_id'],
+			'tariff_id':data['tariff_id']})
 
 		data['state'] = rates.constants.STATE_DELETED
 		data['time_destroy'] = int(time.time())
@@ -189,7 +172,7 @@ class Test(DBTestCase):
 		with database.DBConnect() as db:
 			t1 = db.find_one('rates', {'id': data['id']})
 
-		self.assertEquals(t1, data)
+		self.assertEquals(hashable_dict(t1), hashable_dict(data))
 
 		with mocker([('bc.rates.remove', mocker.exception),
 					('bc_wapi.wapi_rates.LOG.error', mocker.passs)]):
@@ -215,8 +198,9 @@ class Test(DBTestCase):
 		with database.DBConnect() as db:
 			db.insert('rates', data)
 
-		self.assertEqual(wapi_rates.rateModify({'id':data['id']}),
-				requestor({}, 'ok'))
+		self.assertEqual(wapi_rates.rateModify({'metric_id':data['metric_id'],
+												'tariff_id':data['tariff_id']}),
+												requestor({'message': 'More arguments required'}, 'error'))
 
 		with mocker([('bc.rates.modify', mocker.exception),
 					('bc_wapi.wapi_rates.LOG.error', mocker.passs)]):
@@ -224,14 +208,12 @@ class Test(DBTestCase):
 				requestor({'message': 'Unable to modify rate' }, 'servererror'))
 
 		self.assertEqual(
-			wapi_rates.rateModify({'id':'w','state':str(rates.constants.STATE_DELETED)}),
-			requestor({'message': 'Wrong state: ' + str(rates.constants.STATE_DELETED)}, 'error'))
+				wapi_rates.rateModify({'metric_id':'','tariff_id':'','currency':'ASD'}),
+			requestor({'message': 'Wrong currency: ASD'}, 'error'))
 
-		self.assertEqual(
-			wapi_rates.rateModify({'id':'','currency':str(rates.constants.CURRENCY_USD)}),
-			requestor({'message': 'Wrong currency: ' + str(rates.constants.CURRENCY_USD)}, 'error'))
-
-		data1={'id':data['id'], 'description':str(uuid.uuid4())}
+		data1={'tariff_id':data['tariff_id'],
+				'metric_id':data['metric_id'],
+				'description':str(uuid.uuid4()),}
 		data.update(data1)
 
 		self.assertEqual(wapi_rates.rateModify(data1),
@@ -240,4 +222,4 @@ class Test(DBTestCase):
 		with database.DBConnect() as db:
 			t1 = db.find_one('rates', {'id': data['id']})
 
-		self.assertEquals(t1, data)
+		self.assertEquals(hashable_dict(t1), hashable_dict(data))
