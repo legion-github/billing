@@ -51,7 +51,7 @@ def get_host(dbtype, key=None):
 	if key != None:
 		data = config.subdict(conf['database']['shards'], field='weight')
 		ring = hashing.HashRing(data.keys(), data)
-		return ring.get_node(key)['server']
+		return conf['database']['shards'][ring.get_node(key)]['server']
 	elif dbtype == 'local':
 		for shard in conf['database']['shards'].itervalues():
 			if shard['local'] == True:

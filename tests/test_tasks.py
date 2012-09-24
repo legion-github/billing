@@ -72,7 +72,7 @@ class Test(unithelper.DBTestCase):
 
 		tasks.add(o)
 
-		with database.DBConnect() as db:
+		with database.DBConnect(primarykey=o.base_id) as db:
 			n = db.find_one('tasks', {'base_id':o.base_id, 'record_id': '0' })
 			o1 = tasks.Task(n)
 
@@ -98,7 +98,7 @@ class Test(unithelper.DBTestCase):
 
 		data = {'value': 29}
 		tasks.modify('id', o.base_id, data)
-		with database.DBConnect() as db:
+		with database.DBConnect(primarykey=o.base_id) as db:
 			o1 = tasks.Task(db.find_one('tasks', {'base_id':o.base_id, 'record_id': '0' }))
 		o.set(data)
 		self.assertEquals(o1.values, o.values)
@@ -119,7 +119,7 @@ class Test(unithelper.DBTestCase):
 		tasks.remove('id', o.base_id, ts)
 		o.set({'state': tasks.constants.STATE_DELETED, 'time_destroy':ts})
 
-		with database.DBConnect() as db:
+		with database.DBConnect(primarykey=o.base_id) as db:
 			o1 = tasks.Task(db.find_one('tasks', {'base_id':o.base_id, 'record_id': '0' }))
 		self.assertEquals(o1.values, o.values)
 
@@ -140,11 +140,11 @@ class Test(unithelper.DBTestCase):
 		data = {'value': 29}
 		ts = int(time.time() + 10)
 		tasks.update(o.base_id, data, ts)
-		with database.DBConnect() as db:
+		with database.DBConnect(primarykey=o.base_id) as db:
 			o1 = tasks.Task(db.find_one('tasks', {'base_id':o.base_id, 'record_id': '0' }))
 
 		#Getting queues
-		with database.DBConnect() as db:
+		with database.DBConnect(primarykey=o.base_id) as db:
 			nq = db.find_one('queue', {'id':o1.queue_id})
 			oq = db.find_one('queue', {'id':o.queue_id})
 
