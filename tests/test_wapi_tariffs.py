@@ -77,13 +77,14 @@ class Test(DBTestCase):
 		"""Check the creating tariff with tariffAdd"""
 
 		data={
+			'id':   str(uuid.uuid4()),
 			'name': str(uuid.uuid4()),
 			'description': str(uuid.uuid4()),
 		}
 		ans = wapi_tariffs.tariffAdd(data)
 
 		with database.DBConnect() as db:
-			t1 = db.find('tariffs').one()
+			t1 = db.find_one('tariffs', {'name':data['name']})
 		self.assertEquals(data['name'], t1['name'])
 		self.assertEquals(data['description'], t1['description'])
 
