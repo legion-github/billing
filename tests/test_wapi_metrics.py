@@ -77,7 +77,7 @@ class Test(DBTestCase):
 			'formula':    metrics.constants.FORMULA_SPEED,
 			'aggregate':  0L,
 		}
-		ans = wapi_metrics.metricAdd(data)
+		ans = wapi_metrics.metricAdd(data.copy())
 
 		self.assertEquals(ans, requestor({'id':data['id']}, 'ok'))
 

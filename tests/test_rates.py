@@ -187,9 +187,6 @@ class Test(unithelper.DBTestCase):
 		rates.modify(rat.tariff_id, rat.metric_id, data)
 		rat.set(data)
 
-		with self.assertRaises(ValueError):
-			rates.modify(rat.tariff_id, rat.metric_id, {})
-
 		with database.DBConnect() as db:
 			r1 = db.find_one('rates', {'id': rat.id})
 

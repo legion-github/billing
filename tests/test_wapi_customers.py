@@ -115,15 +115,17 @@ class Test(DBTestCase):
 			'state': customers.constants.STATE_ENABLED,
 			'time_create': int(time.time()),
 			'time_destroy': 0,
-			'wallet': 10,
-			'wallet_mode': 'unlimit'
+			'wallet': 10L,
+			'wallet_mode': 'unlimit',
+			'sync': 0,
 		}
-		ans = wapi_customers.customerAdd(data)
+		ans = wapi_customers.customerAdd(data.copy())
 
 		self.assertEquals(ans, requestor({'id':data['id']}, 'ok'))
 
 		with database.DBConnect() as db:
 			t1 = db.find('customers').one()
+		data['wallet_mode'] = customers.constants.WALLET_MODE_UNLIMITED
 		self.assertEquals(data, t1)
 
 		self.assertEquals(wapi_customers.customerAdd({'id':'',
@@ -155,7 +157,8 @@ class Test(DBTestCase):
 			'time_create': int(time.time()),
 			'time_destroy': 0,
 			'wallet': 10,
-			'wallet_mode': customers.constants.WALLET_MODE_LIMITED
+			'wallet_mode': customers.constants.WALLET_MODE_LIMITED,
+			'sync': 0,
 		}
 
 		with database.DBConnect() as db:
@@ -197,7 +200,8 @@ class Test(DBTestCase):
 			'time_create': int(time.time()),
 			'time_destroy': 0,
 			'wallet': 10,
-			'wallet_mode': customers.constants.WALLET_MODE_LIMITED
+			'wallet_mode': customers.constants.WALLET_MODE_LIMITED,
+			'sync': 0,
 			}
 
 		with database.DBConnect() as db:
@@ -214,12 +218,12 @@ class Test(DBTestCase):
 
 		data.update(data1)
 
-		self.assertEqual(wapi_customers.customerModify(data1),
+		self.assertEqual(wapi_customers.customerModify(data1.copy()),
 				requestor({}, 'ok'))
 
 		with mocker([('bc.customers.modify', mocker.exception),
 					('bc_wapi.wapi_customers.LOG.error', mocker.passs)]):
-			self.assertEquals(wapi_customers.customerModify(data1),
+			self.assertEquals(wapi_customers.customerModify(data1.copy()),
 				requestor({'message': 'Unable to modify customer' }, 'servererror'))
 
 		self.assertEqual(
@@ -255,8 +259,9 @@ class Test(DBTestCase):
 			'state': customers.constants.STATE_ENABLED,
 			'time_create': int(time.time()),
 			'time_destroy': 0,
-			'wallet': 10,
-			'wallet_mode': customers.constants.WALLET_MODE_LIMITED
+			'wallet': 10L,
+			'wallet_mode': customers.constants.WALLET_MODE_LIMITED,
+			'sync':0,
 		}
 
 		with database.DBConnect() as db:
@@ -275,7 +280,6 @@ class Test(DBTestCase):
 			t1 = db.find_one('customers', {'id': data['id']})
 
 		data['wallet'] += deposit
-
 		self.assertEquals(t1, data)
 
 		with mocker([('bc.customers.deposit', mocker.exception),

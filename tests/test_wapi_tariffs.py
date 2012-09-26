@@ -81,7 +81,7 @@ class Test(DBTestCase):
 			'name': str(uuid.uuid4()),
 			'description': str(uuid.uuid4()),
 		}
-		ans = wapi_tariffs.tariffAdd(data)
+		ans = wapi_tariffs.tariffAdd(data.copy())
 
 		with database.DBConnect() as db:
 			t1 = db.find_one('tariffs', {'name':data['name']})
@@ -129,6 +129,7 @@ class Test(DBTestCase):
 			'state':        tariffs.constants.STATE_ENABLED,
 			'time_create':  int(time.time()),
 			'time_destroy': 0,
+			'sync':         0,
 		}
 
 		with database.DBConnect() as db:
@@ -160,6 +161,7 @@ class Test(DBTestCase):
 			'state':        tariffs.constants.STATE_ENABLED,
 			'time_create':  int(time.time()),
 			'time_destroy': 0,
+			'sync':         0,
 		}
 
 		with database.DBConnect() as db:

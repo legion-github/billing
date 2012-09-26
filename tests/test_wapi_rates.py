@@ -30,7 +30,7 @@ class Test(DBTestCase):
 			'currency':     rates.constants.CURRENCY_RUB,
 			'state':        rates.constants.STATE_ACTIVE,
 			'time_create':  int(time.time()),
-			'time_destroy': 0
+			'time_destroy': 0,
 		}
 
 		with database.DBConnect() as db:
@@ -71,13 +71,13 @@ class Test(DBTestCase):
 										rates.constants.STATE_DELETED,
 										rates.constants.STATE_UPDATE]),
 					'time_create':  int(time.time()),
-					'time_destroy': 0
+					'time_destroy': 0,
 					}
 
 				rat[tar][met] = data
 
 				with database.DBConnect() as db:
-					db.insert('rates', data)
+					db.insert('rates', data.copy())
 
 		list_all = itertools.chain(*[rat[j].itervalues() for j in rat.iterkeys()])
 
@@ -126,15 +126,18 @@ class Test(DBTestCase):
 				'currency':     'RUB',
 				'state':        'ACTIVE',
 				'time_create':  int(time.time()),
-				'time_destroy': 0
+				'time_destroy': 0,
+				'sync':         0,
 		}
-
+		
 		tariffs.add(tariffs.Tariff({'id':data['tariff_id']}))
 
 		metrics.add(metrics.Metric({'id':data['metric_id']}))
 
-		self.assertEquals(wapi_rates.rateAdd(data), requestor({'id':data['id']}, 'ok'))
+		self.assertEquals(wapi_rates.rateAdd(data.copy()), requestor({'id':data['id']}, 'ok'))
 
+		data['currency'] = rates.constants.CURRENCY_RUB
+		data['state'] = rates.constants.STATE_ACTIVE
 		with database.DBConnect() as db:
 			t1 = db.find('rates').one()
 		self.assertEquals(hashable_dict(data), hashable_dict(t1))
@@ -157,11 +160,12 @@ class Test(DBTestCase):
 				'currency':     rates.constants.CURRENCY_RUB,
 				'state':        rates.constants.STATE_ACTIVE,
 				'time_create':  int(time.time()),
-				'time_destroy': 0
+				'time_destroy': 0,
+				'sync':         0,
 		}
 
 		with database.DBConnect() as db:
-			db.insert('rates', data)
+			db.insert('rates', data.copy())
 
 		wapi_rates.rateRemove({'metric_id':data['metric_id'],
 			'tariff_id':data['tariff_id']})
@@ -172,7 +176,7 @@ class Test(DBTestCase):
 		with database.DBConnect() as db:
 			t1 = db.find_one('rates', {'id': data['id']})
 
-		self.assertEquals(hashable_dict(t1), hashable_dict(data))
+		self.assertEquals(hashable_dict(t1), hashable_dict(data.copy()))
 
 		with mocker([('bc.rates.remove', mocker.exception),
 					('bc_wapi.wapi_rates.LOG.error', mocker.passs)]):
@@ -192,11 +196,12 @@ class Test(DBTestCase):
 				'currency':     rates.constants.CURRENCY_RUB,
 				'state':        rates.constants.STATE_ACTIVE,
 				'time_create':  int(time.time()),
-				'time_destroy': 0
+				'time_destroy': 0,
+				'sync':         0,
 		}
 
 		with database.DBConnect() as db:
-			db.insert('rates', data)
+			db.insert('rates', data.copy())
 
 		self.assertEqual(wapi_rates.rateModify({'metric_id':data['metric_id'],
 												'tariff_id':data['tariff_id']}),
