@@ -1,0 +1,84 @@
+#!/usr/bin/python
+
+import os
+import sys
+import time
+
+from bc import log
+from bc import config
+from bc import database
+
+from bc_client import Sync
+
+conf = config.read()
+
+LOG = log.logger("router-pusher", init=True, type='syslog', level='debug')
+
+SYNC_TABLES = conf['pusher']['tables']
+SYNC_PERIOD = conf['pusher']['period']
+
+# List of incoming singals
+may_work = True
+
+# Set signal handlers
+for sig in [ signal.SIGTERM ]:
+	signal.signal(sig, lambda sig,frame: may_work = False)
+
+CONNECTS = {}
+
+def sync_table(table):
+	with database.DBConnect() as db:
+		while may_work:
+			data = db.find_all(table, { 'sync': 0 }, limit=10)
+
+			if not data:
+				break
+
+			rc = 0
+
+			try:
+				for name,zone in conf['zones'].iteritems():
+					if name not in CONNECTS:
+						CONNECTS[name] = Sync(zone['server'], zone['auth'], 30)
+
+					CONNECTS[name].syncList(
+						{ 'table': table, 'list': data }
+					)
+					rc += 1
+
+			except Exception, e:
+				LOG.exception(e)
+				break
+
+			if len(conf['zones']) != rc:
+				continue
+
+			db.update(table,
+				{ 'id': map(lambda x: x['id'], data) },
+				{ 'sync': 1 }
+			)
+
+
+LOG.info("Configuration synchronizer start")
+
+while may_work:
+	try:
+		for table in SYNC_TABLES:
+			if not may_work:
+				break
+
+			sync_table(table)
+
+	except database.DatabaseError, e:
+		# See http://www.postgresql.org/docs/9.0/static/errcodes-appendix.html#ERRCODES-TABLE
+		if e.pgcode not in [ None, '57000', '57014', '57P01', '57P02', '57P03' ]:
+			LOG.exception(e)
+			os._exit(1)
+
+		LOG.error(database.get_strerror(e))
+
+	except Exception, e:
+		LOG.exception(e)
+		os._exit(1)
+
+	time.sleep(SYNC_PERIOD)

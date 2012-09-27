@@ -26,9 +26,11 @@ _TEMPLATE_CONFIG = {
 		"workers": 3
 	},
 
-	"pusher": {
-		"pidfile": "/tmp/bc-pusher.pid",
-		"period": 15
+	"router": {
+		"pidfile": "/tmp/bc-router.pid",
+		"source":      { "table": "bills",         "list": "@=database.shards" },
+		"destination": { "table": "customerbills", "list": "@=zones" },
+		"pusher": False,
 	},
 
 	"zone": {

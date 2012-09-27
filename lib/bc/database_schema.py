@@ -161,6 +161,24 @@ SCHEMA = [
 				{ "cols": [ ("state", "ASC") ] },
 			]
 		)),
+	(LOCAL, DBTable("bills",
+			columns = [
+				("id",       "varchar(36)",  "NOT NULL PRIMARY KEY"),
+				("target",   "varchar(36)",  "NOT NULL"),
+				("group",    "bigint",       "NOT NULL DEFAULT '0'"),
+				("value",    "bigint",       "NOT NULL DEFAULT '0'"),
+				("sync",     "int",          "NOT NULL DEFAULT '0'"),
+			],
+		)),
+	(GLOBAL, DBTable("customerbills",
+			columns = [
+				("id",       "varchar(36)",  "NOT NULL PRIMARY KEY"),
+				("target",   "varchar(36)",  "NOT NULL"),
+				("group",    "bigint",       "NOT NULL DEFAULT '0'"),
+				("value",    "bigint",       "NOT NULL DEFAULT '0'"),
+				("sync",     "int",          "NOT NULL DEFAULT '0'"),
+			],
+		)),
 	(GLOBAL, DBTable("rates",
 			columns = [
 				("id",           "varchar(36)",   "NOT NULL PRIMARY KEY"),

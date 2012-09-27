@@ -21,6 +21,7 @@ except IndexError:
 	num = '?'
 
 GROUPID = iter(polinomial.permutation())
+BILLS_GROUPID = iter(polinomial.permutation())
 METRIC_CACHE = {}
 
 def get_metric(metric_id):
@@ -117,10 +118,12 @@ while True:
 
 			# Withdraw payment from the customer.
 			for customer, cost in summ.iteritems():
-				db.update('customers',
-					{ 'id': t['customer'] },
-					{ '$dec': { 'wallet': cost } }
-				)
+				b = Bill({
+					'target': customer,
+					'value':  cost,
+					'group':  BILLS_GROUPID.next()
+				})
+				db.insert('bills', b.values)
 
 			# Commit all changes at once.
 			db.commit()

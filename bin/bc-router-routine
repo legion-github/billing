@@ -1,0 +1,95 @@
+#!/usr/bin/python
+
+import os
+import sys
+import time
+
+from bc import log
+from bc import config
+from bc import database
+from bc import hashing
+from bc import polinomial
+
+from bc_client import Sync
+
+LOG = log.logger("router-routine", init=True, type='syslog', level='debug')
+
+srcname = str(sys.argv[1])
+
+conf = config.read()
+
+data_src  = conf['router']['source']['list'][srcname]
+data_dst  = conf['router']['destination']['list']
+
+table_src = conf['router']['source']['table']
+table_dst = conf['router']['destination']['list']
+
+# Create hashring by zone
+data = config.subdict(data_dst, field='weight')
+RING = hashing.HashRing(data.keys(), data)
+
+GROUPID = iter(polinomial.permutation())
+
+# Connection cache
+CONNECTS = {}
+
+LOG.info("Routine ready " + str(srcname))
+
+while True:
+	try:
+		with database.DBConnect(dbhost=data_src['server'], autocommit=False) as db:
+			try:
+				# Lock all selected items.
+				cur = db.find(table_src,
+					{ 'group': GROUPID.next() },
+					limit=50, lock='update', nowait=True)
+
+			except database.OperationalError as e:
+				# Someone has locked our task group.
+				# We have to go to another.
+				if e.pgcode == '55P03':
+					continue
+				raise e
+
+			# Reorder objects by group
+			groups = {}
+
+			for obj in cur:
+				n = RING.get_node(obj['target'])
+
+				if n not in groups:
+					groups[n] = []
+
+				groups[n].append(obj)
+
+			# Nothing to do
+			if len(groups) == 0:
+				continue
+
+			for group, datalist in groups.iteritems():
+				try:
+					if group not in CONNECTS:
+						CONNECTS[group] = Sync(data_dst[group]['server'],
+						                       data_dst[group]['auth'],
+						                       30)
+					CONNECTS[group].syncList({
+						'table': table_dst,
+						'list':  datalist
+					})
+				except Exception as e:
+					LOG.exception(e)
+					continue
+
+				db.delete(table_src, {
+					'id': map(lambda x: x['id'], data)
+				})
+
+			db.commit()
+
+	except Exception as e:
+		# See http://www.postgresql.org/docs/9.0/static/errcodes-appendix.html#ERRCODES-TABLE
+		if e.pgcode in [ None, '57000', '57014', '57P01', '57P02', '57P03' ]:
+			LOG.error(database.get_strerror(e))
+			time.sleep(15)
+			continue
+		raise e
