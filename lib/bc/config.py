@@ -52,6 +52,24 @@ _TEMPLATE_CONFIG = {
 	}
 }
 
+def _resolve_include(rootdict):
+	def _include(d):
+		for k,v in d.iteritems():
+			if isinstance(v, dict):
+				_include(v)
+				continue
+
+			if not isinstance(v, basestring) or v[:2] != '@=':
+				continue
+
+			d[k] = rootdict
+			for e in v[2:].split('.'):
+				d[k] = d[k][e]
+		return d
+
+	return _include(rootdict)
+
+
 def read(filename = CONFIG_FILE, inline = None, force = False):
 	"""Read system config file"""
 
@@ -81,7 +99,9 @@ def read(filename = CONFIG_FILE, inline = None, force = False):
 	s = re.sub(r'([^,:\{\[])\s+("[^"\\]+":)', r'\1, \2', " ".join(arrconf))
 
 	CONFIG = {}
-	return utils.dict_merge(CONFIG, _TEMPLATE_CONFIG, json.loads(s))
+	utils.dict_merge(CONFIG, _TEMPLATE_CONFIG, json.loads(s))
+	_resolve_include(CONFIG)
+	return CONFIG
 
 
 def subdict(confdict, field='weight'):
