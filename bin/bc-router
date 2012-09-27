@@ -11,8 +11,9 @@ from bc import daemon
 from bc import config
 
 conf = config.read()
-data_source = conf['database']['shards']
-run_pusher  = conf['router'].get('pusher', None)
+data_source  = conf['database']['shards']
+run_pusher   = conf['router'].get('pusher', False)
+run_withdraw = conf['router'].get('withdraw', False)
 
 LOG = log.logger("router", init=True, type='stderr')
 CWD = os.path.dirname(sys.argv[0])
@@ -69,6 +70,14 @@ def init_workers(reset=False):
 	if run_pusher and '_pusher' not in WORKERS:
 		WORKERS['_pusher'] = {
 			'prog':   'bc-router-pusher',
+			'args':   [],
+			'pid':    0,
+			'delay':  0
+		}
+
+	if run_withdraw and '_withdraw' not in WORKERS:
+		WORKERS['_withdraw'] = {
+			'prog':   'bc-router-withdraw',
 			'args':   [],
 			'pid':    0,
 			'delay':  0

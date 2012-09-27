@@ -1,0 +1,53 @@
+#!/usr/bin/python
+
+import os
+import sys
+import time
+
+from bc import log
+from bc import database
+from bc import polinomial
+
+LOG = log.logger("withdraw", init=True, type='syslog', level='debug')
+LOG.info("Withdraw service start")
+
+GROUPID = iter(polinomial.permutation())
+
+while True:
+	try:
+		with database.DBConnect(autocommit=False) as db:
+			try:
+				# Lock all selected items.
+				cur = db.find('customerbills',
+					{ 'group': GROUPID.next() },
+					lock='update', nowait=True)
+
+			except database.OperationalError as e:
+				# Someone has locked our task group.
+				# We have to go to another.
+				if e.pgcode == '55P03':
+					continue
+				raise e
+
+			for bill in cur:
+				db.update('customers',
+					{ 'id': bill['target'] },
+					{ '$dec': { 'wallet': bill['value'] } }
+				)
+				db.delete('customerbills',
+					{ 'id': bill['target'] }
+				)
+
+			db.commit()
+
+	except database.DatabaseError, e:
+		# See http://www.postgresql.org/docs/9.0/static/errcodes-appendix.html#ERRCODES-TABLE
+		if e.pgcode not in [ None, '57000', '57014', '57P01', '57P02', '57P03' ]:
+			LOG.exception(e)
+			os._exit(1)
+
+		LOG.error(database.get_strerror(e))
+
+	except Exception, e:
+		LOG.exception(e)
+		os._exit(1)
