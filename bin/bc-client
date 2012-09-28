@@ -74,7 +74,9 @@ while True:
 			except database.OperationalError:
 				# Someone has locked our task group.
 				# We have to go to another.
-				continue
+				if e.pgcode == '55P03':
+					continue
+				raise e
 
 			# Join results: tasks_dict = tasks + queue
 			now = int(time.time())
