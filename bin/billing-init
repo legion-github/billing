@@ -13,8 +13,8 @@ import random
 
 
 LOG = log.logger("unittests", type='stderr', level='debug', init=True)
-host = 'localhost:10004'
-auth = {'role':'admin','secret':'qwerty'}
+host_auth = {'localhost:10004':{'role':'admin','secret':'qwerty'}}
+local = 'localhost:10004'
 
 
 def process_metrics():
@@ -33,7 +33,7 @@ def process_metrics():
 		{ 'id': 'traffic_external_incoming', 'formula': 'unit',  'type': 'bytes',       'aggregate': 1 },
 		{ 'id': 'traffic_external_outgoing', 'formula': 'unit',  'type': 'bytes',       'aggregate': 1 },
 	]
-	cl_metrics = Metrics(host, auth, 30)
+	cl_metrics = Metrics(host_auth, local)
 	for o in metrics:
 		cl_metrics.metricAdd(o)
 
@@ -60,7 +60,7 @@ def process_customers():
 			'wallet_mode':    'unlimit',
 		}
 	]
-	cl_customers = Customers(host, auth, 30)
+	cl_customers = Customers(host_auth, local)
 	for o in customers:
 		cl_customers.customerAdd(o)
 
@@ -71,7 +71,7 @@ def process_tariffs():
 		'name': 'Service tariff',
 		'description': 'This is service tariff record is not for ordinary customers'
 	}
-	cl_tariffs = Tariffs(host, auth, 30)
+	cl_tariffs = Tariffs(host_auth, local)
 	cl_tariffs.tariffAddInternal(internal)
 
 	tariffs = [
@@ -93,10 +93,10 @@ def process_tariffs():
 
 
 def process_rates():
-	tariffIds = [i['id'] for i in Tariffs(host, auth, 30).tariffList()]
-	metricIds = [i['id'] for i in Metrics(host, auth, 30).metricList()]
+	tariffIds = [i['id'] for i in Tariffs(host_auth, local).tariffList()]
+	metricIds = [i['id'] for i in Metrics(host_auth, local).metricList()]
 
-	cl_rates = Rates(host, auth, 30)
+	cl_rates = Rates(host_auth, local)
 
 	for tariff in tariffIds:
 		if tariff != '*':
