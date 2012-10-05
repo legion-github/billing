@@ -1,8 +1,5 @@
 import uuid
 import bobject
-import readonly
-
-from bc import database
 
 class Bill(bobject.BaseObject):
 	def __init__(self, data = None):

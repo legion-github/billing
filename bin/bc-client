@@ -8,6 +8,8 @@ from bc import log
 from bc import database
 from bc import polinomial
 
+from bc import bills
+from bc import rates
 from bc import tasks
 from bc import metrics
 from bc import calculate
@@ -71,7 +73,7 @@ while True:
 					{ 'id': tasks_dict.keys() },
 					lock='update', nowait=True
 				)
-			except database.OperationalError:
+			except database.OperationalError as e:
 				# Someone has locked our task group.
 				# We have to go to another.
 				if e.pgcode == '55P03':
@@ -120,7 +122,7 @@ while True:
 
 			# Withdraw payment from the customer.
 			for customer, cost in summ.iteritems():
-				b = Bill({
+				b = bills.Bill({
 					'target':   customer,
 					'value':    cost,
 					'group_id': BILLS_GROUPID.next()
