@@ -41,7 +41,7 @@ while True:
 			try:
 				# Lock all selected items.
 				cur = db.find(table_src,
-					{ 'group': GROUPID.next() },
+					{ 'group_id': GROUPID.next() },
 					limit=50, lock='update', nowait=True)
 
 			except database.OperationalError as e:

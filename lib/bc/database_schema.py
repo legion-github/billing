@@ -165,7 +165,7 @@ SCHEMA = [
 			columns = [
 				("id",       "varchar(36)",  "NOT NULL PRIMARY KEY"),
 				("target",   "varchar(36)",  "NOT NULL"),
-				("group",    "bigint",       "NOT NULL DEFAULT '0'"),
+				("group_id", "bigint",       "NOT NULL DEFAULT '0'"),
 				("value",    "bigint",       "NOT NULL DEFAULT '0'"),
 				("sync",     "int",          "NOT NULL DEFAULT '0'"),
 			],
@@ -174,7 +174,7 @@ SCHEMA = [
 			columns = [
 				("id",       "varchar(36)",  "NOT NULL PRIMARY KEY"),
 				("target",   "varchar(36)",  "NOT NULL"),
-				("group",    "bigint",       "NOT NULL DEFAULT '0'"),
+				("group_id", "bigint",       "NOT NULL DEFAULT '0'"),
 				("value",    "bigint",       "NOT NULL DEFAULT '0'"),
 				("sync",     "int",          "NOT NULL DEFAULT '0'"),
 			],

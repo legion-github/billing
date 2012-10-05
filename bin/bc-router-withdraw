@@ -19,7 +19,7 @@ while True:
 			try:
 				# Lock all selected items.
 				cur = db.find('customerbills',
-					{ 'group': GROUPID.next() },
+					{ 'group_id': GROUPID.next() },
 					lock='update', nowait=True)
 
 			except database.OperationalError as e:
