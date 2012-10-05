@@ -4,7 +4,7 @@
 %define bc_group _bc
 
 Summary:  CROC Cloud Platform - Billing controller
-Name:     c2-bc
+Name:     bc
 Version:  0.0.0
 Release:  CROC1%{?dist}
 Epoch:    %(date +%s)
@@ -16,14 +16,14 @@ BuildRequires:  python, python-setuptools
 Requires: python
 Requires: python-psycopg2
 Requires: python-msgpack
-Requires: c2-bc-common
+Requires: bc-common
 
 Vendor:     CROC
 URL:        http://cloud.croc.ru
 BuildRoot:  %_tmppath/%name-%version-root
 BuildArch:  noarch
 
-Source0: c2-billing.tar.gz
+Source0: billing.tar.gz
 
 %description
 CROC Cloud Platform billing controller
@@ -58,33 +58,33 @@ JSONRPC implementation.
 Summary:  CROC Cloud billing client library.
 Group:    Applications/System
 
-Requires: c2-common
-Requires: c2-bc-jsonrpc
+Requires: common
+Requires: bc-jsonrpc
 
 %description client-billing
 CROC Cloud billing client library.
 
 
-%package -n c2-abc
+%package -n abc
 Summary:  CROC Cloud Platform - API Controller
 Group:    Applications/System
 
 Requires:  python, httpd, mod_wsgi
-Requires:  c2-bc-common
-Requires:  c2-bc-jsonrpc
+Requires:  bc-common
+Requires:  bc-jsonrpc
 
-%description -n c2-abc
+%description -n abc
 CROC Cloud Platform API Controller
 
 
-%package -n c2-gs-bc
+%package -n gs-bc
 Summary:  CROC Cloud Platform Garbage collection service (BC)
 Group:    Applications/System
 
-Requires: c2-gs
-Requires: c2-bc-common
+Requires: gs
+Requires: bc-common
 
-%description -n c2-gs-bc
+%description -n gs-bc
 Garbage collection service (BC)
 
 
@@ -121,16 +121,16 @@ service %name stop ||:
 %pre common
 groupadd -r -f %bc_group
 
-%post -n c2-abc
+%post -n abc
 service httpd condrestart ||:
 
-%postun -n c2-abc
+%postun -n abc
 [ "$1" != "0" ] || service httpd condrestart ||:
 
-%post -n c2-gs-bc
+%post -n gs-bc
 service crond reload
 
-%preun -n c2-gs-bc
+%preun -n gs-bc
 [ "$1" != "0" ] || service crond reload ||:
 
 %files
@@ -151,12 +151,12 @@ service crond reload
 %files client-billing
 %python_sitearch/bc_client
 
-%files -n c2-abc
+%files -n abc
 %_libexecdir/billing
 %python_sitearch/bc_wapi
 %config(noreplace) %_sysconfdir/httpd/conf.d/*.conf
 
-%files -n c2-gs-bc
+%files -n gs-bc
 %_datadir/c2/gs
 %config(noreplace) %_sysconfdir/cron.d/*
 
