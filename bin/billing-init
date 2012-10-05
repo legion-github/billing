@@ -41,6 +41,7 @@ def process_metrics():
 def process_customers():
 	customers = [
 		{
+			'id':             str(uuid.uuid4()),
 			'login':          'google.com',
 			'name_short':     'Google',
 			'name_full':      'Google OOO (Moscow)',
@@ -53,6 +54,7 @@ def process_customers():
 			'wallet_mode':    'limit',
 		},
 		{
+			'id':             str(uuid.uuid4()),
 			'login':          'testy.org',
 			'name_short':     'Test',
 			'name_full':      'Test Inc.',
@@ -72,7 +74,7 @@ def process_tariffs():
 		'description': 'This is service tariff record is not for ordinary customers'
 	}
 	cl_tariffs = Tariffs(host_auth, local)
-	cl_tariffs.tariffAddInternal(internal)
+	cl_tariffs.tariffAdd(internal)
 
 	tariffs = [
 		{

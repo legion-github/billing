@@ -21,9 +21,9 @@ ERRORS['0'] = lambda x: BillingError('Invalid return message')
 class BCClient(object):
 	def __init__(self, config):
 
-		for key, value in config.iteritems():
-			setattr(self, key,
-				lambda y={}: self.__request(key, y, value))
+		map(lambda key, value: setattr(self, key,
+				lambda y={}: self.__request(key, y, value)),
+			config.iteritems())
 		try:
 			self.pool = HTTPConnectionPool()
 		except Exception as e:
@@ -47,7 +47,7 @@ class BCClient(object):
 			if 'result' in response.keys():
 				return response['result'].get(info['returning'])
 			elif 'error'in response.keys():
-				raise ERRORS[str(response['error'].get('code', 0))](response['error'].get('data',{}).get('message', 0))
+				raise ERRORS[str(response['error'].get('code', 0))](response['error'].get('message', 0))
 
 		except BillingError as e:
 			LOG.exception("Failed to communicate with Billing: %s", e)
