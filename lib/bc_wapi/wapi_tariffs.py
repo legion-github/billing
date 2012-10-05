@@ -47,7 +47,7 @@ def tariffGet(params):
 
 @jsonrpc.method(
 	validate = V({
-		'id':          V(basestring, min=36, max=36),
+		'id':          V(basestring, min=1, max=36),
 		'name':        V(basestring, min=3, max=64),
 		'description': V(basestring, min=3, max=1024),
 	}),

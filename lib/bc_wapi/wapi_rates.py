@@ -63,6 +63,7 @@ def rateGet(params):
 		'description':  V(basestring, required=False, min=3,  max=1024),
 		'rate':         V(int,        required=False),
 		'currency':     V(basestring, required=False,         max=7),
+		'state':        V(basestring, required=False,         max=7),
 	}, drop_optional=True),
 	auth = True)
 def rateAdd(params):

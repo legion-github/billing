@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import httplib
+from connectionpool import HTTPConnectionPool
 
 from bc import log
-from bc_jsonrpc import http
 from bc_jsonrpc import message
+from bc_jsonrpc import http
 
 LOG = log.logger("client", syslog=False)
 
@@ -17,33 +17,38 @@ class BillingError(Exception):
 ERRORS = dict((str(message.error_codes[i]['code']), lambda x: BillingError(i+': {0}', x)) for i in message.error_codes.keys())
 ERRORS['0'] = lambda x: BillingError('Invalid return message')
 
-class BCClient(object):
-	def __init__(self, host, auth, timeout, methods_dict):
 
-		map(lambda x: setattr(self, x,
-				lambda y={}: self.__request(x, y, auth, timeout, methods_dict[x])),
-			methods_dict.keys())
+class BCClient(object):
+	def __init__(self, config):
+
+		map(lambda x: setattr(self, x[0],
+				lambda y={}: self.__request(x[0], y, x[1])),
+			config.iteritems())
 		try:
-			self.conn = httplib.HTTPConnection(host, timeout=timeout)
-			self.conn.connect()
+			self.pool = HTTPConnectionPool()
 		except Exception as e:
-			LOG.exception("Failed to connect to %s: %s.", host, e)
+			LOG.exception("Failed to connect: %s.", e)
 			raise e
 
-	def __request(self, method, json_data, auth, timeout, returning):
+	def __request(self, method, json_data, info):
 
-		def exceptionator(response):
-			if 'result' in response.keys():
-				return response['result']
-			elif 'error'in response.keys():
-				raise ERRORS[str(response['error'].get('code', 0))](response['error'].get('data',{}).get('message', 0))
+		def request(method, server, info):
+			host, port = server.split(':')
+			return http.jsonrpc_http_request(self.pool,
+				host, port, method, json_data,
+				auth_data=info['hosts'][server])
 
 		try:
-			response = http.jsonrpc_http_request(self.conn,
-				method,
-				json_data,
-				auth_data=auth)
-			return exceptionator(response).get(returning)
+			response = request(method, info['local'], info)
+
+			if 'redirect' in response.keys():
+				response = request(method, response['server'], info)
+
+			if 'result' in response.keys():
+				return response['result'].get(info['returning'])
+			elif 'error'in response.keys():
+				raise ERRORS[str(response['error'].get('code', 0))](response['error'].get('message', 0))
+
 		except BillingError as e:
 			LOG.exception("Failed to communicate with Billing: %s", e)
 			raise e

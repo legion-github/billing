@@ -11,26 +11,19 @@ class JsonRpcHttpError(Exception):
 		Exception.__init__(self, fmt.format(*args))
 
 
-def jsonrpc_http_request(conn, method, params=None, auth_data=None, req_limit=None):
+def jsonrpc_http_request(pool, host, port, method, params=None, auth_data=None, req_limit=None):
 	req = message.jsonrpc_request(method, params)
 
 	if auth_data:
 		req = secure.jsonrpc_sign(auth_data['role'], auth_data['secret'], req)
 
-	try:
-		conn.request("POST", "/", json.dumps(req))
-	except httplib.CannotSendRequest:
-		conn.close()
-		conn.connect()
-		conn.request("POST", "/", json.dumps(req))
-
-	response = conn.getresponse()
+	response = pool.request(host, port, "POST", "/", json.dumps(req))
 
 	if response.status != httplib.OK:
 		raise JsonRpcHttpError("The server returned an error: {0}.", response.reason)
 
-	if req_limit:
-		reply = response.read(req_limit + 1)
+		if req_limit:
+			reply = response.read(req_limit + 1)
 
 		if len(reply) > req_limit:
 			raise JsonRpcHttpError("Got a reply of too big size.")
