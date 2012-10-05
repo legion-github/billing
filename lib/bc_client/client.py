@@ -21,8 +21,8 @@ ERRORS['0'] = lambda x: BillingError('Invalid return message')
 class BCClient(object):
 	def __init__(self, config):
 
-		map(lambda key, value: setattr(self, key,
-				lambda y={}: self.__request(key, y, value)),
+		map(lambda x: setattr(self, x[0],
+				lambda y={}: self.__request(x[0], y, x[1])),
 			config.iteritems())
 		try:
 			self.pool = HTTPConnectionPool()
