@@ -46,7 +46,7 @@ class Customer(bobject.BaseObject):
 		c = CustomerConstants()
 
 		self.__values__ = {
-			'id': str(uuid.uuid4()),
+			'id': unicode(uuid.uuid4()),
 
 			'login':            u'',
 

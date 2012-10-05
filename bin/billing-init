@@ -109,6 +109,7 @@ def process_rates():
 					'tariff_id':    tariff,
 					'rate':         long(random.randint(10**3, 10**10)),
 					'currency':     'usd',
+					'state':        'active',
 					})
 
 try:
