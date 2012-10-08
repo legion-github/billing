@@ -8,7 +8,7 @@ from bc import log
 from bc import database
 from bc import polinomial
 
-LOG = log.logger("withdraw", init=True, type='syslog', level='debug')
+LOG = log.logger('data-withdraw', init=True, type='syslog', level='debug')
 LOG.info("Withdraw service start")
 
 GROUPID = iter(polinomial.permutation())

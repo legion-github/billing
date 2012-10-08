@@ -1,0 +1,83 @@
+#!/bin/sh
+#
+# Init script for the CROC Cloud componenct.
+#
+# chkconfig: 2345 99 05
+# description: script for starting and stopping the CROC Cloud component
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+prog=/usr/bin/bc-calc-server
+name='billing calculator'
+lockfile=/var/lock/subsys/bc-calc
+pidfile=/var/run/bc/calc.pid
+user=_bc
+
+RETVAL=0
+
+start() {
+	if [ ! -f "$lockfile" ]; then
+		echo -n $"Starting $name: "
+		daemon --user "$user" --pidfile "$pidfile" $prog &&
+			success || failure
+		RETVAL=$?
+		echo
+		[ $RETVAL = 0 ] && touch "$lockfile"
+	fi
+	return $RETVAL
+}
+
+stop() {
+	echo -n $"Stopping $name: "
+	RETVAL=0
+	killproc -p "$pidfile" $prog ||
+		RETVAL=$?
+	echo
+	[ $RETVAL = 0 ] && rm -f "$lockfile"
+	return $RETVAL
+}
+
+restart() {
+	echo -n $"Restarting $name: "
+	RETVAL=0
+	killproc -p "$pidfile" $prog -USR2 ||
+		RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+reload() {
+	echo -n $"Reloading $name: "
+	RETVAL=0
+	killproc -p "$pidfile" $prog -USR1 ||
+		RETVAL=$?
+	echo
+	return $RETVAL
+}
+
+case $1 in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	restart|reload)
+		restart
+		;;
+	condrestart|condreload)
+		[ -f "$lockfile" ] && restart || :
+		;;
+	status)
+		status -p "$pidfile" $prog
+		RETVAL=$?
+		;;
+	*)
+
+	echo $"Usage: $name {start|stop|restart|reload|condrestart|condreload|status}"
+	exit 3
+esac
+
+exit $RETVAL

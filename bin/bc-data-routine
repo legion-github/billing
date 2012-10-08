@@ -12,17 +12,17 @@ from bc import polinomial
 
 from bc_client import Sync
 
-LOG = log.logger("router-routine", init=True, type='syslog', level='debug')
+LOG = log.logger("data-routine", init=True, type='syslog', level='debug')
 
 srcname = str(sys.argv[1])
 
 conf = config.read()
 
-data_src  = conf['router']['source']['list'][srcname]
-data_dst  = conf['router']['destination']['list']
+data_src  = conf['data-server']['source']['list'][srcname]
+data_dst  = conf['data-server']['destination']['list']
 
-table_src = conf['router']['source']['table']
-table_dst = conf['router']['destination']['list']
+table_src = conf['data-server']['source']['table']
+table_dst = conf['data-server']['destination']['list']
 
 # Create hashring by zone
 data = config.subdict(data_dst, field='weight')

@@ -12,10 +12,10 @@ from bc import config
 
 conf = config.read()
 data_source  = conf['database']['shards']
-run_pusher   = conf['router'].get('pusher', False)
-run_withdraw = conf['router'].get('withdraw', False)
+run_pusher   = conf['data-server'].get('pusher', False)
+run_withdraw = conf['data-server'].get('withdraw', False)
 
-LOG = log.logger("router", init=True, type='stderr')
+LOG = log.logger('data-server', init=True, type='stderr')
 CWD = os.path.dirname(sys.argv[0])
 CWD = os.path.abspath(CWD)
 
@@ -69,7 +69,7 @@ def init_workers(reset=False):
 
 	if run_pusher and '_pusher' not in WORKERS:
 		WORKERS['_pusher'] = {
-			'prog':   'bc-router-pusher',
+			'prog':   'bc-data-pusher',
 			'args':   [],
 			'pid':    0,
 			'delay':  0
@@ -77,7 +77,7 @@ def init_workers(reset=False):
 
 	if run_withdraw and '_withdraw' not in WORKERS:
 		WORKERS['_withdraw'] = {
-			'prog':   'bc-router-withdraw',
+			'prog':   'bc-data-withdraw',
 			'args':   [],
 			'pid':    0,
 			'delay':  0
@@ -88,7 +88,7 @@ def init_workers(reset=False):
 			continue
 
 		WORKERS[k] = {
-			'prog':   'bc-router-routine',
+			'prog':   'bc-data-routine',
 			'args':   [str(k)],
 			'pid':    0,
 			'delay':  0
@@ -96,12 +96,12 @@ def init_workers(reset=False):
 
 
 # Acquire pid and daemonize
-pid_fd = daemon.acquire_pid(conf['router']['pidfile'])
+pid_fd = daemon.acquire_pid(conf['data-server']['pidfile'])
 daemon.daemonize(skipfd=[pid_fd])
 daemon.write_pid(pid_fd)
 
 # Reopen logger to syslog
-LOG = log.logger("router", init=True, type='syslog')
+LOG = log.logger('data-server', init=True, type='syslog')
 
 # Set own process group
 os.setpgrp()

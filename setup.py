@@ -27,6 +27,12 @@ setup(
 	scripts     = [
 		'bin/bc-calc-client',
 		'bin/bc-calc-server',
+
+		'bin/bc-data-pusher',
+		'bin/bc-data-routine',
+		'bin/bc-data-server',
+		'bin/bc-data-withdraw',
+
 		'bin/billing-acl',
 		'bin/billing-bootstrap',
 		'bin/billing-init',
@@ -45,7 +51,7 @@ setup(
 		('libexec/bc',          ['bin/httpd-wapi']),
 		('/etc',                ['data/billing.conf']),
 		('/etc/httpd/conf.d',   ['data/httpd-wapi.conf']),
-		('/etc/rc.d/init.d',    ['data/init.d/c2-bc']),
+		('/etc/rc.d/init.d',    ['data/init.d/bc-calc','data/init.d/bc-data']),
 		('/etc/cron.d',         dir_expand('data/cron.d')),
 		('/usr/share/c2/gs',    dir_expand('data/gs')),
 	],

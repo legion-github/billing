@@ -28,6 +28,16 @@ Source0: billing.tar.gz
 %description
 CROC Cloud Platform billing controller
 
+%package data
+Summary:  CROC Cloud Platform - Data controller
+Group:    Applications/System
+
+Requires:  python
+Requires:  bc-common
+
+%description data
+Storage data contoller.
+
 
 %package admin
 Summary:  CROC Cloud billing admin utilities
@@ -135,7 +145,12 @@ service crond reload
 
 %files
 %_bindir/bc-*
-%_sysconfdir/rc.d/init.d/*
+%_sysconfdir/rc.d/init.d/bc-calc
+%attr(770,root,%bc_group) %_localstatedir/run/bc
+
+%files data
+%_sysconfdir/rc.d/init.d/bc-data
+%_bindir/bc-data-*
 %attr(770,root,%bc_group) %_localstatedir/run/bc
 
 %files admin

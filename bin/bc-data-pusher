@@ -12,7 +12,7 @@ from bc_client import Sync
 
 conf = config.read()
 
-LOG = log.logger("router-pusher", init=True, type='syslog', level='debug')
+LOG = log.logger('data-pusher', init=True, type='syslog', level='debug')
 
 SYNC_TABLES = conf['pusher']['tables']
 SYNC_PERIOD = conf['pusher']['period']
