@@ -64,15 +64,16 @@ Group:    Applications/System
 JSONRPC implementation.
 
 
-%package client-billing
-Summary:  CROC Cloud billing client library.
+%package client
+Summary:  BC client library.
 Group:    Applications/System
 
-Requires: common
+Requires: bc-common
 Requires: bc-jsonrpc
+Requires: python-connectionpool
 
-%description client-billing
-CROC Cloud billing client library.
+%description client
+BC client library.
 
 
 %package wapi
@@ -163,7 +164,7 @@ service crond reload
 %files jsonrpc
 %python_sitearch/bc_jsonrpc
 
-%files client-billing
+%files client
 %python_sitearch/bc_client
 
 %files wapi
