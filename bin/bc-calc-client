@@ -15,7 +15,7 @@ from bc import metrics
 from bc import calculate
 from bc import customers
 
-LOG = log.logger("client", init=True, type='syslog', level='debug')
+LOG = log.logger('calc-client', init=True, type='syslog', level='debug')
 
 try:
 	num = str(sys.argv[1])

@@ -9,10 +9,10 @@
 # Source function library.
 . /etc/init.d/functions
 
-prog=/usr/bin/bc-server
+prog=/usr/bin/bc-calc-server
 name=billing
-lockfile=/var/lock/subsys/bc-server
-pidfile=/var/run/billing/bc-server.pid
+lockfile=/var/lock/subsys/bc-calc
+pidfile=/var/run/bc/calc.pid
 user=_bc
 
 RETVAL=0

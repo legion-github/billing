@@ -136,7 +136,7 @@ service crond reload
 %files
 %_bindir/bc-*
 %_sysconfdir/rc.d/init.d/*
-%attr(770,root,%bc_group) %_localstatedir/run/billing
+%attr(770,root,%bc_group) %_localstatedir/run/bc
 
 %files admin
 %_bindir/billing-*

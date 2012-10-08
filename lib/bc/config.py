@@ -21,8 +21,8 @@ _TEMPLATE_CONFIG = {
 		'facility': 'daemon'
 	},
 
-	"server": {
-		"pidfile": "/tmp/bc-server.pid",
+	"calc-server": {
+		"pidfile": "/tmp/bc-calc.pid",
 		"workers": 3
 	},
 

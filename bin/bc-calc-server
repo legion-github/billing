@@ -12,7 +12,7 @@ from bc import config
 
 conf = config.read()
 
-LOG = log.logger("server", init=True, type='stderr')
+LOG = log.logger('calc-server', init=True, type='stderr')
 CWD = os.path.dirname(sys.argv[0])
 CWD = os.path.abspath(CWD)
 
@@ -59,12 +59,12 @@ def kill_group(signum):
 
 
 # Acquire pid and daemonize
-pid_fd = daemon.acquire_pid(conf['server']['pidfile'])
+pid_fd = daemon.acquire_pid(conf['calc-server']['pidfile'])
 daemon.daemonize(skipfd=[pid_fd])
 daemon.write_pid(pid_fd)
 
 # Reopen logger to syslog
-LOG = log.logger("server", init=True, type='syslog')
+LOG = log.logger('calc-server', init=True, type='syslog')
 
 # Set own process group
 os.setpgrp()
@@ -102,7 +102,7 @@ try:
 				conf = config.read(force=True)
 
 				# Reopen logger to syslog
-				LOG = log.logger("server", init=True, type='syslog')
+				LOG = log.logger("calc-server", init=True, type='syslog')
 
 			if   signum == signal.SIGUSR2:
 				LOG.info("Restarting childrens")
@@ -123,10 +123,9 @@ try:
 				os._exit(0)
 
 		num = len(WORKERS)
+		max = conf['calc-server']['workers']
 
-		if num > conf['server']['workers']:
-			max = conf['server']['workers']
-
+		if num > max:
 			for child in WORKERS[max:]:
 				try: os.kill(child['pid'], signal.SIGTERM)
 				except OSError: pass
@@ -139,11 +138,11 @@ try:
 
 			del WORKERS[max:]
 
-		if num < conf['server']['workers']:
-			for i in xrange(num, conf['server']['workers']):
+		if num < max:
+			for i in xrange(num, max):
 					WORKERS.append(
 						{
-							'prog':   'bc-client',
+							'prog':   'bc-calc-client',
 							'args':   [str(i)],
 							'pid':    0,
 							'delay':  0

@@ -22,10 +22,11 @@ setup(
 		'msgpack',
 		'psycopg2',
 		'unittest2',
+		'connectionpool',
 	],
 	scripts     = [
-		'bin/bc-client',
-		'bin/bc-server',
+		'bin/bc-calc-client',
+		'bin/bc-calc-server',
 		'bin/billing-acl',
 		'bin/billing-bootstrap',
 		'bin/billing-init',
