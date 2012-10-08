@@ -65,7 +65,7 @@ Requires: bc-jsonrpc
 CROC Cloud billing client library.
 
 
-%package -n abc
+%package wapi
 Summary:  CROC Cloud Platform - API Controller
 Group:    Applications/System
 
@@ -73,8 +73,8 @@ Requires:  python, httpd, mod_wsgi
 Requires:  bc-common
 Requires:  bc-jsonrpc
 
-%description -n abc
-CROC Cloud Platform API Controller
+%description wapi
+HTTP API interface for contoller.
 
 
 %package -n gs-bc
@@ -99,7 +99,7 @@ Garbage collection service (BC)
 	--prefix="%_prefix" \
 	--install-lib="%python_sitearch"
 
-mkdir -p -- %buildroot/%_localstatedir/run/billing
+mkdir -p -- %buildroot/%_localstatedir/run/bc
 
 find %buildroot/ -name '*.egg-info' -exec rm -rf -- '{}' '+'
 
@@ -121,10 +121,10 @@ service %name stop ||:
 %pre common
 groupadd -r -f %bc_group
 
-%post -n abc
+%post wapi
 service httpd condrestart ||:
 
-%postun -n abc
+%postun wapi
 [ "$1" != "0" ] || service httpd condrestart ||:
 
 %post -n gs-bc
@@ -151,8 +151,8 @@ service crond reload
 %files client-billing
 %python_sitearch/bc_client
 
-%files -n abc
-%_libexecdir/billing
+%files wapi
+%_libexecdir/bc
 %python_sitearch/bc_wapi
 %config(noreplace) %_sysconfdir/httpd/conf.d/*.conf
 
