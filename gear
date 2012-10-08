@@ -204,7 +204,7 @@ echo "Version: $version"
 
 source_dir="$(rpm --eval %_sourcedir)"
 spec_dir="$(rpm --eval %_specdir)"
-spec="billing.spec"
+spec="bc.spec"
 
 git cat-file -p "$main_commit_sha1:$spec" 2>/dev/null > "$tmpdir/$spec"
 
