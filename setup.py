@@ -49,7 +49,7 @@ setup(
 	],
 	data_files  = [
 		('libexec/bc',          ['bin/httpd-wapi']),
-		('/etc',                ['data/billing.conf']),
+		('/etc',                ['data/billing.conf','data/wapi-acl.conf']),
 		('/etc/httpd/conf.d',   ['data/httpd-wapi.conf']),
 		('/etc/rc.d/init.d',    ['data/init.d/bc-calc','data/init.d/bc-data']),
 		('/etc/cron.d',         dir_expand('data/cron.d')),

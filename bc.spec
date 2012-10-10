@@ -3,15 +3,16 @@
 %define bc_user  _bc
 %define bc_group _bc
 
-Summary:  CROC Cloud Platform - Billing controller
+Summary:  BC Platform package
 Name:     bc
-Version:  0.0.0
+Version:  2.0.0
 Release:  CROC1%{?dist}
 Epoch:    %(date +%s)
 License:  GPLv3
 Group:    Applications/System
 
-BuildRequires:  python, python-setuptools
+BuildRequires: python
+BuildRequires: python-setuptools
 
 Requires: python
 Requires: python-psycopg2
@@ -23,84 +24,100 @@ URL:        http://cloud.croc.ru
 BuildRoot:  %_tmppath/%name-%version-root
 BuildArch:  noarch
 
-Source0: billing.tar.gz
+Source0: bc.tar.gz
 
 %description
-CROC Cloud Platform billing controller
+BC Platform package.
 
-%package data
-Summary:  CROC Cloud Platform - Data controller
+
+%package calc-server
+Summary:  BC Platform - Calc server
 Group:    Applications/System
 
-Requires:  python
-Requires:  bc-common
+Requires: python
+Requires: bc-common
 
-%description data
+%description calc-server
+Billing calculator.
+
+
+%package data-server
+Summary:  BC Platform - Data manage server
+Group:    Applications/System
+
+Requires: python
+Requires: bc-common
+Requires: bc-client
+
+%description data-server
 Storage data contoller.
 
 
-%package admin
-Summary:  CROC Cloud billing admin utilities
+%package wapi
+Summary:  BC Platform - API Controller
 Group:    Applications/System
 
-%description admin
-CROC Cloud billing admin utilities
-
-
-%package common
-Summary:  CROC Cloud billing commons (billing side)
-Group:    Applications/System
-
-%description common
-CROC Cloud billing common files, directories and libraries.
-Billing private library.
-
-
-%package jsonrpc
-Summary:  JSONRPC implementation for python.
-Group:    Applications/System
-
-%description jsonrpc
-JSONRPC implementation.
-
-
-%package client
-Summary:  BC client library.
-Group:    Applications/System
-
+Requires: python
+Requires: httpd
+Requires: mod_wsgi
 Requires: bc-common
 Requires: bc-jsonrpc
-Requires: python-connectionpool
-
-%description client
-BC client library.
-
-
-%package wapi
-Summary:  CROC Cloud Platform - API Controller
-Group:    Applications/System
-
-Requires:  python, httpd, mod_wsgi
-Requires:  bc-common
-Requires:  bc-jsonrpc
 
 %description wapi
 HTTP API interface for contoller.
 
 
-%package -n gs-bc
-Summary:  CROC Cloud Platform Garbage collection service (BC)
+%package admin
+Summary:  BC admin utilities
 Group:    Applications/System
 
-Requires: gs
+Requires: bc-common
+Requires: bc-client
+
+%description admin
+BC admin utilities.
+
+
+%package jsonrpc
+Summary:  JSONRPC implementation for python
+Group:    Applications/System
+
+Requires: python
+
+%description jsonrpc
+JSONRPC implementation.
+
+
+%package common
+Summary:  BC server library
+Group:    Applications/System
+
+Requires: python
+Requires: python-psycopg2
+Requires: python-msgpack
+
+%description common
+BC common files, directories and libraries.
+
+
+%package client
+Summary:  BC client library
+Group:    Applications/System
+
+Requires: python
+Requires: bc-jsonrpc
+Requires: python-connectionpool
+
+# TODO: Remove
 Requires: bc-common
 
-%description -n gs-bc
-Garbage collection service (BC)
+%description client
+BC client library.
 
 
 %prep
-%setup
+%setup -q
+
 
 %install
 [ %buildroot = "/" ] || rm -rf %buildroot
@@ -114,23 +131,39 @@ mkdir -p -- %buildroot/%_localstatedir/run/bc
 
 find %buildroot/ -name '*.egg-info' -exec rm -rf -- '{}' '+'
 
+# Remove for now
+rm -rfv -- %buildroot/etc/cron.d %buildroot/usr/share/c2
+
 %clean
 [ %buildroot = "/" ] || rm -rf %buildroot
 
-%pre
+
+%pre calc-server
 groupadd -r -f %bc_group
 getent passwd %bc_user >/dev/null ||
 	useradd  -r -M -g %bc_group -d /dev/null -s /dev/null -n %bc_user
 
-%post
-chkconfig --add %name
+%post calc-server
+chkconfig --add bc-calc
 
-%preun
-service %name stop ||:
-[ "$1" != "0" ] || chkconfig --del %name ||:
+%preun calc-server
+service bc-calc stop ||:
+[ "$1" != "0" ] || chkconfig --del bc-calc ||:
 
-%pre common
+
+%pre data-server
 groupadd -r -f %bc_group
+getent passwd %bc_user >/dev/null ||
+	useradd  -r -M -g %bc_group -d /dev/null -s /dev/null -n %bc_user
+
+%post data-server
+chkconfig --add bc-data
+
+%preun data-server
+service bc-data stop ||:
+[ "$1" != "0" ] || chkconfig --del bc-data ||:
+
+
 
 %post wapi
 service httpd condrestart ||:
@@ -138,24 +171,24 @@ service httpd condrestart ||:
 %postun wapi
 [ "$1" != "0" ] || service httpd condrestart ||:
 
-%post -n gs-bc
-service crond reload
 
-%preun -n gs-bc
-[ "$1" != "0" ] || service crond reload ||:
+%pre common
+groupadd -r -f %bc_group
 
-%files
-%_bindir/bc-*
+
+%files calc-server
+%_bindir/bc-calc-*
 %_sysconfdir/rc.d/init.d/bc-calc
 %attr(770,root,%bc_group) %_localstatedir/run/bc
 
-%files data
+%files data-server
 %_sysconfdir/rc.d/init.d/bc-data
 %_bindir/bc-data-*
 %attr(770,root,%bc_group) %_localstatedir/run/bc
 
 %files admin
 %_bindir/billing-*
+%attr(600,root,root) %config(noreplace) %_sysconfdir/wapi-acl.conf
 
 %files common
 %attr(644,root,%bc_group) %config(noreplace) %_sysconfdir/billing.conf
@@ -172,8 +205,7 @@ service crond reload
 %python_sitearch/bc_wapi
 %config(noreplace) %_sysconfdir/httpd/conf.d/*.conf
 
-%files -n gs-bc
-%_datadir/c2/gs
-%config(noreplace) %_sysconfdir/cron.d/*
 
 %changelog
+* Wed Oct 10 2012 Alexey Gladkov <alexey.gladkov@gmail.com> 1349878993:2.0.0-CROC1.el6
+- First standalone build.
