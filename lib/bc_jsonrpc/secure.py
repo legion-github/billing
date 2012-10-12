@@ -35,16 +35,25 @@ def serialize(data, prefix = 'params'):
 
 
 def get_secret(role, method):
-	if not _HAVE_DATABASE:
-		return {}
-
-	with database.DBConnect() as db:
-		return db.find_one('auth',
-			{
-				'role': role,
-				'method': method
-			}
-		)
+	if _HAVE_DATABASE:
+		with database.DBConnect() as db:
+			ret = db.find_one('auth',
+				{
+					'role': role,
+					'method': method
+				}
+			)
+			if ret:
+				ret['found'] = True
+				return ret
+	field = '_invalid'
+	return {
+		'role':   field,
+		'method': field,
+		'secret': field,
+		'host':   '*',
+		'found':  False
+	}
 
 
 def sign_string(secret, string):
@@ -59,12 +68,9 @@ def jsonrpc_is_auth(data):
 
 
 def jsonrpc_auth(headers, sign, request):
-	role   = sign.get('role')
-	method = request.get('method')
+	role   = sign.get('role', '')
+	method = request.get('method', '')
 	auth   = get_secret(role, method)
-
-	if not auth or not auth['secret'] or not auth['host']:
-		return False
 
 	if headers:
 		for n in [ 'REMOTE_ADDR', 'REMOTE_HOST' ]:
@@ -73,16 +79,18 @@ def jsonrpc_auth(headers, sign, request):
 			if fnmatch.fnmatch(headers[n], auth['host']):
 				break
 		else:
-			return False
+			auth['found'] = False
 
-	data  = {
-			'auth': {
-				'role': role,
-				'time': int(time.time()) / 15 * 15
-			},
-			'data': request
+	data = {
+		'auth': {
+			'role': auth['role'],
+			'time': int(time.time()) / 15 * 15
+		},
+		'data': request
 	}
-	return sign.get('sign') == sign_string(str(auth['secret']), serialize(data))
+
+	return ((sign.get('sign', '') == sign_string(str(auth['secret']), serialize(data))) and
+	        (auth['found'] == True))
 
 
 def jsonrpc_sign(role, secret, request):
