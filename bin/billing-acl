@@ -11,15 +11,18 @@ sys.path.insert(0, '../lib')
 
 from bc import log
 from bc import database
+from bc import config
 
 LOG  = log.logger("wapi-acl", syslog=False)
 PROG = sys.argv[0].rsplit('/')[-1]
 
 mode   = 'insert'
 quiet  = False
-dbname = 'billing'
-dbuser = 'bc'
-dbpass = 'qwerty'
+
+conf = config.read()
+dbname = conf['database']['name']
+dbuser = conf['database']['user']
+dbpass = conf['database']['pass']
 
 def error(msg):
 	print "{0}: Error: {1}".format(PROG, msg)
