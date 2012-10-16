@@ -30,10 +30,10 @@ _TEMPLATE_CONFIG = {
 		"pidfile": "/tmp/bc-data.pid",
 		"source":      { "table": "bills",         "list": "@=database.shards" },
 		"destination": { "table": "customerbills", "list": "@=zones" },
-		"pusher": False,
+		"pusher": {},
 	},
 
-	"zone": {
+	"zones": {
 		"local-DC": { "server": "localhost", "weight": 3, "local": True,
 		              "auth": { "role": "admin", "secret": "qwerty" } }
 	},
@@ -98,10 +98,11 @@ def read(filename = CONFIG_FILE, inline = None, force = False):
 		if line:
 			arrconf.append(line)
 
-	s = re.sub(r'([^,:\{\[])\s+("[^"\\]+":)', r'\1, \2', " ".join(arrconf))
+	s = re.sub(r'([^,:\{\[ \t\n\r\f\v])[ \t\n\r\f\v]+("[^"\\]+":)', r'\1, \2', " ".join(arrconf))
+	js = json.loads(s)
 
 	CONFIG = {}
-	utils.dict_merge(CONFIG, _TEMPLATE_CONFIG, json.loads(s))
+	utils.dict_merge(CONFIG, _TEMPLATE_CONFIG, js)
 	_resolve_include(CONFIG)
 	return CONFIG
 
