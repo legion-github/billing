@@ -58,7 +58,7 @@ def get_secret(role, method):
 
 def sign_string(secret, string):
 	""" Sign string using specified secret and return base64 encoded value """
-	return base64.b64encode(hmac.new(secret, string, hashlib.sha1).digest())
+	return base64.b64encode(hmac.new(str(secret), str(string), hashlib.sha1).digest())
 
 
 def jsonrpc_is_auth(data):
@@ -89,7 +89,7 @@ def jsonrpc_auth(headers, sign, request):
 		'data': request
 	}
 
-	return ((sign.get('sign', '') == sign_string(str(auth['secret']), serialize(data))) and
+	return ((sign.get('sign', '') == sign_string(auth['secret'], serialize(data))) and
 	        (auth['found'] == True))
 
 
