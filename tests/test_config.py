@@ -20,7 +20,7 @@ class Test(unithelper.TestCase):
 
 		conf_old = json.dumps(config.read())
 
-		with self.assertNotRaises(ValueError):
+		with self.assertNotRaises(SyntaxError):
 			conf_new = config.read(inline = confstr, force=True)
 
 		config.read(inline = conf_old, force=True)
@@ -38,7 +38,7 @@ class Test(unithelper.TestCase):
 		}
 		"""
 		conf_old = json.dumps(config.read())
-		with self.assertNotRaises(ValueError):
+		with self.assertNotRaises(SyntaxError):
 			conf = config.read(inline = confstr, force=True)
 		self.assertEqual(conf['logging']['level'], 'error')
 
@@ -56,7 +56,7 @@ class Test(unithelper.TestCase):
 		}
 		"""
 		conf_old = json.dumps(config.read())
-		with self.assertRaises(ValueError):
+		with self.assertRaises(SyntaxError):
 			conf = config.read(inline = confstr, force=True)
 
 		config.read(inline = conf_old, force=True)
@@ -67,7 +67,7 @@ class Test(unithelper.TestCase):
 
 		conf_old = json.dumps(config.read())
 
-		with self.assertNotRaises(ValueError):
+		with self.assertNotRaises(SyntaxError):
 			conf = config.read('./test_config1.conf', force=True)
 
 		config.read(inline = conf_old, force=True)
@@ -77,7 +77,7 @@ class Test(unithelper.TestCase):
 		"""Check reading config file with wrong syntax"""
 
 		conf_old = json.dumps(config.read())
-		with self.assertRaises(ValueError):
+		with self.assertRaises(SyntaxError):
 			conf = config.read('./test_config2.conf', force=True)
 
 		config.read(inline = conf_old, force=True)

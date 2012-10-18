@@ -107,12 +107,9 @@ def read(filename = CONFIG_FILE, inline = None, force = False):
 		fname   = filename
 		confstr = open(fname).read()
 
-	try:
-		confstr = re.sub(r'^[ \t\n\r\f\v]+{', r'{', confstr)
-		confstr = re.sub(r'}[ \t\n\r\f\v]+$', r'}', confstr)
-		confdict = parse(confstr, fname)
-	except SyntaxError as e:
-		raise ValueError("Config file have syntax errors")
+	confstr = re.sub(r'^[ \t\n\r\f\v]+{', r'{', confstr)
+	confstr = re.sub(r'}[ \t\n\r\f\v]+$', r'}', confstr)
+	confdict = parse(confstr, fname)
 
 	CONFIG = {}
 	utils.dict_merge(CONFIG, _TEMPLATE_CONFIG, confdict)
