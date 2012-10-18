@@ -62,29 +62,6 @@ class Test(unithelper.TestCase):
 		config.read(inline = conf_old, force=True)
 
 
-	def test_inline_wrong1(self):
-		"""Check wrong syntax in inline configuration (comma separator error)"""
-
-		confstr = """
-		{
-			"database": {
-				"name": "testing", "user": "root"
-				"pass": "qwerty",
-				"server": "127.0.0.1"
-				"shards": ["127.0.0.10", "127.0.0.11", "127.0.0.12",
-				"127.0.0.13", "127.0.0.14"]
-			}
-		}
-		"""
-
-		conf_old = json.dumps(config.read())
-
-		with self.assertNotRaises(ValueError):
-			conf_new = config.read(inline = confstr, force=True)
-
-		config.read(inline = conf_old, force=True)
-
-
 	def test_file_config(self):
 		"""Check reading config file"""
 

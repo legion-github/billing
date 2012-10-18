@@ -1,8 +1,7 @@
 #!/usr/bin/python
 
 import re
-import json
-import cStringIO
+import ast
 
 from bc import utils
 
@@ -72,6 +71,27 @@ def _resolve_include(rootdict):
 	return _include(rootdict)
 
 
+def parse(astr, fn='<unknown>'):
+	try:
+		tree = ast.parse(astr, filename=fn, mode='eval')
+	except SyntaxError as e:
+		raise e
+
+	boolean = {'true':'True', 'false':'False' }
+
+	for node in ast.walk(tree):
+		if not isinstance(node, (ast.Dict, ast.Expression, ast.List, ast.Load, ast.Name, ast.Num, ast.Str)):
+			e = SyntaxError("Bad nodes found: {0}".format(node))
+			e.filename, e.lineno = fn, node.lineno
+			raise e
+
+		if isinstance(node, ast.Name):
+			if node.__dict__.get('id') in boolean:
+				node.__dict__['id'] = boolean[node.__dict__['id']]
+
+	return ast.literal_eval(tree)
+
+
 def read(filename = CONFIG_FILE, inline = None, force = False):
 	"""Read system config file"""
 
@@ -80,29 +100,22 @@ def read(filename = CONFIG_FILE, inline = None, force = False):
 	if CONFIG and not force:
 		return CONFIG
 
-	if isinstance(inline, basestring):
-		f = cStringIO.StringIO(inline)
-	else:
-		f = open(filename, 'r')
+	fname   = '<inline>'
+	confstr = inline
 
-	arrconf = []
-	while True:
-		line = f.readline()
-		if not line:
-			break
+	if not isinstance(inline, basestring):
+		fname   = filename
+		confstr = open(fname).read()
 
-		# Remove trash from line
-		line = re.sub(r'(^\s+|\s+$|\s*#.*$)', '', line)
-
-		# Ignore empty string
-		if line:
-			arrconf.append(line)
-
-	s = re.sub(r'([^,:\{\[ \t\n\r\f\v])[ \t\n\r\f\v]+("[^"\\]+":)', r'\1, \2', " ".join(arrconf))
-	js = json.loads(s)
+	try:
+		confstr = re.sub(r'^[ \t\n\r\f\v]+{', r'{', confstr)
+		confstr = re.sub(r'}[ \t\n\r\f\v]+$', r'}', confstr)
+		confdict = parse(confstr, fname)
+	except SyntaxError as e:
+		raise ValueError("Config file have syntax errors")
 
 	CONFIG = {}
-	utils.dict_merge(CONFIG, _TEMPLATE_CONFIG, js)
+	utils.dict_merge(CONFIG, _TEMPLATE_CONFIG, confdict)
 	_resolve_include(CONFIG)
 	return CONFIG
 
