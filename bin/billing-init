@@ -82,14 +82,17 @@ def process_tariffs():
 
 	tariffs = [
 		{
+			'id': str(uuid.uuid4()),
 			'name': 'Simple testing',
 			'description': 'This is try-buy tariff for new customers'
 		},
 		{
+			'id': str(uuid.uuid4()),
 			'name': 'Big rich man',
 			'description': 'This tariff for big customers'
 		},
 		{
+			'id': str(uuid.uuid4()),
 			'name': 'Hungry student',
 			'description': 'This tariff for startups and little companies'
 		}
