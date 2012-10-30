@@ -102,6 +102,7 @@ try:
 	creator_uuid = str(uuid.uuid4())[:6]
 	customers = [
 		{
+			'id':              str(uuid.uuid4()),
 			'login':          'testy{0}-{1}.org'.format(i, creator_uuid),
 			'name_short':     'Test{0}-{1}'.format(i, creator_uuid),
 			'name_full':      'Test{0}-{1} Inc.'.format(i, creator_uuid),
@@ -111,7 +112,8 @@ try:
 		} for i in xrange(int(sys.argv[1]))
 	]
 	cl_customers = Customers(WAPIS, WAPI_LOCAL)
-	customersIDs = [cl_customers.customerAdd(o) for o in customers]
+	[cl_customers.customerAdd(o) for o in customers]
+	customersIDs = [x['id'] for x in customers]
 	print "Created {0} test customers".format(len(customers))
 	metricIds = [i['id'] for i in Metrics(WAPIS, WAPI_LOCAL).metricList()]
 
