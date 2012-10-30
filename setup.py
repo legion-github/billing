@@ -37,7 +37,7 @@ setup(
 		'bin/billing-bootstrap',
 		'bin/billing-init',
 
-		'bin/task-creator',
+		'bin/task_creator',
 	],
 	package_dir = { '': 'lib' },
 	packages    = [
