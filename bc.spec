@@ -188,6 +188,7 @@ groupadd -r -f %bc_group
 
 %files admin
 %_bindir/billing-*
+%_bindir/task-creator
 %attr(600,root,root) %config(noreplace) %_sysconfdir/wapi-acl.conf
 
 %files common

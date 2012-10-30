@@ -5,10 +5,11 @@ import random
 import uuid
 import threading
 import Queue
+import time
 
-sys.path.insert(0, '../lib')
 
 from bc import log
+from bc import config
 from bc_client import Tasks
 from bc_client import Customers
 from bc_client import Tariffs
@@ -89,11 +90,15 @@ def parallelize(func, data, threads = 5, log_errors = False):
 
 
 try:
-	host = 'bc02blade14:10004'
-	auth = {'role':'admin','secret':'qwerty'}
+	conf = config.read()
+	WAPIS = {}
+	for wapi in conf['zone'].values():
+		WAPIS[wapi['server']]=wapi['auth']
+		if wapi['local']:
+			WAPI_LOCAL = wapi['server']
 
 
-	tariffIds = [i['id'] for i in Tariffs(host, auth, 30).tariffList() if i['id'] != '*']
+	tariffIds = [i['id'] for i in Tariffs(WAPIS, WAPI_LOCAL).tariffList() if i['id'] != '*']
 	creator_uuid = str(uuid.uuid4())[:6]
 	customers = [
 		{
@@ -105,14 +110,15 @@ try:
 			'tariff_id':      random.choice(tariffIds)
 		} for i in xrange(int(sys.argv[1]))
 	]
-	cl_customers = Customers(host, auth, 30)
+	cl_customers = Customers(WAPIS, WAPI_LOCAL)
 	customersIDs = [cl_customers.customerAdd(o) for o in customers]
 	print "Created {0} test customers".format(len(customers))
-	metricIds = [i['id'] for i in Metrics(host, auth, 30).metricList()]
+	metricIds = [i['id'] for i in Metrics(WAPIS, WAPI_LOCAL).metricList()]
 
 
 	def create_tasks(customer, count):
-		cl_tasks = Tasks(host, auth, 30)
+		cl_tasks = Tasks(WAPIS, WAPI_LOCAL)
+		start_time = int(time.time())
 		for i in xrange(int(count)):
 			cl_tasks.taskAdd({
 				'type':		random.choice(metricIds),
@@ -124,7 +130,7 @@ try:
 			})
 			if not i%100:
 				print "Created {0} for customer {2} tasks from {1}".format(i, sys.argv[2], customer)
-		return True
+		return "For customer {0} was generated {1} tasks in {2} seconds".format(customer, sys.argv[2], int(time.time() - start_time))
 
 	print parallelize(lambda x: create_tasks(x, sys.argv[2]), customersIDs, int(sys.argv[1] if int(sys.argv[1])<=5 else 5))
 
