@@ -83,8 +83,7 @@ def jsonrpc_auth(headers, sign, request):
 
 	data = {
 		'auth': {
-			'role': auth['role'],
-			'time': int(time.time()) / 15 * 15
+			'role': auth['role']
 		},
 		'data': request
 	}
@@ -99,8 +98,7 @@ def jsonrpc_sign(role, secret, request):
 
 	data  = {
 			'auth': {
-				'role': role,
-				'time': int(time.time()) / 15 * 15
+				'role': role
 			},
 			'data': request
 	}
