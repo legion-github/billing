@@ -33,7 +33,11 @@ class BCClient(object):
 	def __request(self, method, json_data, info):
 
 		def request(method, server, info):
-			host, port = server.split(':')
+			if ':' in server:
+				host, port = server.split(':')
+			else:
+				host = server
+				port = '80'
 			return http.jsonrpc_http_request(self.pool,
 				host, port, method, json_data,
 				auth_data=info['hosts'][server])
