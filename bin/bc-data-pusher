@@ -21,8 +21,11 @@ SYNC_PERIOD = conf['pusher']['period']
 may_work = True
 
 # Set signal handlers
+def sig_handler(sig,frame):
+	may_work = False
+
 for sig in [ signal.SIGTERM ]:
-	signal.signal(sig, lambda sig,frame: may_work = False)
+	signal.signal(sig, sig_handler)
 
 CONNECTS = {}
 
