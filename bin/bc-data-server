@@ -168,7 +168,9 @@ try:
 			try:
 				pid = pcount = 0
 
-				for child in WORKERS.values():
+				for k in sorted(WORKERS.keys()):
+					child = WORKERS[k]
+
 					if child['pid'] != pid:
 						continue
 
