@@ -14,21 +14,27 @@ from bc_client import Sync
 
 LOG = log.logger("data-routine", init=True, type='syslog', level='debug')
 
-srcname = str(sys.argv[1])
+try:
+	srcname = str(sys.argv[1])
 
-conf = config.read()
+	conf = config.read()
 
-data_src  = conf['data-server']['source']['list'][srcname]
-data_dst  = conf['data-server']['destination']['list']
+	data_src  = conf['data-server']['source']['list'][srcname]
+	data_dst  = conf['data-server']['destination']['list']
 
-table_src = conf['data-server']['source']['table']
-table_dst = conf['data-server']['destination']['list']
+	table_src = conf['data-server']['source']['table']
+	table_dst = conf['data-server']['destination']['list']
 
-# Create hashring by zone
-data = config.subdict(data_dst, field='weight')
-RING = hashing.HashRing(data.keys(), data)
+	# Create hashring by zone
+	data = config.subdict(data_dst, field='weight')
+	RING = hashing.HashRing(data.keys(), data)
 
-GROUPID = iter(polinomial.permutation())
+	GROUPID = iter(polinomial.permutation())
+
+except Exception as e:
+	LOG.exception("Initialization failed: %s", e)
+	os._exit(1)
+
 
 # Connection cache
 CONNECTS = {}

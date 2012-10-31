@@ -10,22 +10,26 @@ from bc import database
 
 from bc_client import Sync
 
-conf = config.read()
-
 LOG = log.logger('data-pusher', init=True, type='syslog', level='debug')
 
-SYNC_TABLES = conf['data-server']['pusher']['tables']
-SYNC_PERIOD = conf['data-server']['pusher']['period']
+try:
+	conf = config.read()
+	SYNC_TABLES = conf['data-server']['pusher']['tables']
+	SYNC_PERIOD = conf['data-server']['pusher']['period']
 
-# List of incoming singals
-may_work = True
+	# List of incoming singals
+	may_work = True
 
-# Set signal handlers
-def sig_handler(sig,frame):
-	may_work = False
+	# Set signal handlers
+	def sig_handler(sig,frame):
+		may_work = False
 
-for sig in [ signal.SIGTERM ]:
-	signal.signal(sig, sig_handler)
+	for sig in [ signal.SIGTERM ]:
+		signal.signal(sig, sig_handler)
+
+except Exception as e:
+	LOG.exception("Initialization failed: %s", e)
+	os._exit(1)
 
 CONNECTS = {}
 

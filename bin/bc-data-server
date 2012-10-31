@@ -10,15 +10,7 @@ from bc import log
 from bc import daemon
 from bc import config
 
-conf = config.read()
-data_source  = conf['database']['shards']
-run_pusher   = conf['data-server'].get('pusher', False)
-run_withdraw = conf['data-server'].get('withdraw', False)
-
 LOG = log.logger('data-server', init=True, type='stderr')
-CWD = os.path.dirname(sys.argv[0])
-CWD = os.path.abspath(CWD)
-
 
 def fork_prog(name, *args):
 	global pgrp
@@ -94,30 +86,44 @@ def init_workers(reset=False):
 			'delay':  0
 		}
 
+try:
+	conf = config.read()
 
-# Acquire pid and daemonize
-pid_fd = daemon.acquire_pid(conf['data-server']['pidfile'])
-daemon.daemonize(skipfd=[pid_fd])
-daemon.write_pid(pid_fd)
+	data_source  = conf['database']['shards']
+	run_pusher   = conf['data-server'].get('pusher', False)
+	run_withdraw = conf['data-server'].get('withdraw', False)
 
-# Reopen logger to syslog
-LOG = log.logger('data-server', init=True, type='syslog')
+	CWD = os.path.dirname(sys.argv[0])
+	CWD = os.path.abspath(CWD)
 
-# Set own process group
-os.setpgrp()
+	# Acquire pid and daemonize
+	pid_fd = daemon.acquire_pid(conf['data-server']['pidfile'])
+	daemon.daemonize(skipfd=[pid_fd])
+	daemon.write_pid(pid_fd)
 
-# Set clients process group
-pgrp = 0
+	# Reopen logger to syslog
+	LOG = log.logger('data-server', init=True, type='syslog')
 
-# List of incoming singals
-signals = []
+	# Set own process group
+	os.setpgrp()
 
-# Set signal handlers
-for sig in [ signal.SIGUSR1, signal.SIGUSR2, signal.SIGTERM ]:
-	signal.signal(sig, lambda sig,frame: signals.append(int(sig)))
+	# Set clients process group
+	pgrp = 0
 
-# Initialize client list
-init_workers(reset=True)
+	# List of incoming singals
+	signals = []
+
+	# Set signal handlers
+	for sig in [ signal.SIGUSR1, signal.SIGUSR2, signal.SIGTERM ]:
+		signal.signal(sig, lambda sig,frame: signals.append(int(sig)))
+
+	# Initialize client list
+	init_workers(reset=True)
+
+except Exception as e:
+	LOG.exception("Initialization failed: %s", e)
+	os._exit(1)
+
 
 try:
 	LOG.info("Server start")
