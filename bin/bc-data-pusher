@@ -3,6 +3,7 @@
 import os
 import sys
 import time
+import signal
 
 from bc import log
 from bc import config
