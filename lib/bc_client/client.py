@@ -22,7 +22,7 @@ class BCClient(object):
 	def __init__(self, config):
 
 		map(lambda x: setattr(self, x[0],
-				lambda y={}: self.__request(x[0], y, x[1])),
+				lambda json={}, server=None: self.__request(x[0], json, x[1], server)),
 			config.iteritems())
 		try:
 			self.pool = HTTPConnectionPool()
@@ -30,7 +30,7 @@ class BCClient(object):
 			LOG.exception("Failed to connect: %s.", e)
 			raise e
 
-	def __request(self, method, json_data, info):
+	def __request(self, method, json_data, info, server=None):
 
 		def request(method, server, info):
 			if ':' in server:
@@ -43,10 +43,14 @@ class BCClient(object):
 				auth_data=info['hosts'][server])
 
 		try:
-			response = request(method, info['local'], info)
+			response = request(method, server if server else info['local'], info)
 
 			if 'redirect' in response.keys():
-				response = request(method, response['server'], info)
+				try:
+					response = request(method, response['server'], info)
+				except KeyError as e:
+					LOG.exception("Redirect to unknown host: %s", response['server'])
+					raise BillingError("Redirect to unknown server: {0}", response['server'])
 
 			if 'result' in response.keys():
 				return response['result'].get(info['returning'])

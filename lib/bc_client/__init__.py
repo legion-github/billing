@@ -20,16 +20,16 @@ def Client(config):
 	'wapiMethodName': {
 		'returning': 'returningData',
 		'hosts': {
-			'HOST1:PORT':{
+			'HOST1[:PORT]':{
 				"role": "admin",
 				"secret": "qwerty"
 			},
-			'HOST2:PORT':{
+			'HOST2[:PORT]':{
 				"role": "user",
 				"secret": "123456"
 			},
 		},
-		'local': 'HOST1:PORT'
+		'local': 'HOST1[:PORT]'
 		},
 	...
 	}
