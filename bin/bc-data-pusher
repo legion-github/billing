@@ -14,8 +14,8 @@ conf = config.read()
 
 LOG = log.logger('data-pusher', init=True, type='syslog', level='debug')
 
-SYNC_TABLES = conf['pusher']['tables']
-SYNC_PERIOD = conf['pusher']['period']
+SYNC_TABLES = conf['data-server']['pusher']['tables']
+SYNC_PERIOD = conf['data-server']['pusher']['period']
 
 # List of incoming singals
 may_work = True
