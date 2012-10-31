@@ -15,11 +15,11 @@ import random
 
 LOG = log.logger("unittests", type='stderr', level='debug', init=True)
 conf = config.read()
-WAPIS = {}
 for wapi in conf['zone'].values():
-	WAPIS[wapi['server']]=wapi['auth']
 	if wapi['local']:
 		WAPI_LOCAL = wapi['server']
+		WAPI_AUTH  = wapi['auth']
+		break
 
 def process_metrics():
 	metrics = [
@@ -37,7 +37,7 @@ def process_metrics():
 		{ 'id': 'traffic_external_incoming', 'formula': 'unit',  'type': 'bytes',       'aggregate': 1 },
 		{ 'id': 'traffic_external_outgoing', 'formula': 'unit',  'type': 'bytes',       'aggregate': 1 },
 	]
-	cl_metrics = Metrics(WAPIS, WAPI_LOCAL)
+	cl_metrics = Metrics(WAPI_AUTH, WAPI_LOCAL)
 	for o in metrics:
 		cl_metrics.metricAdd(o)
 
@@ -66,7 +66,7 @@ def process_customers():
 			'wallet_mode':    'unlimit',
 		}
 	]
-	cl_customers = Customers(WAPIS, WAPI_LOCAL)
+	cl_customers = Customers(WAPI_AUTH, WAPI_LOCAL)
 	for o in customers:
 		cl_customers.customerAdd(o)
 
@@ -77,7 +77,7 @@ def process_tariffs():
 		'name': 'Service tariff',
 		'description': 'This is service tariff record is not for ordinary customers'
 	}
-	cl_tariffs = Tariffs(WAPIS, WAPI_LOCAL)
+	cl_tariffs = Tariffs(WAPI_AUTH, WAPI_LOCAL)
 	cl_tariffs.tariffAdd(internal)
 
 	tariffs = [
@@ -102,10 +102,10 @@ def process_tariffs():
 
 
 def process_rates():
-	tariffIds = [i['id'] for i in Tariffs(WAPIS, WAPI_LOCAL).tariffList()]
-	metricIds = [i['id'] for i in Metrics(WAPIS, WAPI_LOCAL).metricList()]
+	tariffIds = [i['id'] for i in Tariffs(WAPI_AUTH, WAPI_LOCAL).tariffList()]
+	metricIds = [i['id'] for i in Metrics(WAPI_AUTH, WAPI_LOCAL).metricList()]
 
-	cl_rates = Rates(WAPIS, WAPI_LOCAL)
+	cl_rates = Rates(WAPI_AUTH, WAPI_LOCAL)
 
 	for tariff in tariffIds:
 		if tariff != '*':

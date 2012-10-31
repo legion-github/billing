@@ -19,20 +19,21 @@ ERRORS['0'] = lambda x: BillingError('Invalid return message')
 
 
 class BCClient(object):
-	def __init__(self, config):
+	def __init__(self, method_dict, auth, local_server=None):
 
-		map(lambda x: setattr(self, x[0],
-				lambda json={}, server=None: self.__request(x[0], json, x[1], server)),
-			config.iteritems())
+		self.__dict__.update(locals())
+		map(lambda x: setattr(self, x,
+				lambda json={}, server=local_server: self.__request(x, json, server)),
+			method_dict.keys())
 		try:
 			self.pool = HTTPConnectionPool()
 		except Exception as e:
 			LOG.exception("Failed to connect: %s.", e)
 			raise e
 
-	def __request(self, method, json_data, info, server=None):
+	def __request(self, method, json_data, server):
 
-		def request(method, server, info):
+		def request(method, server, auth):
 			if ':' in server:
 				host, port = server.split(':')
 			else:
@@ -40,20 +41,22 @@ class BCClient(object):
 				port = '80'
 			return http.jsonrpc_http_request(self.pool,
 				host, port, method, json_data,
-				auth_data=info['hosts'][server])
+				auth_data=auth)
 
 		try:
-			response = request(method, server if server else info['local'], info)
+			if not server:
+				raise BillingError("Server not specified")
+			response = request(method, server, self.auth)
 
 			if 'redirect' in response.keys():
 				try:
-					response = request(method, response['server'], info)
+					response = request(method, response['server'], self.auth)
 				except KeyError as e:
 					LOG.exception("Redirect to unknown host: %s", response['server'])
 					raise BillingError("Redirect to unknown server: {0}", response['server'])
 
 			if 'result' in response.keys():
-				return response['result'].get(info['returning'])
+				return response['result'].get(self.method_dict[method])
 			elif 'error'in response.keys():
 				raise ERRORS[str(response['error'].get('code', 0))](response['error'].get('message', 0))
 

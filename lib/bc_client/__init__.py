@@ -1,45 +1,8 @@
-import client
-
-def configcreator(hosts_auth, local, method_returning):
-	"""For lazy administrators with same auth on diffrent wapis"""
-	ans = {}
-	for key,value in method_returning.iteritems():
-		ans[key]={
-			'local': local,
-			'hosts': hosts_auth,
-			'returning': value
-			}
-	return ans
+from client import BCClient
 
 
-def Client(config):
-	"""
-	config sample:
-	{
-	...
-	'wapiMethodName': {
-		'returning': 'returningData',
-		'hosts': {
-			'HOST1[:PORT]':{
-				"role": "admin",
-				"secret": "qwerty"
-			},
-			'HOST2[:PORT]':{
-				"role": "user",
-				"secret": "123456"
-			},
-		},
-		'local': 'HOST1[:PORT]'
-		},
-	...
-	}
-	"""
-	return client.BCClient(config)
-
-
-def Customers(hosts_auth, local):
-	return client.BCClient(configcreator(
-		hosts_auth, local,
+def Customers(auth, server):
+	return BCClient(
 		{
 			'customerList':    'customers',
 			'customerGet':     'customer',
@@ -47,56 +10,51 @@ def Customers(hosts_auth, local):
 			'customerModify':  'status',
 			'customerRemove':  'status',
 			'customerDeposit': 'status',
-		}))
+		}, auth, server)
 
 
-def Metrics(hosts_auth, local):
-	return client.BCClient(configcreator(
-		hosts_auth, local,
+def Metrics(auth, server):
+	return BCClient(
 		{
 		'metricList':'metrics',
 		'metricAdd': 'id',
 		'metricGet': 'metric',
-		}))
+		}, auth, server)
 
 
-def Rates(hosts_auth, local):
-	return client.BCClient(configcreator(
-		hosts_auth, local,
+def Rates(auth, server):
+	return BCClient(
 		{
 		'rateList':  'rates',
 		'rateGet':   'rate',
 		'rateAdd':   'id',
 		'rateModify':'status',
 		'rateRemove':'status',
-		}))
+		}, auth, server)
 
 
-def Tariffs(hosts_auth, local):
-	return client.BCClient(configcreator(
-		hosts_auth, local,
+def Tariffs(auth, server):
+	return BCClient(
 		{
 		'tariffList':       'tariffs',
 		'tariffGet':        'tariff',
 		'tariffAdd':        'id',
 		'tariffModify':     'status',
 		'tariffRemove':     'status',
-		}))
+		}, auth, server)
 
 
-def Tasks(hosts_auth, local):
-	return client.BCClient(configcreator(
-		hosts_auth, local,
+def Tasks(auth, server):
+	return BCClient(
 		{
 		'taskAdd':   'id',
 		'taskModify':'status',
 		'taskRemove':'status',
-		}))
+		}, auth, server)
 
-def Sync(hosts_auth, local):
-	return client.BCClient(configcreator(
-		hosts_auth, local,
+def Sync(auth, server):
+	return BCClient(
 		{
 		'sync':    'status',
 		'syncList':'status',
-		}))
+		}, auth, server)
