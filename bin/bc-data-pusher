@@ -80,13 +80,13 @@ while may_work:
 	except database.DatabaseError, e:
 		# See http://www.postgresql.org/docs/9.0/static/errcodes-appendix.html#ERRCODES-TABLE
 		if e.pgcode not in [ None, '57000', '57014', '57P01', '57P02', '57P03' ]:
-			LOG.exception(e)
+			LOG.exception("Fatal database error: %s", e)
 			os._exit(1)
 
 		LOG.error(database.get_strerror(e))
 
 	except Exception, e:
-		LOG.exception(e)
+		LOG.exception("Fatal error: %s", e)
 		os._exit(1)
 
 	time.sleep(SYNC_PERIOD)
