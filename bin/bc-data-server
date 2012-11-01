@@ -3,6 +3,7 @@
 import os
 import sys
 import time
+import select
 import signal
 import errno
 
@@ -23,12 +24,21 @@ def fork_prog(name, *args):
 		if not os.access(path, os.X_OK):
 			raise OSError('No such file or directory')
 
+		pipe = os.pipe()
 		pid = os.fork()
 
 		if not pid:
 			os.setpgid(0, pgrp)
+			os.write(pipe[1], '0')
 			daemon.close_all_fds()
 			os.execv(CWD + '/' + name, argv)
+
+		if not select.select([pipe[0]], [], [], 30)[0]:
+			raise Exception("pipe timeout")
+
+		os.read(pipe[0], 2)
+		os.close(pipe[0])
+		os.close(pipe[1])
 
 		if pgrp == 0:
 			pgrp = pid
@@ -103,9 +113,6 @@ try:
 
 	# Reopen logger to syslog
 	LOG = log.logger('data-server', init=True, type='syslog')
-
-	# Set own process group
-	os.setpgrp()
 
 	# Set clients process group
 	pgrp = 0
