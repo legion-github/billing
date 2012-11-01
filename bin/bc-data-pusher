@@ -47,7 +47,7 @@ def sync_table(table):
 			try:
 				for name,zone in conf['zones'].iteritems():
 					if name not in CONNECTS:
-						CONNECTS[name] = Sync(zone['server'], zone['auth'], 30)
+						CONNECTS[name] = Sync(zone['auth'], zone['server'])
 
 					CONNECTS[name].syncList(
 						{ 'table': table, 'list': data }
