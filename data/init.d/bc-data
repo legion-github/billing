@@ -40,21 +40,8 @@ stop() {
 }
 
 restart() {
-	echo -n $"Restarting $name: "
-	RETVAL=0
-	killproc -p "$pidfile" $prog -USR2 ||
-		RETVAL=$?
-	echo
-	return $RETVAL
-}
-
-reload() {
-	echo -n $"Reloading $name: "
-	RETVAL=0
-	killproc -p "$pidfile" $prog -USR1 ||
-		RETVAL=$?
-	echo
-	return $RETVAL
+	stop
+	start
 }
 
 case $1 in

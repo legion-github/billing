@@ -144,12 +144,17 @@ getent passwd %bc_user >/dev/null ||
 	useradd  -r -M -g %bc_group -d /dev/null -s /dev/null -n %bc_user
 
 %post calc-server
-chkconfig --add bc-calc
+if [ "$1" = "0" ]; then
+	chkconfig --add bc-calc
+else
+	service bc-calc condrestart
+fi
 
 %preun calc-server
-service bc-calc stop ||:
-[ "$1" != "0" ] || chkconfig --del bc-calc ||:
-
+if [ "$1" = "0" ]; then
+	service bc-calc stop ||:
+	chkconfig --del bc-calc ||:
+fi
 
 %pre data-server
 groupadd -r -f %bc_group
@@ -157,13 +162,17 @@ getent passwd %bc_user >/dev/null ||
 	useradd  -r -M -g %bc_group -d /dev/null -s /dev/null -n %bc_user
 
 %post data-server
-chkconfig --add bc-data
+if [ "$1" = "0" ]; then
+	chkconfig --add bc-data
+else
+	service bc-data condrestart
+fi
 
 %preun data-server
-service bc-data stop ||:
-[ "$1" != "0" ] || chkconfig --del bc-data ||:
-
-
+if [ "$1" = "0" ]; then
+	service bc-data stop ||:
+	chkconfig --del bc-data ||:
+fi
 
 %post wapi
 service httpd condrestart ||:
