@@ -29,12 +29,18 @@ _TEMPLATE_CONFIG = {
 		"pidfile": "/tmp/bc-data.pid",
 		"source":      { "table": "bills",         "list": "@=database.shards" },
 		"destination": { "table": "customerbills", "list": "@=zones" },
-		"pusher": {},
+		"pusher": {
+			# Synchronize tables
+			#"tables": [ "customers", "metrics", "rates", "tariffs" ],
+
+			# Polling period
+			#"period": 15
+		},
 	},
 
 	"zones": {
-		"local-DC": { "server": "localhost", "weight": 3, "local": True,
-		              "auth": { "role": "admin", "secret": "qwerty" } }
+		#"local-DC": { "server": "localhost", "weight": 3, "local": True,
+		#              "auth": { "role": "admin", "secret": "qwerty" } }
 	},
 
 	# Database section
@@ -49,7 +55,10 @@ _TEMPLATE_CONFIG = {
 		"server": "127.0.0.1",
 
 		# Database servers for sharding
-		"shards": {}
+		"shards": {
+			#"shard0": { "server": "127.0.0.10", "weight": 3, "local": true  },
+			#"shard1": { "server": "127.0.0.11", "weight": 3, "local": false },
+		}
 	}
 }
 
