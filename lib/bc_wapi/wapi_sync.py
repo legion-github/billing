@@ -3,7 +3,7 @@ __version__ = '1.0'
 import bc_jsonrpc as jsonrpc
 
 from bc.validator import Validate as V
-from bc import sync
+from bc import sync as bc_sync
 from bc import log
 
 LOG = log.logger("wapi.sync")
@@ -17,7 +17,7 @@ LOG = log.logger("wapi.sync")
 	auth = True)
 def sync(params):
 	try:
-		sync.record(params['table'], params['record'])
+		bc_sync.record(params['table'], params['record'])
 
 	except Exception, e:
 		LOG.error(e)
@@ -36,7 +36,7 @@ def sync(params):
 def syncList(params):
 	try:
 		for r in params['list']:
-			sync.record(params['table'], r)
+			bc_sync.record(params['table'], r)
 
 	except Exception, e:
 		LOG.error(e)
