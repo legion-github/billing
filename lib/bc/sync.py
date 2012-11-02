@@ -29,8 +29,8 @@ def record(table, params):
 			db.insert(table, o.values)
 			return
 
-		except database.OperationalError, e:
-			if e.pgcode != 23505:
+		except database.DatabaseError, e:
+			if e.pgcode != '23505':
 				raise
 			# Ignore duplicate key value violates unique constraint
 			pass

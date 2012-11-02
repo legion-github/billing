@@ -22,7 +22,7 @@ while True:
 					{ 'group_id': GROUPID.next() },
 					lock='update', nowait=True)
 
-			except database.OperationalError as e:
+			except database.DatabaseError as e:
 				# Someone has locked our task group.
 				# We have to go to another.
 				if e.pgcode == '55P03':
