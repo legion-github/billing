@@ -251,15 +251,13 @@ SCHEMA = [
 def create_schema(dbname=None, dbuser=None, dbpass=None):
 	for dbhosts, table in SCHEMA:
 		for dbhost in dbhosts:
-			with database.DBConnect(dbhost=dbhost, dbname=dbname, dbuser=dbuser, dbpass=dbpass, autocommit=False) as db:
+			with database.DBConnect(dbhost=dbhost, dbname=dbname, dbuser=dbuser, dbpass=dbpass, autocommit=True) as db:
 				table.create(db)
-				db.commit()
 
 
 def destroy_schema(dbname=None, dbuser=None, dbpass=None):
 	for dbhosts, table in SCHEMA:
 		for dbhost in dbhosts:
-			with database.DBConnect(dbhost=dbhost, dbname=dbname, dbuser=dbuser, dbpass=dbpass, autocommit=False) as db:
+			with database.DBConnect(dbhost=dbhost, dbname=dbname, dbuser=dbuser, dbpass=dbpass, autocommit=True) as db:
 				table.drop(db)
-				db.commit()
 
