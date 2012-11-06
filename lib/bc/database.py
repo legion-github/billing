@@ -141,27 +141,42 @@ class DBQuery(object):
 	def __init__(self, cursor, autocommit, fmt, *args):
 		self.cursor = cursor
 		self.autocommit = autocommit
-		if self.autocommit:
-			cursor.execute("START TRANSACTION")
-		cursor.execute(fmt, *args)
+		try:
+			if self.autocommit:
+				cursor.execute("START TRANSACTION")
+			self.cursor.execute(fmt, *args)
+		except psycopg2.Error as e:
+			self.cursor.execute("ROLLBACK")
+			self.cursor.close()
+			self.cursor = None
+			raise e
 
 	def close(self):
+		if not self.cursor:
+			return
 		self.cursor.fetchall()
 		if self.autocommit:
 			self.cursor.execute("COMMIT")
 		self.cursor.close()
+		self.cursor = None
 
 	def __iter__(self):
+		if not self.cursor:
+			return
 		for o in self.cursor:
 			yield o
 		self.close()
 
 	def one(self):
+		if not self.cursor:
+			return None
 		r = self.cursor.fetchone()
 		self.close()
 		return r
 
 	def all(self):
+		if not self.cursor:
+			return []
 		r = self.cursor.fetchall()
 		self.close()
 		return r
@@ -265,8 +280,13 @@ class DBConnect(object):
 	def execute(self, fmt, *args):
 		"""Exetutes SQL command
 		"""
-		self.begin()
-		self.cursor().execute(fmt, *args)
+		try:
+			self.begin()
+			self.cursor().execute(fmt, *args)
+		except psycopg2.Error as e:
+			if self.autocommit:
+				self.rollback()
+			raise e
 		if self.autocommit:
 			self.commit()
 
