@@ -9,6 +9,7 @@ from bc import config
 from bc import hashing
 
 import psycopg2
+from psycopg2 import extensions
 from psycopg2 import extras
 from psycopg2 import errorcodes
 from psycopg2 import pool
@@ -22,6 +23,10 @@ DatabaseError    = psycopg2.DatabaseError
 
 # Backend methods
 DBCursor  = extras.RealDictCursor
+
+# Backend status
+TRANSACTION_STATUS_IDLE       = extensions.TRANSACTION_STATUS_IDLE
+TRANSACTION_STATUS_INERROR    = extensions.TRANSACTION_STATUS_INERROR
 
 LOG = logging.getLogger("database")
 
@@ -131,7 +136,7 @@ class DBPool(object):
 
 
 	def free_connection(self, conn):
-		conn['socket'].rollback()
+		conn['socket'].reset()
 		self._CONNECTIONS[conn['key']].putconn(conn['socket'])
 
 
@@ -152,34 +157,40 @@ class DBQuery(object):
 			raise e
 
 	def close(self):
-		if not self.cursor:
+		if not self.cursor or self.cursor.closed:
 			return
-		self.cursor.fetchall()
-		if self.autocommit:
-			self.cursor.execute("COMMIT")
-		self.cursor.close()
-		self.cursor = None
+		try:
+			self.cursor.fetchall()
+			if self.autocommit:
+				self.cursor.execute("COMMIT")
+		finally:
+			self.cursor.close()
+			self.cursor = None
 
 	def __iter__(self):
-		if not self.cursor:
+		if not self.cursor or self.cursor.closed:
 			return
-		for o in self.cursor:
-			yield o
-		self.close()
+		try:
+			for o in self.cursor:
+				yield o
+		finally:
+			self.close()
 
 	def one(self):
-		if not self.cursor:
+		if not self.cursor or self.cursor.closed:
 			return None
-		r = self.cursor.fetchone()
-		self.close()
-		return r
+		try:
+			return self.cursor.fetchone()
+		finally:
+			self.close()
 
 	def all(self):
-		if not self.cursor:
+		if not self.cursor or self.cursor.closed:
 			return []
-		r = self.cursor.fetchall()
-		self.close()
-		return r
+		try:
+			return self.cursor.fetchall()
+		finally:
+			self.close()
 
 
 DB = DBPool()
@@ -190,9 +201,9 @@ class DBConnect(object):
 		for n in [ 'dbhost', 'dbname', 'dbuser', 'dbpass' ]:
 			self.__dict__[n] = self._conn[n]
 
-		self._cursor = None
-		self._transaction = False
-		self.autocommit = autocommit
+		self.autocommit = bool(autocommit)
+		self._curlist = []
+		self.state = 0
 
 
 	def __enter__(self):
@@ -200,10 +211,21 @@ class DBConnect(object):
 
 
 	def __exit__(self, exc_type, exc_value, traceback):
-		if self._cursor:
-			self.commit()
-			self._cursor.close()
-			self._cursor = None
+		conn_status = self.connect().get_transaction_status()
+		cursor_cmd = None
+
+		if conn_status != TRANSACTION_STATUS_IDLE:
+			cursor_cmd = (conn_status == TRANSACTION_STATUS_INERROR) \
+				and "ROLLBACK" \
+				or  "COMMIT"
+
+		for cur in self._curlist:
+			if cur.closed:
+				continue
+			if cursor_cmd:
+				cur.execute(cursor_cmd)
+			cur.close()
+
 		DB.free_connection(self._conn)
 		return False
 
@@ -217,27 +239,33 @@ class DBConnect(object):
 	def cursor(self):
 		"""Returns database cursor
 		"""
-		if not self._cursor:
-			self._cursor = DBCursor(self.connect())
-		return self._cursor
+		if not self._curlist:
+			self._curlist.append(DBCursor(self.connect()))
+
+		elif self._curlist[0].closed:
+			self._curlist[0] = DBCursor(self.connect())
+
+		return self._curlist[0]
+
+
+	def in_transaction(self):
+		return self.connect().get_transaction_status() != TRANSACTION_STATUS_IDLE
 
 
 	def begin(self):
 		"""Begins a new transaction block
 		"""
-		if self._transaction:
+		if self.in_transaction():
 			return
 		self.cursor().execute("START TRANSACTION")
-		self._transaction = True
 
 
 	def commit(self):
 		"""Commits the current transaction
 		"""
-		if not self._transaction:
+		if not self.in_transaction():
 			return
 		self.cursor().execute("COMMIT")
-		self._transaction = False
 
 
 	def savepoint(self, point, release=False):
@@ -252,7 +280,7 @@ class DBConnect(object):
 		point:     the name of the savepoint;
 		release:   destroys a savepoint previously defined.
 		"""
-		if not self._transaction:
+		if not self.in_transaction():
 			return
 		qs = (release) and "RELEASE SAVEPOINT %s" or "SAVEPOINT %s"
 		self.cursor().execute(qs, point)
@@ -268,25 +296,26 @@ class DBConnect(object):
 
 		point:   the name of the savepoint.
 		"""
-		if not self._transaction:
+		if not self.in_transaction():
 			return
 		if point != None:
 			self.cursor().execute("ROLLBACK TO SAVEPOINT %s", point)
 			return
 		self.cursor().execute("ROLLBACK")
-		self._transaction = False
 
 
 	def execute(self, fmt, *args):
 		"""Exetutes SQL command
 		"""
+		self.begin()
 		try:
-			self.begin()
 			self.cursor().execute(fmt, *args)
+
 		except psycopg2.Error as e:
 			if self.autocommit:
 				self.rollback()
 			raise e
+
 		if self.autocommit:
 			self.commit()
 
@@ -294,7 +323,11 @@ class DBConnect(object):
 	def query(self, fmt, *args):
 		"""Queries the database and returns DBCursor with result
 		"""
+		self._curlist = filter(lambda x: x.closed, self._curlist)
+
 		cur = DBCursor(self.connect())
+		self._curlist.append(cur)
+
 		return DBQuery(cur, self.autocommit, fmt, *args)
 
 
