@@ -15,7 +15,7 @@ import random
 
 LOG = log.logger("unittests", type='stderr', level='debug', init=True)
 conf = config.read()
-for wapi in conf['zone'].values():
+for wapi in conf['zones'].values():
 	if wapi['local']:
 		WAPI_LOCAL = wapi['server']
 		WAPI_AUTH  = wapi['auth']
