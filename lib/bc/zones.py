@@ -1,3 +1,11 @@
+#
+# zones.py
+#
+# Copyright (c) 2012-2013 by Alexey Gladkov
+#
+# This file is covered by the GNU General Public License,
+# which should be included with billing as the file COPYING.
+#
 from bc import config
 from bc import hashing
 

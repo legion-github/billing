@@ -1,3 +1,11 @@
+#
+# trace.py
+#
+# Copyright (c) 2012-2013 by Alexey Gladkov
+#
+# This file is covered by the GNU General Public License,
+# which should be included with billing as the file COPYING.
+#
 """
 The module contains a decorator to keep track of function calls. The decorator is controlled via environment variables^
 

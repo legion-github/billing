@@ -1,4 +1,12 @@
-#!/usr/bin/python2.6
+#!/usr/bin/python
+#
+# readonly.py
+#
+# Copyright (c) 2012-2013 by Alexey Gladkov
+#
+# This file is covered by the GNU General Public License,
+# which should be included with billing as the file COPYING.
+#
 
 class metaClass(type):
 	def __new__(cls, cname, bases, cdict):

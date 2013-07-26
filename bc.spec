@@ -1,3 +1,12 @@
+# bc.spec
+#
+# Copyright (c) 2012-2013 by Alexey Gladkov
+# Copyright (c) 2012-2013 by Nikolay Ivanov
+#
+# This file is covered by the GNU General Public License,
+# which should be included with billing as the file COPYING.
+#
+
 %define python_sitearch %(%{__python} -c 'from distutils import sysconfig; print sysconfig.get_python_lib(1)')
 
 %define bc_user  _bc
