@@ -1,2 +1,0 @@
-# Run every minute
-*/1 * * * * root c2-gs-run aggregate-billing
