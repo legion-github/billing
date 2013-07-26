@@ -3,9 +3,9 @@
 import sys
 import random
 import uuid
-import threading
-import Queue
 import time
+import logging
+import multiprocessing
 
 
 from bc import log
@@ -17,111 +17,63 @@ from bc_client import Metrics
 
 LOG = log.logger("unittests", type='stderr', level='debug', init=True)
 
-
-def join_thread(thread):
-	"""Joins the thread.
-	Python is bugous: if we simply join a thread in the main thread without a
-	timeout, we will never get any UNIX signals.
-	"""
-
-	while thread and thread.isAlive():
-		thread.join(float(24*3600))
-
-
-def parallelize(func, data, threads = 5, log_errors = False):
-	"""Calls func() in a separated thread for each element in data.
-
-	Returns a list of objects. Each object is a return value of func() or
-	Exception object in case func() raise an exception.
-
-	>>> parallelize(lambda x: x * x, range(0, 50)) == [ x * x for x in xrange(0, 50) ]
-	True
-	"""
-
-	if threads < 1:
-		raise Exception("Invalid number of threads: {0}.", threads)
-
-	if len(data) == 0:
-		return []
-	elif len(data) == 1:
-		for element in data:
-			try:
-				return [ func(element) ]
-			except Exception as e:
-				if log_errors:
-					LOG.exception("Parallelize of %s for %s failed.", func, element)
-				return [ e ]
-	else:
-		results = []
-		thread_pool = []
-
-		queue = Queue.Queue()
-		for task in enumerate(data):
-			queue.put(task)
-
-		def worker(queue):
-			while True:
-				try:
-
-					task_id, element = queue.get(False)
-				except Queue.Empty:
-					break
-
-				try:
-					result = func(element)
-				except Exception as e:
-					if log_errors:
-						LOG.exception("Parallelize of %s for %s failed.", func, element)
-					result = e
-
-				results.append(( task_id, result ))
-
-		try:
-			for i in xrange(0, min(queue.qsize(), threads)):
-				thread = threading.Thread(target = worker, args = (queue,))
-				thread_pool.append(thread)
-				thread.start()
-		finally:
-			for thread in thread_pool:
-				join_thread(thread)
-
-		results.sort(key = lambda result: result[0])
-		return [ result[1] for result in results ]
-
+num_customers = int(sys.argv[1])
+num_tasks     = int(sys.argv[2])
 
 try:
 	conf = config.read()
+
 	WAPIS = {}
 	for wapi in conf['zone'].values():
 		WAPIS[wapi['server']]=wapi['auth']
 		if wapi['local']:
 			WAPI_LOCAL = wapi['server']
 
+	tariffIds = []
+	for i in Tariffs(WAPIS, WAPI_LOCAL).tariffList():
+		if i['id'] != '*':
+			tariffIds.append(i['id'])
 
-	tariffIds = [i['id'] for i in Tariffs(WAPIS, WAPI_LOCAL).tariffList() if i['id'] != '*']
 	creator_uuid = str(uuid.uuid4())[:6]
-	customers = [
-		{
-			'id':              str(uuid.uuid4()),
-			'login':          'testy{0}-{1}.org'.format(i, creator_uuid),
-			'name_short':     'Test{0}-{1}'.format(i, creator_uuid),
-			'name_full':      'Test{0}-{1} Inc.'.format(i, creator_uuid),
-			'comment':        'Simple test client',
-			'wallet_mode':    'unlimit',
-			'tariff_id':      random.choice(tariffIds)
-		} for i in xrange(int(sys.argv[1]))
-	]
+
+	customers    = []
+	customersIDs = []
 	cl_customers = Customers(WAPIS, WAPI_LOCAL)
-	[cl_customers.customerAdd(o) for o in customers]
-	customersIDs = [x['id'] for x in customers]
+
+	for i in xrange(num_customers):
+		o = {
+			'id':          str(uuid.uuid4()),
+			'login':       'testy{0}-{1}.org'.format(i, creator_uuid),
+			'name_short':  'Test{0}-{1}'.format(i, creator_uuid),
+			'name_full':   'Test{0}-{1} Inc.'.format(i, creator_uuid),
+			'comment':     'Simple test client',
+			'wallet_mode': 'unlimit',
+			'tariff_id':   random.choice(tariffIds)
+		}
+
+		cl_customers.customerAdd(o)
+		customersIDs.append(o['id'])
+		customers.append(o)
+
 	print "Created {0} test customers".format(len(customers))
-	metricIds = [i['id'] for i in Metrics(WAPIS, WAPI_LOCAL).metricList()]
 
+	metricIds = [ i['id'] for i in Metrics(WAPIS, WAPI_LOCAL).metricList() ]
 
-	def create_tasks(customer, count):
+	def create_tasks(customer):
 		cl_tasks = Tasks(WAPIS, WAPI_LOCAL)
-		start_time = int(time.time())
-		for i in xrange(int(count)):
+
+		dsum = 0
+		stat = {
+			'customer':     customer,
+			'start_time':   int(time.time()),
+			'finish_time':  0,
+			'task_maxtime': 0,
+			'task_mintime': 0,
+			'task_avgtime': 0,
+		}
+
+		for i in xrange(num_tasks):
+			ts = int(time.time())
 			cl_tasks.taskAdd({
 				'type':		random.choice(metricIds),
 				'customer':	customer,
@@ -130,13 +82,71 @@ try:
 				'uuid':		str(uuid.uuid4()),
 				'descr':	"task number {0}".format(i),
 			})
-			if not i%100:
-				print "Created {0} for customer {2} tasks from {1}".format(i, sys.argv[2], customer)
-		return "For customer {0} was generated {1} tasks in {2} seconds".format(customer, sys.argv[2], int(time.time() - start_time))
+			te = int(time.time())
 
-	print parallelize(lambda x: create_tasks(x, sys.argv[2]), customersIDs, int(sys.argv[1] if int(sys.argv[1])<=5 else 5))
+			delta = te - ts
+			dsum += delta
+
+			if stat['task_maxtime'] < delta or stat['task_maxtime'] == 0:
+				stat['task_maxtime'] = delta
+
+			if stat['task_mintime'] > delta or stat['task_mintime'] == 0:
+				stat['task_mintime'] = delta
+
+			if not i % 100:
+				print "Created {0} for customer {2} tasks from {1}".format(i, num_tasks, customer)
+
+		stat['finish_time']  = int(time.time())
+		stat['task_avgtime'] = float(dsum / num_tasks)
+
+		return stat
+
+
+	logger = multiprocessing.log_to_stderr()
+	logger.setLevel(logging.INFO)
+
+	pool   = multiprocessing.Pool(processes=num_procs)
+	result = pool.map_async(create_tasks, customersIDs)
+
+	pool.close()
+	pool.join()
+
+	print "Task creation finished."
+	print
+
+	sum_maxtime = 0
+	sum_mintime = 0
+	sum_avgtime = 0
+
+	print "[ Per customer statistic ]"
+
+	for stat in result.get():
+		print "Customer:     ", stat['customer']
+		print "Seconds spent:", stat['finish_time'] - stat['start_time']
+		print "Maximum delay:", stat['task_maxtime']
+		print "Minimum delay:", stat['task_mintime']
+		print "Average delay:", stat['task_avgtime']
+		print
+
+		if sum_maxtime < stat['task_maxtime'] or sum_maxtime == 0:
+			sum_maxtime = stat['task_maxtime']
+
+		if sum_mintime > stat['task_mintime'] or sum_mintime == 0:
+			sum_mintime = stat['task_mintime']
+
+		sum_avgtime += stat['task_avgtime']
+
+	sum_avgtime = float(sum_avgtime / num_customers)
+
+	print "[ Summary ]"
+	print "Number of parallel process:  ", num_procs
+	print "Number of customers:         ", num_customers
+	print "Number of tasks per customer:", num_tasks
+	print "Number of all tasks:         ", num_customers * num_tasks
+	print "Maximum delay task creation: ", sum_maxtime
+	print "Minimum delay task creation: ", sum_mintime
+	print "Average delay:               ", sum_avgtime
+	print
 
 except Exception, e:
 	print 'Error:', e
-
-
