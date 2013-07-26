@@ -13,7 +13,7 @@ def dir_expand(path):
 setup(
 	name        = 'python-billing',
 	version     = '1.0',
-	description = 'CROC Cloud Platform API library',
+	description = 'Billing Platform',
 	license     = 'GPLv3',
 	platforms   = 'Linux',
 	author      = 'Alexey Gladkov',

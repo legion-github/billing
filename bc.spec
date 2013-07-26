@@ -6,7 +6,7 @@
 Summary:  BC Platform package
 Name:     bc
 Version:  2.0.0
-Release:  CROC1%{?dist}
+Release:  1%{?dist}
 Epoch:    %(date +%s)
 License:  GPLv3
 Group:    Applications/System
@@ -19,8 +19,6 @@ Requires: python-psycopg2
 Requires: python-msgpack
 Requires: bc-common
 
-Vendor:     CROC
-URL:        http://cloud.croc.ru
 BuildRoot:  %_tmppath/%name-%version-root
 BuildArch:  noarch
 
@@ -217,5 +215,5 @@ groupadd -r -f %bc_group
 
 
 %changelog
-* Wed Oct 10 2012 Alexey Gladkov <alexey.gladkov@gmail.com> 1349878993:2.0.0-CROC1.el6
+* Wed Oct 10 2012 Alexey Gladkov <alexey.gladkov@gmail.com> 1349878993:2.0.0-1.el6
 - First standalone build.

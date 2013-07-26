@@ -1,9 +1,9 @@
 #!/bin/sh
 #
-# Init script for the CROC Cloud componenct.
+# Init script for the Billing componenct.
 #
 # chkconfig: 2345 99 05
-# description: script for starting and stopping the CROC Cloud component
+# description: script for starting and stopping the Billing component
 #
 
 # Source function library.
